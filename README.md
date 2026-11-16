@@ -76,3 +76,11 @@ The user requests **more recent Reddit findings**, not older historical threads 
 - Indexed Greek independent forum [HowToFixIt — Υδραυλικά & Θέρμανση](https://www.howtofixit.gr/forum/forumdisplay.php?f=358) was found but fresh original hiring posts and automated crawl permissions could not be verified, so it is source-review only, not an active lead feeder.
 - Company Supabase, marketing outreach and private contact collection remain disabled. The private candidate schema extension is an UNAPPLIED proposal.
 - [Detailed BIO-16 source policy and CPV reference](docs/BIO16_SERVICES_MULTIPLATFORM_SOURCE_POLICY.md).
+
+## BIO-17 — Hourly discovery, geographic coverage and X platform policy
+
+- Official TED searches are now scheduled every **hour at :17** in GitHub Actions (GitHub scheduler can delay). On-open Render API retains bounded **15-minute** cache.
+- The fourth ChatGPT-connected Firecrawl account was verified with **1,400 credits** on 2026-11-16 (prior 3: 0 credits each), but its credentials were NOT copied to Render. No in-server Firecrawl account rotation/crawling is claimed. Only authorized sources can be crawled.
+- **X (Twitter)** appears in the research source-readiness registry. X's current terms prohibit crawling/scraping without express written permission. No automated X crawling, Reddit RSS, unsolicited contact or private customer collection.
+- New read-only `GET /api/bioshield/discovery/map` reports official TED geographies with **administrative-center markers**, explicit precision/buyer-only labels and zero-coverage-region research hints. Two ambiguous Attica buyer-office references are deliberately unlocated rather than falsely mapped as jobs. The responsive `Χάρτης / Κάλυψη` tab uses Leaflet and OSM with visible attribution and service/region/time filters.
+- [BIO-17 implementation and limitations](docs/BIO17_HOURLY_COVERAGE_MAP_X.md).
