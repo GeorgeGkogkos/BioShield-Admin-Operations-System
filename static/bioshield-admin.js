@@ -401,7 +401,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     const selection=host?.querySelector('#bio-ted-service')?.value||'all';
     const term=(host?.querySelector('#bio-ted-term')?.value||'').trim().toLocaleLowerCase('el-GR');
     let count=0;
-    host?.querySelectorAll('[data-ted-row],[data-focus-row]').forEach(row=>{
+    host?.querySelectorAll('[data-ted-row],[data-focus-row],[data-remote-row]').forEach(row=>{
       const serviceMatch=selection==='all'||(row.dataset.services||'').split(',').includes(selection);
       const searchMatch=!term||(row.dataset.search||'').includes(term);
       const show=serviceMatch&&searchMatch;
@@ -431,6 +431,8 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     if(national)national.innerHTML=tenderRows(ted,esc,focused?.policy);
     const regional=page.querySelector('#bio-focus-results');
     if(regional)regional.innerHTML=focusResults(focused,esc);
+    const remote=page.querySelector('#bio-remote-results');
+    if(remote)remote.innerHTML=remoteOpportunities(segmented,esc);
     for(const id of ['bio-live-status-overview','bio-live-status-discovery']){
       const target=page.querySelector('#'+id);
       if(target)target.innerHTML=automationStatus(heartbeat,ted,esc);
