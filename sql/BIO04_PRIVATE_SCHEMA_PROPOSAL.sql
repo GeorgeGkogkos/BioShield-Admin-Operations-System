@@ -44,7 +44,7 @@ create table if not exists bioshield_private.candidates (
   id uuid primary key default gen_random_uuid(),
   source_id uuid not null references bioshield_private.sources(id) on delete restrict,
   audience_segment text not null check (audience_segment in ('individual', 'public_sector', 'business', 'needs_review')),
-  service_code text not null check (service_code in ('pest_control', 'rodent_control', 'disinfection', 'other_review')),
+  service_code text not null check (service_code in ('pest_control', 'rodent_control', 'disinfection', 'plumbing', 'drain_unblocking', 'other_review')),
   geographic_area text,
   request_kind text not null check (request_kind in ('explicit_service_request', 'discussion_not_hiring', 'procurement_notice', 'advertisement_not_buyer', 'unclear')),
   case_state text not null default 'review_required'

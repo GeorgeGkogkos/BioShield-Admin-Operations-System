@@ -67,3 +67,12 @@ The user requests **more recent Reddit findings**, not older historical threads 
 - Reddit commercial automated retrieval stays **disabled** until Reddit gives written approval. As of November 13, 2026 Reddit's RSS support ended; no RSS bypass or unauthorized scraping is used. See [Reddit official data-access rules](https://support.reddithelp.com/hc/en-us/articles/14945211791892-Developer-Platform-Accessing-Reddit-Data) and [October 2026 changelog](https://support.reddithelp.com/hc/en-us/articles/54353370049684-Changelog-October-8-2026).
 - `GET /api/bioshield/discovery/providers` gives a truthful capability status. Private `/candidates`, `/discover` and `/handoff` remain HTTP 403; real commercial lead workflows require verified admin authentication, lawful basis and explicit review.
 - [Detailed operating and safety guide](docs/BIO14_REAL_DISCOVERY_AND_BRANDING.md).
+
+## BIO-16 — Five services, official plumbing/drain search, social/forum permission gates
+
+- Added **Υδραυλικός (plumbing)** and **Αποφράξεις (drain unblocking)** as independent service categories alongside pest control, rodent control and disinfection. Official TED searches corresponding published CPVs for all five and attaches matched source tags to notices. Dashboard filters by service.
+- `GET /api/bioshield/services` returns service labels. `GET /api/bioshield/discovery/sources` exposes permission/readiness for **Facebook, Instagram, TikTok, Reddit and independent Greek forums**.
+- User expressly rejects Reddit RSS: **NO Reddit RSS is used**. Firecrawl/TinyFish do not bypass official Reddit, Meta or TikTok permission conditions. All 3 Firecrawl accounts had zero credits on 2026-11-16.
+- Indexed Greek independent forum [HowToFixIt — Υδραυλικά & Θέρμανση](https://www.howtofixit.gr/forum/forumdisplay.php?f=358) was found but fresh original hiring posts and automated crawl permissions could not be verified, so it is source-review only, not an active lead feeder.
+- Company Supabase, marketing outreach and private contact collection remain disabled. The private candidate schema extension is an UNAPPLIED proposal.
+- [Detailed BIO-16 source policy and CPV reference](docs/BIO16_SERVICES_MULTIPLATFORM_SOURCE_POLICY.md).
