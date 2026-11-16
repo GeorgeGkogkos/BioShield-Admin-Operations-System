@@ -335,6 +335,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     '<h2 id="bio-discovery-private-heading">Ανακαλύψεις</h2>',
     '<p id="bio-discovery-private-description" class="bio-note"></p>',
     '<div id="bio-discovery-business-results"></div>',
+    '<p class="bio-note" id="bio-discovery-private-no-matches" role="status" hidden>Δεν βρέθηκαν επιχειρηματικά ευρήματα που να ταιριάζουν στην αναζήτηση.</p>',
     '<a href="/admin/operations/evidence" data-bio-tab="pilot" id="bio-discovery-archive" data-bio-discovery-archive="individual">Αποθηκευμένα δημόσια τεκμήρια ›</a></div>',
     '</section>',
     '<section data-bio-panel="pilot" hidden>',renderPublicPilot(pilot,esc),'</section>',
@@ -511,6 +512,17 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     if(label)label.textContent=fmt(count)+' εμφανιζόμενες τεκμηριωμένες προκηρύξεις';
     const noMatches=host?.querySelector('#bio-discovery-no-matches');
     if(noMatches)noMatches.hidden=!(discoveryCategory==='public_sector' && count===0 && ted?.status==='ok');
+    // The shared search field also filters independently sourced B2B entries.
+    // Individuals have no approved live source, so they keep an explicit empty state.
+    let matchingBusinesses=0;
+    const businessRows=host?.querySelectorAll('#bio-discovery-business-results [data-remote-row]')||[];
+    businessRows.forEach(row=>{
+      const matches=!term||(row.dataset.search||'').includes(term);
+      row.hidden=!matches;
+      if(matches)matchingBusinesses++;
+    });
+    const emptyBusiness=host?.querySelector('#bio-discovery-private-no-matches');
+    if(emptyBusiness)emptyBusiness.hidden=!(discoveryCategory==='business'&&term&&businessRows.length>0&&matchingBusinesses===0);
   }
   page.addEventListener('change',event=>{
     if(event.target.id==='bio-ted-service')filterTED();
@@ -689,8 +701,13 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     privatePanel.hidden=publicOnly;
     const input=page.querySelector('#bio-ted-term');
     const submit=page.querySelector('#bio-discovery-search-form button[type="submit"]');
-    if(input){input.disabled=!publicOnly;input.placeholder=publicOnly?'Σύμβαση, υπηρεσία, φορέας, αριθμός TED…':'Δεν υπάρχει ενεργή αναζήτηση αυτής της κατηγορίας';}
-    if(submit)submit.disabled=!publicOnly;
+    if(input){
+      input.disabled=false;
+      input.placeholder=publicOnly?'Σύμβαση, υπηρεσία, φορέας, αριθμός TED…':
+        category==='business'?'Αναζήτηση στα τεκμηριωμένα επιχειρηματικά ευρήματα…':
+        'Αναζήτηση ιδιωτικών ευρημάτων (χωρίς ενεργή πηγή)…';
+    }
+    if(submit)submit.disabled=false;
     if(!publicOnly){
       const heading=page.querySelector('#bio-discovery-private-heading');
       const description=page.querySelector('#bio-discovery-private-description');

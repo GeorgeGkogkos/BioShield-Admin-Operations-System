@@ -45,26 +45,29 @@ export function discoveryFilterMenu({ted,entry,newIds,esc,indicator,summary}){
   const businessIcon='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V4h12v17M15 10h6v11M7 8h4M7 12h4M7 16h4M2 21h20"/></svg>';
   return [
     '<div class="bio-home-card bio-discovery-menu">',
-    '<div class="bio-home-topline"><span class="bio-home-kicker">BIOSHIELD / DISCOVERY</span>',
-    '<span id="bio-home-source-indicator">'+indicator+'</span></div>',
-    '<div class="bio-home-intro"><h1>Αναζήτηση συμβάσεων &amp; ευρημάτων</h1>',
-    '<p>Φιλτράρισε πραγματικές ανακοινώσεις ανά κατηγορία και όρο.</p></div>',
-    '<form role="search" id="bio-discovery-search-form">',
-    '<label class="bio-visually-hidden" for="bio-ted-term">Αναζήτηση στις φορτωμένες συμβάσεις TED</label>',
+    '<form role="search" id="bio-discovery-search-form" aria-label="Αναζήτηση ανακαλύψεων">',
+    '<label class="bio-visually-hidden" for="bio-ted-term">Αναζήτηση στα φορτωμένα, τεκμηριωμένα ευρήματα</label>',
     '<div class="bio-home-search-box">'+searchIcon,
-    '<input id="bio-ted-term" type="search" placeholder="Σύμβαση, υπηρεσία, φορέας, αριθμός TED…" autocomplete="off">',
-    '<button type="submit" aria-label="Φιλτράρισμα δημοσίων συμβάσεων">',
+    '<input id="bio-ted-term" type="search" placeholder="Αναζήτηση συμβάσεων, υπηρεσιών και φορέων…" autocomplete="off">',
+    '<button type="submit" aria-label="Αναζήτηση ευρημάτων">',
     '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg>',
     '</button></div></form>',
-    '<nav class="bio-home-categories" aria-label="Κατηγορία αιτούντος">',
+    '<div class="bio-discovery-subbar">',
+    '<span class="bio-home-kicker">BIOSHIELD / DISCOVERY</span>',
+    '<span id="bio-home-source-indicator">'+indicator+'</span></div>',
+    '<div class="bio-discovery-filter-row">',
+    '<span class="bio-discovery-filter-label">Φίλτρα:</span>',
+    '<nav class="bio-home-categories" aria-label="Φίλτρο αναζήτησης ανά κατηγορία αιτούντος">',
     '<button type="button" class="bio-home-category" data-bio-discovery-category="individual" aria-pressed="false">'+userIcon+'<span>Ιδιώτες</span></button>',
     '<button type="button" class="bio-home-category" data-bio-discovery-category="public_sector" aria-pressed="true">'+publicIcon+'<span>Δημόσια έργα</span></button>',
     '<button type="button" class="bio-home-category" data-bio-discovery-category="business" aria-pressed="false">'+businessIcon+'<span>Επιχειρήσεις</span></button>',
-    '</nav><p class="bio-discovery-search-scope">Η αναζήτηση κειμένου φιλτράρει τις δημοσιεύσεις TED που έχουν ήδη φορτωθεί· δεν εκτελεί νέο ελεύθερο ερώτημα σε άλλους παρόχους.</p>',
-    '<div class="bio-home-bottom"><div class="bio-home-provider">',
-    '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 4 16 4 16 0V5M4 12c0 4 16 4 16 0"/></svg>',
-    '<span id="bio-home-ted-summary" role="status">'+esc(summary)+'</span></div>',
-    '<a href="/admin/operations/status" data-bio-tab="status">Κατάσταση πηγών ›</a></div></div>'
+    '</nav></div>',
+    '<div class="bio-discovery-meta">',
+    '<p class="bio-discovery-search-scope">Αναζήτηση μόνο στα ήδη φορτωμένα τεκμήρια της επιλεγμένης κατηγορίας.</p>',
+    '<a href="/admin/operations/status" data-bio-tab="status">Κατάσταση πηγών ›</a>',
+    '</div>',
+    '<div class="bio-discovery-statusline" id="bio-home-ted-summary" role="status">'+esc(summary)+'</div>',
+    '</div>'
   ].join('');
 }
 
