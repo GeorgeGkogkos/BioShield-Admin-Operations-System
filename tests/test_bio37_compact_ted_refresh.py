@@ -33,7 +33,9 @@ def test_refresh_is_adjacent_to_search_and_not_a_second_large_card():
                     "Εκτέλεση χειροκίνητης αναζήτησης τώρα"):
         assert removed not in results
 
-    assert "bio-ted-service" in results
+    assert 'id="bio-ted-service"' in panel
+    assert 'id="bio-ted-service"' not in results
+    assert 'id="bio-ted-count"' in results
     assert "bio-ted-results" in results
     assert "bio-focus-results" in results
     assert "bio-remote-results" in results

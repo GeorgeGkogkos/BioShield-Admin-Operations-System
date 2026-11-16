@@ -73,3 +73,20 @@ def test_private_data_remains_unavailable_and_no_new_api_routes_are_needed():
         assert client.get("/api/bioshield/candidates").status_code==403
         assert client.post("/api/bioshield/handoff").status_code==403
         assert client.get("/api/bioshield/discovery/map").status_code==200
+
+def test_service_filter_is_inside_search_facets_not_a_separate_results_toolbar():
+    menu=(STATIC/"discovery-layout.js").read_text(encoding="utf-8").split(
+        "export function discoveryFilterMenu",1)[1].split(
+        "export function businessDiscoveryMarkup",1)[0]
+    admin=(STATIC/"bioshield-admin.js").read_text(encoding="utf-8")
+    results=admin.split("function discoveries(",1)[1].split(
+        "export async function renderBioShieldAdmin",1)[0]
+    assert menu.count('id="bio-ted-service"')==1
+    assert menu.index('data-bio-location-mode="custom"') < menu.index('id="bio-ted-service"')
+    assert menu.index('id="bio-ted-service"') < menu.index('bio-discovery-meta')
+    for service in ("all","pest_control","rodent_control","disinfection","plumbing","drain_unblocking"):
+        assert f'<option value="{service}">' in menu
+    assert 'id="bio-ted-service"' not in results
+    assert 'id="bio-ted-count"' in results
+    assert "host?.querySelector('#bio-ted-service')" in admin
+    assert "if(event.target.id==='bio-ted-service')filterTED();" in admin
