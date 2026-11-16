@@ -52,9 +52,11 @@ def test_shell_is_sticky_and_panel_animations_cannot_overlay_header():
     assert "animation:bio-panel-enter 220ms ease-out both" in admin
     assert "from{opacity:0}" in admin and "to{opacity:1}" in admin
     assert "transform:translateY(8px)" not in admin
-    assert "window.scrollTo(0,0)" in navigation
-    assert "window.scrollTo(0,0)" in typed_navigation
-    assert "window.history.scrollRestoration='manual'" in navigation
+    # TypeScript build formats whitespace differently from the checked-in JS.
+    for source in (navigation, typed_navigation):
+        minified = "".join(source.split())
+        assert "window.scrollTo(0,0)" in minified
+        assert "window.history.scrollRestoration='manual'" in minified
     app_js = (STATIC / "app.js").read_text(encoding="utf-8")
     assert "focus({preventScroll:true})" in app_js
     assert "@media(prefers-reduced-motion:reduce)" in admin
