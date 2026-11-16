@@ -2,7 +2,7 @@
 
 Independent BioShield admin operations application hosted in the DST Render workspace. Dedicated source code repository for public-demand discovery, lead qualification and compliant call-center handoff.
 
-**Status: initial setup only.** The external BioShield Supabase database is not connected, Firecrawl/TinyFish are not configured for recurring operation, and no leads or telephone numbers are collected or exposed.
+**Status: real public-source discovery preview.** Official EU TED procurement discovery is enabled, alongside a separate RLS-protected read-only Supabase demo. No synthetic request datasets remain in the running app or source-code fixture corpus. External company Supabase, private candidate intake, commercial Reddit automation and call-center handoff remain disabled.
 
 ## First-stage goals
 
@@ -35,13 +35,13 @@ This repository is currently PUBLIC. Never commit Supabase secrets, Firecrawl/Ti
 The page is a PUBLIC setup preview and MUST NOT contain any personal/contact data until proper admin authentication and the external business database are verified.
 
 
-## Performance lab (before external Supabase)
+## Previous synthetic lab (removed from running app)
 
-BIO-08/BIO-09: a deterministic 30-case synthetic Greek corpus, conservative request classifier, URL dedupe and Firecrawl/TinyFish mock failover. No external network requests or PII. Test CPU-only throughput via `python -m bioshield.benchmark --iterations 10000 --check` (also GitHub Actions artifact). Details: [docs/PRE_SUPABASE_TESTING.md](docs/PRE_SUPABASE_TESTING.md). This is NOT real-world precision or provider/backend load testing.
+The BIO-08/BIO-09 fabricated request examples, API routes, UI and mock benchmark files were removed by BIO-14. Historical technical notes remain under `docs/` as archival design context only. Production-quality real-world precision cannot be inferred from any synthetic testing.
 
 ## BIO-10 — Real public evidence, not CRM leads
 
-One-time snapshot from **real** public sites, dated 2026-11-16: 7 public institutional pest-control tenders and 5 forum discussions, with independent source URLs, timestamps where published, evidence-level labels and no contacts. Accessible in the dashboard's `Πραγματικά ευρήματα` tab and `GET /api/bioshield/pilot/evidence`. **Zero confirmed current contactable private leads**. This is NOT an automatic discovery feed, nor confirmation that tenders remain open. Three Firecrawl accounts had zero credits, and some official sources blocked automation. No Supabase connection, provider automation or customer data. Full methods: [docs/BIO10_REAL_SOURCE_PILOT.md](docs/BIO10_REAL_SOURCE_PILOT.md).
+One-time snapshot from **real** public sites, dated 2026-11-16: 7 public institutional pest-control tenders and 5 forum discussions, with independent source URLs, timestamps where published, evidence-level labels and no contacts. The old static API `/api/bioshield/pilot/evidence` was removed by BIO-14; real public evidence is read from the separate Supabase demo. **Zero confirmed current contactable private leads**. This is NOT an automatic discovery feed, nor confirmation that tenders remain open. Three Firecrawl accounts had zero credits, and some official sources blocked automation. No Supabase connection, provider automation or customer data. Full methods: [docs/BIO10_REAL_SOURCE_PILOT.md](docs/BIO10_REAL_SOURCE_PILOT.md).
 
 ## BIO-11 — separate Individuals, Public-Sector Tenders and Businesses
 
@@ -56,3 +56,14 @@ The **BioShield — Live Demo Sandbox** project in the user's second Supabase ac
 ## BIO-13 — Fresh Reddit discussions first (30 days)
 
 The user requests **more recent Reddit findings**, not older historical threads shown as opportunities. BioShield now sorts community posts by original posting date, defaults to **last 30 days**, offers **last 7 days** or historical archive, and exposes separate recent/historical counts. Two inspected primary Reddit threads dated **2026-10-27 (Athens)** and **2026-11-02 (AskGreece)** were added as public, no-contact discussion metadata; neither constitutes a confirmed current service-order request. Historical older Reddit posts remain in the archive only; comments or re-crawls cannot reset freshness. This feature does not activate automatic Reddit crawling or customer outreach. See [the BIO-13 freshness policy](docs/BIO13_REDDIT_FRESHNESS.md).
+
+
+## BIO-14 — Company logo, no synthetic requests, automatic official discovery
+
+- The uploaded BioShield company emblem (resized/optimized but not redrawn) is installed as the website icon and the visible brand logo under `static/bioshield-company-logo.png`.
+- Synthetic request fixture corpus, synthetic lab UI/REST endpoints and mock benchmark/source outputs were removed from production source. Pure unit tests still use isolated test objects and never present them as real leads.
+- `GET /api/bioshield/discovery/tenders` queries the **official EU TED Search API** automatically on dashboard entry, with a 15-minute per-instance cache. The bounded 30-day, Greece-only query covers CPV 90921000/90922000/90923000/90924000. It displays only official public procurement metadata, source URLs and review requirements; it does not infer a current bid opportunity or buyer contact eligibility.
+- `.github/workflows/discovery.yml` schedules an official TED scan every six hours on GitHub Actions and writes a nonpersonal `data/ted-current.json` snapshot only if the provider returns a valid response. The Render frontend also reads the live TED API independently; the action is not a Supabase CRM ingestion worker.
+- Reddit commercial automated retrieval stays **disabled** until Reddit gives written approval. As of November 13, 2026 Reddit's RSS support ended; no RSS bypass or unauthorized scraping is used. See [Reddit official data-access rules](https://support.reddithelp.com/hc/en-us/articles/14945211791892-Developer-Platform-Accessing-Reddit-Data) and [October 2026 changelog](https://support.reddithelp.com/hc/en-us/articles/54353370049684-Changelog-October-8-2026).
+- `GET /api/bioshield/discovery/providers` gives a truthful capability status. Private `/candidates`, `/discover` and `/handoff` remain HTTP 403; real commercial lead workflows require verified admin authentication, lawful basis and explicit review.
+- [Detailed operating and safety guide](docs/BIO14_REAL_DISCOVERY_AND_BRANDING.md).
