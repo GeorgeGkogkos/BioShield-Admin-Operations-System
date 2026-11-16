@@ -162,7 +162,7 @@ function locationControls(esc){
     '<h3>Προτεραιότητες περιοχής</h3>'+
     '<p class="bio-note">Μόνιμη βάση και επιπλέον προσωρινή τοποθεσία αναζητούνται <strong>παράλληλα</strong>. '+
     'Από Ίλιον η πρώτη προτεραιότητα είναι Αττική, Εύβοια και Κορινθία. '+
-    'Απομακρυσμένες προκηρύξεις εμφανίζονται στην κύρια λίστα μόνο με επίσημα επιβεβαιωμένο ποσό ≥100.000€.</p>'+
+    'Μακρινά έργα Δημοσίου και επιχειρήσεων έχουν ξεχωριστή ενότητα χωρίς ελάχιστη αξία. Μακρινοί ιδιώτες αποκλείονται.</p>'+
     '<div class="bio-focus-controls"><label for="bio-focus-home">Μόνιμη βάση</label>'+
     '<select id="bio-focus-home">'+choices()+'</select>'+
     '<label for="bio-focus-travel">Προσωρινή περιοχή</label>'+
@@ -214,7 +214,7 @@ function officialSourceCards(official,esc){
        'Επίσημη αναζήτηση · αναμονή σύνδεσης')+'</span></article>').join('')+'</div>';
 }
 
-function discoveries(state,esc,focused,heartbeat) {
+function discoveries(state,esc,focused,heartbeat,segmented) {
   return [
     '<div class="bio-lab-top"><div><p class="eyebrow">OFFICIAL EU OPEN DATA / LIVE SEARCH</p>',
     '<h2>Αυτόματη ανακάλυψη — δημόσια έργα</h2>',
@@ -245,29 +245,32 @@ function discoveries(state,esc,focused,heartbeat) {
     '<div class="bio-focus-title"><h3>Επιπλέον αναζήτηση κοντά στη βάση και στην προσωρινή τοποθεσία</h3>',
     '<p class="bio-note">Ειδικές επίσημες ερωτήσεις γεωγραφίας NUTS στο TED, όχι απλώς ταξινόμηση ήδη γνωστών δημοσιεύσεων.</p></div>',
     '<div id="bio-focus-results">',focusResults(focused,esc),'</div>',
-    '<h3>Εθνικές προκηρύξεις — μόνο τοπικά σχετικές ή τεκμηριωμένα μεγάλες εκτός περιοχής</h3>',
+    '<h3>Κοντινές δημόσιες προκηρύξεις — Αττική, Εύβοια, Κορινθία ή προσωρινή βάση</h3>',
     '<div id="bio-ted-results">',tenderRows(state,esc,focused?.policy),'</div>',
+    '<div id="bio-remote-results">',remoteOpportunities(segmented,esc),'</div>',
     '<p class="bio-note">Η ανακάλυψη ενεργοποιείται αυτόματα με το άνοιγμα της σελίδας (έως 15 λεπτά cache ανά instance) και η προγραμματισμένη αναζήτηση GitHub Actions εκτελείται κάθε ώρα, στο :17 (με πιθανές καθυστερήσεις scheduler). Εάν ο πάροχος δεν απαντά, η κατάσταση φαίνεται ως μη διαθέσιμη.</p>',
     '<p class="bio-note"><strong>Facebook, Instagram, TikTok, Reddit:</strong> η εμπορική αυτοματοποιημένη συλλογή απαιτεί δικαιώματα πλατφόρμας. Οι ανεξάρτητες κοινότητες χρειάζονται έλεγχο robots και όρων πριν από οποιοδήποτε crawl. Οι συζητήσεις δεν αποτελούν επιβεβαιωμένους πελάτες.</p>',
   ].join('');
 }
 
 export async function renderBioShieldAdmin(page,{api,esc}) {
-  page.innerHTML=brandedLoader();
+  page.innerHTML=pageSkeleton(window.location.pathname);
   const selectedHome=safeHome();
-  const [pilotReply,tedReply,sourceReply,mapReply,researchReply,focusedReply,heartbeatReply,officialReply,alertsReply]=await Promise.allSettled([
+  const [pilotReply,tedReply,sourceReply,mapReply,researchReply,focusedReply,heartbeatReply,officialReply,alertsReply,segmentedReply]=await Promise.allSettled([
     api('/bioshield/demo/evidence'), api('/bioshield/discovery/tenders'),
     api('/bioshield/discovery/sources'), api('/bioshield/discovery/map'),
     api('/bioshield/research/config'),
     api('/bioshield/discovery/focused?home='+encodeURIComponent(selectedHome)),
     api('/bioshield/discovery/heartbeat'),
     api('/bioshield/discovery/official-sources'),
-    api('/bioshield/discovery/google-alerts')
+    api('/bioshield/discovery/google-alerts'),
+    api('/bioshield/discovery/segmented?home='+encodeURIComponent(selectedHome))
   ]);
   let pilot=pilotReply.status==='fulfilled'?pilotReply.value:{demo_unavailable:true};
   let ted=tedReply.status==='fulfilled'?tedReply.value:{status:'unavailable'};
   const policy=sourceReply.status==='fulfilled'?sourceReply.value:null;
   let focused=focusedReply.status==='fulfilled'?focusedReply.value:{status:'unavailable'};
+  let segmented=segmentedReply.status==='fulfilled'?segmentedReply.value:{status:'unavailable'};
   let heartbeat=heartbeatReply.status==='fulfilled'?heartbeatReply.value:{status:'unavailable'};
   const official=officialReply.status==='fulfilled'?officialReply.value:null;
   const googleAlerts=alertsReply.status==='fulfilled'?alertsReply.value:null;
@@ -307,7 +310,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     '<p>Οι μετρήσεις αφορούν το αποθηκευμένο δημόσιο δείγμα, όχι επαληθευμένη ενεργή ζήτηση.</p>',
     '<button class="bio-open-lab" type="button" data-bio-tab="pilot">Προβολή πηγών</button></article>',
     '</div></section>',
-    '<section data-bio-panel="discovery" hidden>',discoveries(ted,esc,focused,heartbeat),'</section>',
+    '<section data-bio-panel="discovery" hidden>',discoveries(ted,esc,focused,heartbeat,segmented),'</section>',
     '<section data-bio-panel="pilot" hidden>',renderPublicPilot(pilot,esc),'</section>',
     '<section data-bio-panel="map" hidden>',coverageMarkup(coverage,esc),'</section>',
     '<section data-bio-panel="sources" hidden>',
