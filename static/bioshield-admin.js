@@ -143,11 +143,15 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     function filterPilot(){
       const search=pilotPanel.querySelector('#bio-pilot-search');
       const type=pilotPanel.querySelector('#bio-pilot-type');
-      if(!search||!type||!pilot.demo_supabase_connected)return;
+      const recency=pilotPanel.querySelector('#bio-pilot-recency');
+      if(!search||!type||!recency||!pilot.demo_supabase_connected)return;
       const term=search.value.trim().toLocaleLowerCase('el-GR'), kind=type.value;
       let visible=0;
       pilotPanel.querySelectorAll('[data-pilot-row]').forEach(row=>{
-        const matches=(kind==='all'||kind===row.dataset.segment)&&(!term||row.dataset.search.includes(term));
+        const allowedDate=row.dataset.kind!=='forum'||recency.value==='all'||
+          (recency.value==='30d'&&row.dataset.redditRecent==='true')||
+          (recency.value==='7d'&&row.dataset.redditWeek==='true');
+        const matches=allowedDate&&(kind==='all'||kind===row.dataset.segment)&&(!term||row.dataset.search.includes(term));
         row.hidden=!matches;
         if(matches)visible++;
       });
@@ -169,6 +173,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
       loadingDemo=true;
       const oldQuery=pilotPanel.querySelector('#bio-pilot-search')?.value||'';
       const oldType=pilotPanel.querySelector('#bio-pilot-type')?.value||'all';
+      const oldRecency=pilotPanel.querySelector('#bio-pilot-recency')?.value||'30d';
       const button=pilotPanel.querySelector('#bio-demo-refresh');
       if(button){button.disabled=true;button.textContent='Ανανέωση…';}
       try{
@@ -183,8 +188,10 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
           pilotPanel.innerHTML=renderPublicPilot(pilot,esc);
           const query=pilotPanel.querySelector('#bio-pilot-search');
           const type=pilotPanel.querySelector('#bio-pilot-type');
+          const recency=pilotPanel.querySelector('#bio-pilot-recency');
           if(query)query.value=oldQuery;
           if(type&&Array.from(type.options).some(o=>o.value===oldType))type.value=oldType;
+          if(recency&&Array.from(recency.options).some(o=>o.value===oldRecency))recency.value=oldRecency;
           filterPilot();
         }
         loadingDemo=false;
