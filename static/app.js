@@ -1,14 +1,12 @@
 import {renderBioShieldAdmin} from './bioshield-admin.js';
 import {currentScreen} from './typed/navigation.js';
-// BIO-34: obsolete data pages are aliases of the single search workspace.
+// BIO-35: only the former Findings page is a legacy alias for Search.
+// Overview, Map, Sources and Status remain independent destinations.
 const oldPath=window.location.pathname.replace(/\/+$/,'');
-const canonicalPaths=new Set(['/admin/operations','/admin/operations/overview',
-  '/admin/operations/evidence','/admin/operations/map']);
-if(canonicalPaths.has(oldPath)){
-  const originalParams=new URLSearchParams(window.location.search);
-  const showMap=oldPath.endsWith('/map')||originalParams.get('tab')==='map';
-  const target='/admin/operations/discovery'+(showMap?'?view=map':'');
-  window.history.replaceState({bioScreen:'discovery'},'',target);
+const oldTab=new URLSearchParams(window.location.search).get('tab');
+if(oldPath==='/admin/operations/evidence'||
+   (oldPath==='/admin/operations'&&oldTab==='pilot')){
+  window.history.replaceState({bioScreen:'discovery'},'','/admin/operations/discovery');
 }
 const esc = value => String(value??'').replace(/[&<>"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
 async function api(path) {
