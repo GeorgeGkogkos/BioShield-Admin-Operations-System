@@ -705,7 +705,8 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
       button.setAttribute('aria-pressed',String(button.dataset.bioLocationMode===mode))
     );
     const config=page.querySelector('#bio-location-config');
-    config.hidden=false;
+    // The saved home is active immediately; reveal the setup card only for alternative modes.
+    config.hidden=mode==='home';
     config.dataset.mode=mode;
     const stop=discoveryPanel.querySelector('#bio-focus-gps-stop');
     if(mode==='current'){

@@ -90,3 +90,14 @@ def test_service_filter_is_inside_search_facets_not_a_separate_results_toolbar()
     assert 'id="bio-ted-count"' in results
     assert "host?.querySelector('#bio-ted-service')" in admin
     assert "if(event.target.id==='bio-ted-service')filterTED();" in admin
+
+def test_location_mode_restores_home_without_showing_configuration_panel():
+    """Returning from custom/current to the saved base must not reopen setup."""
+    script=(STATIC/"bioshield-admin.js").read_text(encoding="utf-8")
+    mode=script.split("function setLocationMode(mode){",1)[1].split(
+        "// The menu belongs",1)[0]
+    assert "config.hidden=mode==='home';" in mode
+    assert "config.dataset.mode=mode;" in mode
+    assert "if(mode==='home')" in mode
+    assert "if(extra&&extra.value){extra.value='';}" in mode
+    assert "void refreshFocused(effectiveFocusChoice(focusController.selection()))" in mode
