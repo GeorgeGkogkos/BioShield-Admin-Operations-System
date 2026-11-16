@@ -31,11 +31,22 @@ export function installNavigation(page, onChange) {
   // Native history restoration can reapply a previous page's offset after popstate.
   if('scrollRestoration' in window.history)window.history.scrollRestoration='manual';
   let active = currentScreen();
+  let leaving = null;
+  let pending = null;
+  let revision=0;
   const change=(next, push)=>{
     if(!SCREENS.includes(next))return;
-    if(active===next && !push){onChange(next);return;}
-    if(active===next && window.location.pathname===ROUTES[next])return;
+    if(pending===next)return;
+    if(active===next && !leaving && !push){onChange(next);return;}
+    if(active===next && !leaving && window.location.pathname===ROUTES[next])return;
+
+    const currentRevision=++revision;
+    if(leaving){leaving.cancel();leaving=null;pending=null;}
+    if(push && window.location.pathname!==ROUTES[next]){
+      window.history.pushState({bioScreen:next},'',ROUTES[next]);
+    }
     const render=()=>{
+      if(currentRevision!==revision)return;
       active=next;
       document.documentElement.dataset.bioScreen=next;
       onChange(next);
@@ -44,17 +55,30 @@ export function installNavigation(page, onChange) {
         pilot:'Αποθηκευμένα ευρήματα',map:'Χάρτης / Κάλυψη',
         sources:'Πηγές & έλεγχοι',status:'Κατάσταση & διαφάνεια',
       })[next];
-      if(push)window.history.pushState({bioScreen:next},'',ROUTES[next]);
       page.querySelector('[data-bio-panel="'+next+'"] h2, [data-bio-panel="'+next+'"] h1')
         ?.setAttribute('tabindex','-1');
+      window.scrollTo(0,0);
     };
-    // Document-level snapshots paint in the browser top layer over sticky
-    // app chrome. Switch the real DOM panel instead; its in-flow CSS entrance
-    // animation stays underneath the persistent header and sidebar.
-    render();
-    // The newly selected page always begins at the top of the content area.
-    // Reset synchronously before the next paint; never scroll the persistent shell.
-    window.scrollTo(0,0);
+
+    const oldPanel=page.querySelector('[data-bio-panel="'+active+'"]');
+    const reducedMotion=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches===true;
+    if(next!==active && oldPanel && !oldPanel.hidden &&
+       typeof oldPanel.animate==='function' && !reducedMotion){
+      // No document-level View Transition: the app shell never animates.
+      pending=next;
+      const animation=oldPanel.animate([
+        {opacity:1,transform:'translateY(0)'},
+        {opacity:0,transform:'translateY(-6px)'}
+      ],{duration:145,easing:'ease-in',fill:'forwards'});
+      leaving=animation;
+      const finish=()=>{
+        if(currentRevision!==revision)return;
+        leaving=null;pending=null;
+        animation.cancel();
+        render();
+      };
+      void animation.finished.then(finish,finish);
+    }else render();
   };
   const onClick=(event)=>{
     if(event.defaultPrevented || event.button!==0 || event.metaKey || event.ctrlKey ||
@@ -77,6 +101,8 @@ export function installNavigation(page, onChange) {
   document.documentElement.dataset.bioScreen=active;
   onChange(active);
   return ()=>{
+    revision++;
+    if(leaving){leaving.cancel();leaving=null;pending=null;}
     page.removeEventListener('click',onClick);
     shellNavigation?.removeEventListener('click',onClick);
     bottomNavigation?.removeEventListener('click',onClick);
