@@ -25,3 +25,7 @@
 
 ## Limited claim
 This release is hourly **official public-sector notice discovery** plus a geographic research map. It is not hourly Reddit/X/social discovery, automatically geocoded private-customer events, or a geospatial demand-density model. Observations are conditioned on the source and selected period.
+
+### BIO-17 browser fix — local vector map
+
+An actual browser E2E test of PR #10 found that the external Leaflet CDN did not load; the fallback list displayed all points regardless of filters. The follow-up fix replaces external CDN tiles/scripts with a self-hosted interactive SVG Greece map using a simplified Natural Earth public-domain boundary. The map is now independent of external tile providers, and filters redraw both the vector pins and source list from the same verified source rows. This correction makes precise source date, service and area filtering testable, without inventing addresses. Source boundary: https://www.naturalearthdata.com/ .
