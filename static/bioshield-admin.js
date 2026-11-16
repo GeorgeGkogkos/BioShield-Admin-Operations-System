@@ -2,6 +2,7 @@ import {renderPublicPilot} from './real-pilot.js';
 import {coverageMarkup,setupCoverageMap} from './geographic-map.js';
 import {installNavigation} from './typed/navigation.js';
 import {researchMarkup,setupResearchPlaybook} from './typed/research-view.js';
+import {LOCATION_CHOICES,installLocationFocus} from './typed/location-focus.js';
 
 /* BIO-14: REAL public-source evidence only; the synthetic request lab is removed. */
 const fmt = x => Number(x || 0).toLocaleString('el-GR');
@@ -46,6 +47,92 @@ function tenderRows(state,esc) {
       '<small class="bio-evidence-note">Ελέγχονται η διακήρυξη και η δυνατότητα υποβολής</small></td></tr>'
     ).join('')+'</tbody></table></div>';
 }
+
+function brandedLoader(){
+  return '<div class="bio-start-loader" role="status" aria-live="polite">'+
+    '<div class="bio-logo-pulse"><img src="/static/bioshield-company-logo.png" width="108" height="108" alt=""></div>'+
+    '<strong>BioShield</strong><span>Φόρτωση επισκόπησης και επίσημων πηγών…</span></div>';
+}
+const LOCATION_KEYS=new Set(LOCATION_CHOICES.map(x=>x.id));
+function safeHome(){
+  let key='ilion';try{key=localStorage.getItem('bioshield-home-region')||'ilion'}catch{}
+  return LOCATION_KEYS.has(key)?key:'ilion';
+}
+function automationStatus(heartbeat,ted,esc){
+  const run=heartbeat?.latest_run;
+  const official=ted?.status==='ok';
+  const timestamp=official?ted.searched_at_utc:ted?.checked_at_utc;
+  const sourceStatus=official?(ted?.cached?'Προβολή από cache επίσημου API':'Επιτυχής επικοινωνία με TED'):
+    'Ο τελευταίος έλεγχος TED απέτυχε';
+  return '<div class="bio-automation-stats">'+
+    '<div><span>Τελευταίος πραγματικός έλεγχος TED</span><strong>'+dateTime(timestamp)+'</strong>'+
+    '<small>'+esc(sourceStatus)+' · ώρα Αθήνας</small></div>'+
+    '<div><span>Προγραμματισμένη εκτέλεση GitHub</span><strong>'+
+    (run?dateTime(run.run_started_at||run.created_at):'Δεν επαληθεύτηκε')+'</strong>'+
+    '<small>'+(run?'Κατάσταση: '+esc(run.status||'άγνωστη')+
+      ' · Αποτέλεσμα: '+esc(run.conclusion||'εκκρεμεί'):
+      'Δεν εμφανίζεται εικονικό «επιτυχές» cron')+
+    ' · <a href="https://github.com/GeorgeGkogkos/BioShield-Admin-Operations-System/actions/workflows/discovery.yml" target="_blank" rel="noopener noreferrer">Ιστορικό εκτελέσεων</a></small></div></div>';
+}
+function locationControls(esc){
+  const choices=(empty=false)=> (empty?'<option value="">Καμία πρόσθετη περιοχή</option>':'')+
+    LOCATION_CHOICES.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.label)+'</option>').join('');
+  return '<div class="bio-focus-panel" aria-label="Προτεραιότητες γεωγραφικής αναζήτησης">'+
+    '<h3>Προτεραιότητες περιοχής</h3>'+
+    '<p class="bio-note">Μόνιμη βάση και επιπλέον προσωρινή τοποθεσία αναζητούνται <strong>παράλληλα</strong>. '+
+    'Από Ίλιον η πρώτη προτεραιότητα είναι Αττική, Εύβοια και Κορινθία. '+
+    'Απομακρυσμένες προκηρύξεις εμφανίζονται στην κύρια λίστα μόνο με επίσημα επιβεβαιωμένο ποσό ≥100.000€.</p>'+
+    '<div class="bio-focus-controls"><label for="bio-focus-home">Μόνιμη βάση</label>'+
+    '<select id="bio-focus-home">'+choices()+'</select>'+
+    '<label for="bio-focus-travel">Προσωρινή περιοχή</label>'+
+    '<select id="bio-focus-travel">'+choices(true)+'</select></div>'+
+    '<div class="bio-focus-gps-actions">'+
+    '<button type="button" id="bio-focus-gps-start">Χρήση θέσης συσκευής (με άδεια)</button>'+
+    '<button type="button" id="bio-focus-gps-stop" disabled>Διακοπή τοποθεσίας</button></div>'+
+    '<p id="bio-focus-gps-status" class="bio-note" aria-live="polite">Η θέση συσκευής είναι ανενεργή. '+
+    'Αναγνωρίζονται μόνο ευρύτερες ζώνες· δεν στέλνονται συντεταγμένες. '+
+    'Ο γεωεντοπισμός σταματά όταν κρύβεται η καρτέλα.</p>'+
+    '</div>';
+}
+function focusResults(state,esc){
+  if(!state||state.status!=='ok'){
+    const limited=state?.status==='rate_limited';
+    return '<p class="bio-note" role="status">'+(limited?
+      'Η χειροκίνητη έρευνα έχει προσωρινό όριο. Επανάληψη σε '+esc(state.retry_after_seconds)+' δευτερόλεπτα.':
+      'Δεν επιβεβαιώθηκε επιτυχής αναζήτηση για αυτές τις περιοχές. Τα παλιά δεδομένα δεν εμφανίζονται ως νέα.')+'</p>';
+  }
+  const notices=(state.notices||[]);
+  const rows=notices.map(x=>'<tr data-focus-row data-services="'+esc((x.service_codes||[]).join(','))+
+    '" data-search="'+esc([x.title,x.buyer,(x.cpv_codes||[]).join(' '),x.notice_number].join(' ').toLocaleLowerCase('el-GR'))+'">'+
+    '<td>'+esc(x.published_on)+'</td><td>'+esc(x.title)+'</td>'+
+    '<td>'+esc(x.buyer)+'</td><td><small>'+esc((x.place_of_performance_nuts||[]).join(', ')||
+      'Χωρίς δηλωμένο NUTS στην απάντηση')+'</small></td>'+
+    '<td><span class="bio-evidence-note">'+(x.geographic_tier==='regional_query_requires_place_verification'?
+      'Ταίριαξε στο επίσημο γεωγραφικό ερώτημα — απαιτείται έλεγχος διακήρυξης':
+      'Περιοχή εκτέλεσης από επίσημο NUTS — όχι ακριβές σημείο')+'</span></td>'+
+    '<td><a href="'+esc(x.source_url)+'" target="_blank" rel="noopener noreferrer">TED</a></td></tr>').join('');
+  const lanes=(state.lanes||[]).map(x=>'<span>'+esc(x.lane==='permanent'?'Μόνιμη βάση':'Προσωρινή περιοχή')+
+    ': <strong>'+esc(x.status==='ok'?x.count+' αποτελέσματα':'Μη διαθέσιμη')+'</strong>'+
+    (x.searched_at_utc?' · '+dateTime(x.searched_at_utc):'')+'</span>').join('');
+  return '<div class="bio-geo-result-head"><strong>Επιπλέον στοχευμένη έρευνα TED: '+esc(notices.length)+' τεκμήρια</strong>'+
+    '<small>Έλεγχος: '+dateTime(state.checked_at_utc)+' · ώρα Αθήνας'+(state.cached?' · cache':'')+'</small></div>'+
+    '<div class="bio-lane-summary">'+lanes+'</div>'+
+    (rows?'<div class="bio-scroll"><table class="bio-table"><thead><tr>'+
+       '<th>Δημοσιεύτηκε</th><th>Εργασία</th><th>Φορέας</th><th>NUTS</th><th>Γεωγραφική τεκμηρίωση</th><th>Πηγή</th>'+
+       '</tr></thead><tbody>'+rows+'</tbody></table></div>':
+       '<p class="bio-note">Η επίσημη γεωγραφική αναζήτηση ολοκληρώθηκε χωρίς αντίστοιχες προκηρύξεις. '+
+       'Δεν σημαίνει ότι δεν υπάρχουν τοπικές ιδιωτικές εργασίες.</p>');
+}
+function officialSourceCards(official,esc){
+  return '<div class="bio-official-sources"><h3>Επιπλέον ελληνικές επίσημες πηγές δημοσίων έργων</h3>'+
+    '<p class="bio-note">Πραγματικές επίσημες σελίδες που ερευνήθηκαν. '+
+    'Δεν αποτελούν ενεργούς αυτοματοποιημένους εισαγωγείς στο BioShield μέχρι να επιβεβαιωθεί τεχνική πρόσβαση.</p>'+
+    (official?.providers||[]).map(s=>'<article class="bio-source-row"><div><strong>'+esc(s.name)+'</strong>'+
+     '<p>'+esc(s.notes)+'</p><a href="'+esc(s.url)+'" target="_blank" rel="noopener noreferrer">Επίσημη πηγή</a></div>'+
+     '<span>'+esc(s.status==='partial_search_only_by_ADA_2026_11_16'?'Περιορισμένη αναζήτηση':
+       'Επίσημη αναζήτηση · αναμονή σύνδεσης')+'</span></article>').join('')+'</div>';
+}
+
 function discoveries(state,esc) {
   return [
     '<div class="bio-lab-top"><div><p class="eyebrow">OFFICIAL EU OPEN DATA / LIVE SEARCH</p>',
