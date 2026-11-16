@@ -54,7 +54,10 @@ def test_source_evidence_is_preserved_without_pretending_historical_is_new():
     map_module=(STATIC/"geographic-map.js").read_text(encoding="utf-8")
     assert "renderSearchArchive(pilot,esc,category)" in script
     assert "category==='ted'" in archive
-    assert "Ιστορική ανάρτηση" in archive
+    # BIO-36: historical individual posts remain in Supabase but never fill fresh search results.
+    assert "x.within_14d===true" in archive
+    assert "x.source_opened===true" in archive
+    assert "Δεν βρέθηκαν επαληθευμένα πρόσφατα αιτήματα" in archive
     assert "Αρχειακή έρευνα" in archive
     assert "Δεν παρουσιάζονται δεδομένα cache ως ζωντανά" in archive
     assert "https://" in archive and "noopener noreferrer" in archive
