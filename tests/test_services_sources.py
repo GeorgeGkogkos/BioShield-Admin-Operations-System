@@ -74,8 +74,11 @@ def test_social_crawl_is_not_authorized_by_third_party_scraper():
     assert data["automated_forum_crawls_enabled"] is False
     assert data["verified_new_private_customer_requests"] == 0
     assert set(x["id"] for x in data["platforms"]) == {
-        "ted", "reddit", "facebook", "instagram", "tiktok", "x", "independent_forums"
+        "ted", "google_alerts", "reddit", "facebook", "instagram", "tiktok", "x", "independent_forums"
     }
+    assert permitted_to_crawl(source_id="google_alerts", provider="firecrawl",
+                              provider_credits=1000, written_commercial_permission=True,
+                              robots_and_terms_verified=True) is False
     for platform in ("reddit", "facebook", "instagram", "tiktok", "x"):
         for provider in ("firecrawl", "tinyfish"):
             assert permitted_to_crawl(source_id=platform,provider=provider,

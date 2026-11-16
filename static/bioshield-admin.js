@@ -15,13 +15,42 @@ const sourceStateName={
   blocked_pending_written_commercial_approval:'Αναμονή γραπτής εμπορικής άδειας',
   blocked_pending_platform_permission:'Αναμονή άδειας πλατφόρμας',
   blocked_pending_eligible_api_access:'Αναμονή κατάλληλου API',
-  candidate_sources_found_policy_review_required:'Εντοπίστηκαν forums · αναμονή ελέγχου όρων'
+  candidate_sources_found_policy_review_required:'Εντοπίστηκαν forums · αναμονή ελέγχου όρων',
+  operator_feed_configuration_required:'Αναμονή RSS feed από τον διαχειριστή'
 };
 function sourceList(policy,esc){
   if(!policy?.platforms)return '<p>Οι καταστάσεις πηγών δεν είναι διαθέσιμες.</p>';
   return policy.platforms.map(p=>'<article class="bio-source-row"><div><strong>'+esc(p.name)+'</strong>'+
     '<p>'+esc(p.note)+'</p><a href="'+esc(p.url)+'" rel="noopener noreferrer" target="_blank">Πηγή / όροι</a></div>'+
     '<span>'+esc(sourceStateName[p.status]||p.status)+'</span></article>').join('');
+}
+function googleAlertsCard(report,esc){
+  const status=report?.status||'unavailable';
+  const states={
+    awaiting_feed_configuration:'Αναμονή σύνδεσης Google Alerts',
+    configuration_error:'Σφάλμα ρύθμισης feed',
+    unavailable:'Ο πάροχος δεν απαντά',
+    partial:'Μερική πρόσβαση στα feeds',
+    ok:'Επιτυχής ανάγνωση RSS/Atom'
+  };
+  const val=(n)=>Number.isInteger(n)?fmt(n):'—';
+  return '<article class="bio-card" data-source-provider="google_alerts">'+
+    '<h3>Google Alerts · αναζήτηση νέων ενδείξεων</h3>'+
+    '<p><strong>'+esc(states[status]||'Μη διαθέσιμη κατάσταση')+'</strong> · Feeds: '+
+    val(report?.configured_feeds)+' · Αναγνωσμένα: '+val(report?.fetched_feeds)+'</p>'+
+    '<p>Διαφορετικές αναφορές: <strong>'+val(report?.entries_unique_unverified)+
+    '</strong> · Ενδείξεις πιθανού αιτήματος (μη επαληθευμένες): <strong>'+
+    val(report?.potential_request_hints_unverified)+'</strong></p>'+
+    '<p>Ενδείξεις ανά κατηγορία (χωρίς επιβεβαίωση): Ιδιώτες <strong>'+
+    val(report?.buyer_hint_counts_unverified?.individual)+'</strong> · Δημόσιο <strong>'+
+    val(report?.buyer_hint_counts_unverified?.public_sector)+'</strong> · Επιχειρήσεις <strong>'+
+    val(report?.buyer_hint_counts_unverified?.business)+'</strong> · Αδιευκρίνιστα <strong>'+
+    val(report?.buyer_hint_counts_unverified?.unknown)+'</strong></p>'+
+    '<p class="bio-note">Καμία αναφορά Google Alerts δεν χαρακτηρίζεται επιβεβαιωμένος πελάτης χωρίς έλεγχο της πρωτογενούς δημοσίευσης. '+
+    'Δεν συλλέγονται στοιχεία επικοινωνίας ούτε ενεργοποιείται τηλεφωνικό κέντρο.</p>'+
+    '<p class="bio-note">Η σύνδεση απαιτεί RSS Feed στο google.com/alerts και ιδιωτική ρύθμιση στο Render. '+
+    'Πλήρης 14ήμερη σύγκριση πηγών μόνο μετά από πραγματική σύνδεση και καταγραφή αποτελεσμάτων.</p>'+
+    '</article>';
 }
 const dateTime = raw => {
   if (!raw) return '—';
@@ -184,13 +213,14 @@ function discoveries(state,esc,focused,heartbeat) {
 export async function renderBioShieldAdmin(page,{api,esc}) {
   page.innerHTML=brandedLoader();
   const selectedHome=safeHome();
-  const [pilotReply,tedReply,sourceReply,mapReply,researchReply,focusedReply,heartbeatReply,officialReply]=await Promise.allSettled([
+  const [pilotReply,tedReply,sourceReply,mapReply,researchReply,focusedReply,heartbeatReply,officialReply,alertsReply]=await Promise.allSettled([
     api('/bioshield/demo/evidence'), api('/bioshield/discovery/tenders'),
     api('/bioshield/discovery/sources'), api('/bioshield/discovery/map'),
     api('/bioshield/research/config'),
     api('/bioshield/discovery/focused?home='+encodeURIComponent(selectedHome)),
     api('/bioshield/discovery/heartbeat'),
-    api('/bioshield/discovery/official-sources')
+    api('/bioshield/discovery/official-sources'),
+    api('/bioshield/discovery/google-alerts')
   ]);
   let pilot=pilotReply.status==='fulfilled'?pilotReply.value:{demo_unavailable:true};
   let ted=tedReply.status==='fulfilled'?tedReply.value:{status:'unavailable'};
@@ -198,6 +228,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
   let focused=focusedReply.status==='fulfilled'?focusedReply.value:{status:'unavailable'};
   let heartbeat=heartbeatReply.status==='fulfilled'?heartbeatReply.value:{status:'unavailable'};
   const official=officialReply.status==='fulfilled'?officialReply.value:null;
+  const googleAlerts=alertsReply.status==='fulfilled'?alertsReply.value:null;
   const research=researchReply.status==='fulfilled'?researchReply.value:null;
   let coverage=mapReply.status==='fulfilled'?mapReply.value:{status:'source_unavailable'};
   let mapCleanup=null;
@@ -241,6 +272,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     '<h2>Συνδεδεμένες &amp; εκκρεμείς πηγές</h2>',
     '<p class="bio-muted">Έγινε έρευνα σε Facebook, Instagram, TikTok και ανεξάρτητα ελληνικά forums. Εμφανίζονται μόνο πραγματικές καταστάσεις πρόσβασης· καμία κοινωνική πλατφόρμα δεν θεωρείται ενεργός crawler.</p>',
     sourceList(policy,esc),
+    googleAlertsCard(googleAlerts,esc),
     officialSourceCards(official,esc),
     researchMarkup(research,esc),
     '<div class="bio-policy"><span>Firecrawl · τέσσερις λογαριασμοί (έλεγχος 16/11/2026)</span><strong>0 + 0 + 0 + 1.400 credits</strong></div>',

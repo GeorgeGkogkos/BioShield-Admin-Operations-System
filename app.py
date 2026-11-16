@@ -62,6 +62,7 @@ def overview():
                    "outreach_eligible":None,"completed_runs":None},
         "providers":[
             {"id":"ted","name":"EU TED","status":"enabled_public_notices"},
+            {"id":"google_alerts","name":"Google Alerts","status":"awaiting_feed_configuration"},
             {"id":"reddit","name":"Reddit","status":"commercial_approval_required"},
             {"id":"facebook","name":"Facebook","status":"permission_required"},
             {"id":"instagram","name":"Instagram","status":"permission_required"},
@@ -72,6 +73,13 @@ def overview():
         "contact_gate":"review_required",
         "message":"Η εταιρική Supabase δεν έχει συνδεθεί. Οι δημόσιες προκηρύξεις αναζητούνται από το επίσημο TED API. Οι ιδιωτικοί υποψήφιοι παραμένουν απενεργοποιημένοι."
     },headers={"Cache-Control":"no-store"})
+
+# BIO-20: Google Alerts never returns source excerpts, private feed URLs, or contact leads.
+from bioshield.google_alerts import alerts_status
+
+@app.get("/api/bioshield/discovery/google-alerts")
+def google_alerts_source_health():
+    return JSONResponse(alerts_status(), headers={"Cache-Control": "no-store"})
 
 @app.get("/api/bioshield/candidates")
 def candidates():
@@ -112,6 +120,7 @@ def source_provider_status():
             "status": "blocked_pending_permission",
             "description": "Commercial automated Reddit data access requires Reddit approval; RSS ended Nov 13 2026.",
         },
+        "google_alerts": {"status": alerts_status().get("status"), "confirmed_contactable_leads": 0},
         "private_lead_intake": "disabled",
         "outreach": "disabled",
         "synthetic_requests": 0,
