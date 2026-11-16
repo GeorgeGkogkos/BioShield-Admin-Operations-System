@@ -13,11 +13,11 @@ async def protect(request, call_next):
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-Robots-Tag"] = "noindex, nofollow"
-    response.headers["Referrer-Policy"] = "no-referrer"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
     response.headers["Content-Security-Policy"] = (
         "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self';"
-        " img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none';"
+        " img-src 'self' data: https://tile.openstreetmap.org; object-src 'none'; base-uri 'none'; frame-ancestors 'none';"
         " form-action 'none'"
     )
     if request.url.path.startswith(("/api/", "/admin/")):
