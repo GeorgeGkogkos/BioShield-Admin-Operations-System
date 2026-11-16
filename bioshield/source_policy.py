@@ -128,8 +128,8 @@ def permitted_to_crawl(*, source_id, provider, provider_credits,
         return False
     if source_id not in {item["id"] for item in SOURCES}:
         return False
-    if source_id == "ted":
-        return False  # TED uses an official API, not third-party scraping.
+    if source_id in {"ted", "google_alerts"}:
+        return False  # Official TED API or operator-owned Alerts feed; never scrape either.
     if not isinstance(provider_credits, int) or isinstance(provider_credits, bool) or provider_credits <= 0:
         return False
     if source_id in {"reddit", "facebook", "instagram", "tiktok", "x"}:
