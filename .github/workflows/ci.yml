@@ -17,6 +17,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - name: Validate checked-in browser modules BEFORE TypeScript build
+        run: |
+          node --input-type=module --check < static/typed/navigation.js
+          node --input-type=module --check < static/typed/research-view.js
+          node --input-type=module --check < static/bioshield-admin.js
       - name: Build and typecheck TypeScript page navigation and research UI
         run: |
           npm install --ignore-scripts --no-audit --no-fund
