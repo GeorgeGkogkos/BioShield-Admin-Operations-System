@@ -142,7 +142,7 @@ def test_actual_skeleton_modules_and_loading_lifecycle():
     assert "bio-skeleton-map" in js
     assert "bio-skeleton-loader" in js
     assert "pageSkeleton(window.location.pathname)" in app
-    assert "showLoadingOverlay(pilotPanel" not in app  # BIO-24: periodic reads keep the visible data
+    assert "showLoadingOverlay(pilotPanel" not in app  # BIO-25: periodic reads keep the visible data
     assert "showLoadingOverlay(mapPanel" in app
     assert "showLoadingOverlay(page.querySelector('#bio-ted-results')" in app
     assert "showLoadingOverlay(page.querySelector('#bio-remote-results')" in app
