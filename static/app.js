@@ -81,4 +81,11 @@ document.addEventListener('keydown',event=>{
 });
 window.addEventListener('popstate',()=>setMenuOpen(false));
 mobileViewport.addEventListener('change',()=>setMenuOpen(false));
-renderBioShieldAdmin(document.getElementById('app'),{api,esc});
+// Keep the application shell mounted: only the header's status changes.
+const appMount=document.getElementById('app');
+renderBioShieldAdmin(appMount,{api,esc}).catch(error=>{
+  console.error('BioShield initial data render failed:',error);
+  appMount.innerHTML='<div class="bio-initial-load-error" role="alert"><strong>Αδυναμία φόρτωσης δεδομένων</strong><p>Δεν ήταν δυνατή η αρχική εμφάνιση των δεδομένων. Δοκιμάστε ανανέωση της σελίδας.</p></div>';
+}).finally(()=>{
+  document.querySelector('.topbar')?.classList.remove('bio-is-loading');
+});

@@ -144,11 +144,6 @@ function entryCheckMarkup(state,ids,esc){
     '. Δεν σημαίνει ότι η προκήρυξη είναι ακόμη ενεργή ή ότι υπάρχει εγκεκριμένος πελάτης.';
 }
 
-function brandedLoader(){
-  return '<div class="bio-start-loader" role="status" aria-live="polite">'+
-    '<div class="bio-logo-pulse"><img src="/static/bioshield-company-logo.png" width="108" height="108" alt=""></div>'+
-    '<strong>BioShield</strong><span>Φόρτωση επισκόπησης και επίσημων πηγών…</span></div>';
-}
 const LOCATION_KEYS=new Set(LOCATION_CHOICES.map(x=>x.id));
 function safeHome(){
   let key='ilion';try{key=localStorage.getItem('bioshield-home-region')||'ilion'}catch{}

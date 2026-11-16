@@ -22,10 +22,10 @@ def test_deep_links_share_one_persistent_header_sidebar_and_app_mount():
         response = client.get(route)
         assert response.status_code == 200
         html = response.text
-        assert html.count('class="topbar"') == 1
+        assert html.count('class="topbar bio-is-loading"') == 1
         assert html.count('class="sidebar"') == 1
         assert html.count('id="app"') == 1
-        assert html.index('class="topbar"') < html.index('class="sidebar"') < html.index('id="app"')
+        assert html.index('class="topbar bio-is-loading"') < html.index('class="sidebar"') < html.index('id="app"')
 
 
 def test_shell_is_sticky_and_panel_animations_cannot_overlay_header():
