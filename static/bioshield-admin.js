@@ -1,3 +1,4 @@
+import {overviewSnapshot,overviewRecentNotices,discoveryFilterMenu,businessDiscoveryMarkup} from './discovery-layout.js';
 import {renderPublicPilot} from './real-pilot.js';
 import {reconcileEntryDiscovery} from './entry-discovery.js';
 import {coverageMarkup,setupCoverageMap} from './geographic-map.js';
@@ -105,33 +106,19 @@ function remoteOpportunityRows(items,esc,newIds=new Set()){
     ).join('')+'</tbody></table></div>';
 }
 function remoteOpportunities(segmented,esc,newIds=new Set()){
-  if(segmented?.status!=='ok'){
-    return '<div role="status" class="bio-note">Οι μακρινές προκηρύξεις δεν μπορούν να επαληθευτούν τώρα. '+
-      'Δεν προβάλλονται παλιές ή ανεπιβεβαίωτες ευκαιρίες ως ενεργές.</div>';
-  }
+  if(segmented?.status!=='ok')return '<div role="status" class="bio-note">Οι μακρινές επίσημες συμβάσεις δεν μπορούν να επαληθευτούν τώρα.</div>';
   const publicItems=segmented.remote_public||[];
-  const businessItems=segmented.remote_business||[];
   const counts=segmented.counts||{};
   return '<div class="bio-remote-container">'+
-    '<h3>Ξεχωριστή λίστα μακρινών έργων — Δημόσιο και επιχειρήσεις</h3>'+
-    '<p class="bio-note">Εμφανίζονται μακρινές επίσημες προκηρύξεις Δημοσίου ανεξαρτήτως ποσού και '+
-    'επαληθευμένα αιτήματα επιχειρήσεων, εφόσον υπάρχουν εγκεκριμένες πηγές. '+
-    '<strong>Δεν προστίθενται μακρινά αιτήματα ιδιωτών.</strong> '+
-    'Οι ημερομηνίες, η περιοχή εκτέλεσης και η δυνατότητα συμμετοχής απαιτούν έλεγχο.</p>'+
-    '<div class="bio-remote-split">'+
-    '<section class="bio-remote-panel" aria-labelledby="bio-remote-public-title"><h4 id="bio-remote-public-title">Δημόσιες προκηρύξεις εκτός περιοχής</h4>'+
-    '<span class="bio-remote-count"><strong>'+esc(publicItems.length)+'</strong> τεκμηριωμένες δημοσιεύσεις</span>'+
-    remoteOpportunityRows(publicItems,esc,newIds)+'</section>'+
-    '<section class="bio-remote-panel" aria-labelledby="bio-remote-business-title"><h4 id="bio-remote-business-title">Επιχειρηματικά έργα εκτός περιοχής</h4>'+
-    '<span class="bio-remote-count"><strong>'+esc(businessItems.length)+'</strong> πρωτογενώς επαληθευμένες αναφορές</span>'+
-    remoteOpportunityRows(businessItems,esc,newIds)+
-    '<p class="bio-remote-unknown">Δεν υποθέτουμε αιτήματα ξενοδοχείων ή εταιρειών από γενικές διαφημίσεις. '+
-    'Ο τρέχων ζωντανός αυτοματοποιημένος πάροχος είναι το TED, το οποίο δημοσιεύει δημόσιες συμβάσεις.</p>'+
-    '</section></div>'+
-    '<p class="bio-remote-unknown">Προς έλεγχο: '+esc(counts.needs_location_review||0)+
-    ' χωρίς επαληθευμένη περιοχή εκτέλεσης, '+esc(counts.needs_audience_review||0)+
-    ' με μη επαληθευμένη κατηγορία. Αποκλείστηκαν '+esc(counts.excluded_remote_individual||0)+
-    ' μακρινά αιτήματα ιδιωτών.</p></div>';
+    '<h3>Δημόσιες συμβάσεις εκτός βασικής περιοχής</h3>'+
+    '<p class="bio-note">Μακρινές επίσημες προκηρύξεις Δημοσίου ανεξαρτήτως ποσού. '+
+    'Η περιοχή εκτέλεσης και η δυνατότητα συμμετοχής απαιτούν έλεγχο της πρωτογενούς διακήρυξης.</p>'+
+    '<span class="bio-remote-count"><strong>'+esc(publicItems.length)+
+    '</strong> τεκμηριωμένες δημόσιες δημοσιεύσεις</span>'+
+    remoteOpportunityRows(publicItems,esc,newIds)+
+    '<p class="bio-remote-unknown">Προς επαλήθευση: '+esc(counts.needs_location_review||0)+
+    ' χωρίς περιοχή εκτέλεσης, '+esc(counts.needs_audience_review||0)+
+    ' με άγνωστη κατηγορία. Οι επιχειρηματικές εργασίες ανήκουν στο φίλτρο «Επιχειρήσεις».</p></div>';
 }
 
 function entryCheckMarkup(state,ids,esc){
@@ -249,7 +236,6 @@ function discoveries(state,esc,focused,heartbeat,segmented) {
     '<h2>Αυτόματη ανακάλυψη — δημόσια έργα</h2>',
     '<p class="bio-muted">Πραγματική αναζήτηση δημοσίων συμβάσεων για απεντομώσεις, μυοκτονίες, απολυμάνσεις, <strong>υδραυλικά</strong> και <strong>αποφράξεις</strong> βάσει επίσημων CPV. Δεν τεκμηριώνει από μόνη της ότι ένας διαγωνισμός είναι ανοιχτός.</p></div>',
     '<span id="bio-ted-state" class="bio-test-badge">',state?.status==='ok'?'API TED · ΑΝΑΓΝΩΣΗ':'TED · ΜΗ ΔΙΑΘΕΣΙΜΟ','</span></div>',
-    '<div id="bio-live-status-discovery">',automationStatus(heartbeat,state,esc),'</div>',
     '<div class="bio-demo-connection"><div><strong>',state?.status==='ok'?'Τελευταία επιτυχής αναζήτηση':'Αδυναμία επαλήθευσης TED',
     '</strong><p id="bio-ted-substatus">Ώρα Αθήνας: ',dateTime(state?.searched_at_utc||state?.checked_at_utc),
     ' · ',state?.status==='ok'?'Επιστράφηκαν '+fmt(state.count)+' πραγματικές προκηρύξεις από '+fmt(state.raw_count)+' εγγραφές απάντησης.':'Δεν χρησιμοποιούμε εικονικά αποτελέσματα.', '</p></div>',
@@ -258,9 +244,6 @@ function discoveries(state,esc,focused,heartbeat,segmented) {
     '<div class="bio-metrics bio-lab-metrics">',
     '<article class="bio-metric"><span>Ευρήματα TED</span><strong id="bio-ted-total">'+fmt(state?.status==='ok'?state.count:0)+'</strong>'+
     '<small>Έλεγχος αρχικής διακήρυξης απαιτείται</small></article>',
-    countCard('Επιβεβαιωμένοι ιδιώτες',0,'Δεν συλλέγονται προσωπικά στοιχεία'),
-    countCard('Επιβεβαιωμένες επιχειρήσεις',0,'Δεν δημιουργούνται εικονικά αιτήματα'),
-    countCard('Επιτρεπόμενες επαφές',0,'Επικοινωνία απενεργοποιημένη'),
     '</div>',
     '<div class="bio-lab-filter bio-service-filter"><label for="bio-ted-service">Φίλτρο υπηρεσίας</label>'+
     '<select id="bio-ted-service" aria-label="Φίλτρο υπηρεσίας">'+
@@ -268,7 +251,6 @@ function discoveries(state,esc,focused,heartbeat,segmented) {
     '<option value="pest_control">Απεντόμωση</option><option value="rodent_control">Μυοκτονία</option>'+
     '<option value="disinfection">Απολύμανση</option><option value="plumbing">Υδραυλικός</option>'+
     '<option value="drain_unblocking">Αποφράξεις</option></select>'+
-    '<label for="bio-ted-term">Όρος</label><input id="bio-ted-term" type="search" placeholder="Προκήρυξη, υπηρεσία, φορέας…">',
     '<span id="bio-ted-count"></span></div>',
     locationControls(esc),
     '<div class="bio-focus-title"><h3>Επιπλέον αναζήτηση κοντά στη βάση και στην προσωρινή τοποθεσία</h3>',
@@ -278,7 +260,6 @@ function discoveries(state,esc,focused,heartbeat,segmented) {
     '<div id="bio-ted-results">',tenderRows(state,esc,focused?.policy),'</div>',
     '<div id="bio-remote-results">',remoteOpportunities(segmented,esc),'</div>',
     '<p class="bio-note">Η ανακάλυψη ενεργοποιείται αυτόματα με το άνοιγμα της σελίδας (έως 15 λεπτά cache ανά instance) και η προγραμματισμένη αναζήτηση GitHub Actions εκτελείται κάθε ώρα, στο :17 (με πιθανές καθυστερήσεις scheduler). Εάν ο πάροχος δεν απαντά, η κατάσταση φαίνεται ως μη διαθέσιμη.</p>',
-    '<p class="bio-note"><strong>Facebook, Instagram, TikTok, Reddit:</strong> η εμπορική αυτοματοποιημένη συλλογή απαιτεί δικαιώματα πλατφόρμας. Οι ανεξάρτητες κοινότητες χρειάζονται έλεγχο robots και όρων πριν από οποιοδήποτε crawl. Οι συζητήσεις δεν αποτελούν επιβεβαιωμένους πελάτες.</p>',
   ].join('');
 }
 
@@ -321,30 +302,8 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
   page.innerHTML=[
     '<div class="bio-page">',
     '<section data-bio-panel="overview">',
-    '<div class="bio-home-card">',
-    '<div class="bio-home-topline"><span class="bio-home-kicker">BIOSHIELD / DISCOVERY</span>',
-    '<span id="bio-home-source-indicator">',homeSourceIndicator(ted),'</span></div>',
-    '<div class="bio-home-intro"><h1>Ανακάλυψη ευκαιριών</h1>',
-    '<p>Αναζήτησε πραγματικές ευκαιρίες από δημόσια, τεκμηριωμένα δεδομένα.</p></div>',
-    '<form id="bio-home-search-form" role="search"><label for="bio-home-search" class="bio-visually-hidden">Αναζήτηση προκηρύξεων TED</label>',
-    '<div class="bio-home-search-box">',
-    '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="7"/><path d="m16 16 5 5"/></svg>',
-    '<input id="bio-home-search" type="search" placeholder="Αναζήτηση ευκαιριών…" autocomplete="off" aria-describedby="bio-home-search-context">',
-    '<button type="submit" aria-label="Αναζήτηση στις δημόσιες προκηρύξεις"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></button>',
-    '</div><span class="bio-visually-hidden" id="bio-home-search-context">Η αναζήτηση αφορά τις επιβεβαιωμένες δημοσιεύσεις της επίσημης υπηρεσίας TED.</span></form>',
-    '<nav class="bio-home-categories" aria-label="Κατηγορίες ευκαιριών">',
-    '<a class="bio-home-category" href="/admin/operations/evidence" data-bio-tab="pilot" data-bio-home-segment="individual">',
-    '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7.5" r="3.2"/><path d="M5 21v-2.4a7 7 0 0 1 14 0V21"/></svg><span>Ιδιώτες</span></a>',
-    '<a class="bio-home-category" href="/admin/operations/discovery" data-bio-tab="discovery" data-bio-home-public="true">',
-    '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5h18M5 9.5v9M9 9.5v9M15 9.5v9M19 9.5v9M3 19h18M12 3l9 5H3l9-5Z"/></svg><span>Δημόσια έργα</span></a>',
-    '<a class="bio-home-category" href="/admin/operations/evidence" data-bio-tab="pilot" data-bio-home-segment="business">',
-    '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V4h12v17M15 10h6v11M7 8h4M7 12h4M7 16h4M2 21h20"/></svg><span>Επιχειρήσεις</span></a>',
-    '</nav>',
-    '<div class="bio-home-bottom"><div class="bio-home-provider">',
-    '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 4 16 4 16 0V5M4 12c0 4 16 4 16 0"/></svg>',
-    '<span id="bio-home-ted-summary" role="status">',esc(homeTedSummary(ted,entryCheck,newSinceOpen)),'</span></div>',
-    '<a href="/admin/operations/status" data-bio-tab="status">Κατάσταση πηγών <span aria-hidden="true">›</span></a></div>',
-    '</div></section>',
+    overviewSnapshot({ted,entry:entryCheck,newIds:newSinceOpen,pilot,esc,fmt,
+      summary:homeTedSummary(ted,entryCheck,newSinceOpen)}),'</section>',
     '<section data-bio-panel="status" hidden>',
     '<header class="bio-heading"><div><p class="eyebrow">BIOSHIELD / REAL EVIDENCE</p>',
     '<h1>Κατάσταση &amp; διαφάνεια</h1>',
@@ -367,8 +326,17 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     '<button class="bio-open-lab" type="button" data-bio-tab="pilot">Προβολή πηγών</button></article>',
     '</div><p class="bio-status-source-link"><a href="/admin/operations/sources" data-bio-tab="sources">Αναλυτικές πηγές, δικαιώματα πρόσβασης &amp; Google Alerts ›</a></p></section>',
     '<section data-bio-panel="discovery" hidden>',
-    '<div class="bio-entry-check" id="bio-entry-discovery" role="status">',entryCheckMarkup(entryCheck,newSinceOpen,esc),'</div>',
-    discoveries(ted,esc,focused,heartbeat,segmented),'</section>',
+    discoveryFilterMenu({ted,entry:entryCheck,newIds:newSinceOpen,esc,
+      indicator:homeSourceIndicator(ted),summary:homeTedSummary(ted,entryCheck,newSinceOpen)}),
+    '<div id="bio-discovery-public-results">',
+    discoveries(ted,esc,focused,heartbeat,segmented),
+    '<p id="bio-discovery-no-matches" role="status" class="bio-note" hidden>Δεν υπάρχουν αποτελέσματα με αυτά τα φίλτρα στις φορτωμένες συμβάσεις TED.</p></div>',
+    '<div id="bio-discovery-private-results" class="bio-discovery-private-results" hidden>',
+    '<h2 id="bio-discovery-private-heading">Ανακαλύψεις</h2>',
+    '<p id="bio-discovery-private-description" class="bio-note"></p>',
+    '<div id="bio-discovery-business-results"></div>',
+    '<a href="/admin/operations/evidence" data-bio-tab="pilot" id="bio-discovery-archive" data-bio-discovery-archive="individual">Αποθηκευμένα δημόσια τεκμήρια ›</a></div>',
+    '</section>',
     '<section data-bio-panel="pilot" hidden>',renderPublicPilot(pilot,esc),'</section>',
     '<section data-bio-panel="map" hidden>',coverageMarkup(coverage,esc),'</section>',
     '<section data-bio-panel="sources" hidden>',
@@ -483,6 +451,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     if(business&&updatedBusiness&&business.innerHTML!==updatedBusiness.innerHTML){
       business.innerHTML=updatedBusiness.innerHTML;
     }
+    updateLiveText(page.querySelector('#bio-overview-demo-count'),fmt(next.public_sources_reviewed));
     updateLiveText(page.querySelector('#bio-sources-overview'),fmt(next.public_sources_reviewed));
     const counts=next.segment_counts;
     const summary=page.querySelectorAll('#bio-overview-segments strong');
@@ -526,6 +495,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
       if(currentButton){currentButton.disabled=false;currentButton.removeAttribute('aria-busy');}
     }
   }
+  let discoveryCategory='public_sector';
   function filterTED(){
     const host=page.querySelector('[data-bio-panel="discovery"]');
     const selection=host?.querySelector('#bio-ted-service')?.value||'all';
@@ -539,6 +509,8 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     });
     const label=host?.querySelector('#bio-ted-count');
     if(label)label.textContent=fmt(count)+' εμφανιζόμενες τεκμηριωμένες προκηρύξεις';
+    const noMatches=host?.querySelector('#bio-discovery-no-matches');
+    if(noMatches)noMatches.hidden=!(discoveryCategory==='public_sector' && count===0 && ted?.status==='ok');
   }
   page.addEventListener('change',event=>{
     if(event.target.id==='bio-ted-service')filterTED();
@@ -565,10 +537,20 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     if(!page.isConnected)return;
     const national=page.querySelector('#bio-ted-results');
     if(national)national.innerHTML=tenderRows(ted,esc,focused?.policy,newSinceOpen);
-    for(const id of ['bio-entry-status','bio-entry-discovery']){
+    for(const id of ['bio-entry-status']){
       const el=page.querySelector('#'+id);
       if(el)el.innerHTML=entryCheckMarkup(entryCheck,newSinceOpen,esc);
     }
+    const overviewTed=page.querySelector('#bio-overview-ted-count');
+    if(overviewTed)overviewTed.textContent=ted?.status==='ok'?fmt(ted.count):'—';
+    const overviewNew=page.querySelector('#bio-overview-new-count');
+    if(overviewNew)overviewNew.textContent=entryCheck?.status==='compared'?fmt(newSinceOpen.size):'—';
+    const overviewRecent=page.querySelector('#bio-overview-recent-list');
+    if(overviewRecent)overviewRecent.innerHTML=overviewRecentNotices(ted,esc);
+    const overviewSummary=page.querySelector('#bio-overview-check-summary');
+    if(overviewSummary)overviewSummary.textContent=homeTedSummary(ted,entryCheck,newSinceOpen);
+    const businessContainer=page.querySelector('#bio-discovery-business-results');
+    if(businessContainer)businessContainer.innerHTML=businessDiscoveryMarkup({segmented,esc,newIds:newSinceOpen,renderRows:remoteOpportunityRows});
     const homeSource=page.querySelector('#bio-home-source-indicator');
     if(homeSource)homeSource.innerHTML=homeSourceIndicator(ted);
     const homeSummary=page.querySelector('#bio-home-ted-summary');
@@ -579,7 +561,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     if(regional)regional.innerHTML=focusResults(focused,esc);
     const remote=page.querySelector('#bio-remote-results');
     if(remote)remote.innerHTML=remoteOpportunities(segmented,esc,newSinceOpen);
-    for(const id of ['bio-live-status-status','bio-live-status-discovery']){
+    for(const id of ['bio-live-status-status']){
       const target=page.querySelector('#'+id);
       if(target)target.innerHTML=automationStatus(heartbeat,ted,esc);
     }
@@ -629,8 +611,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     const releases=[
       showLoadingOverlay(page.querySelector('#bio-ted-results'),action+' αναζήτηση κοντινών προκηρύξεων…','table'),
       showLoadingOverlay(page.querySelector('#bio-focus-results'),action+' γεωγραφική αναζήτηση…','table'),
-      showLoadingOverlay(page.querySelector('#bio-remote-results'),action+' έλεγχος μακρινών δημοσίων και B2B…','table'),
-      showLoadingOverlay(page.querySelector('#bio-live-status-discovery'),'Επιβεβαίωση ώρας και κατάστασης έρευνας…','compact')
+      showLoadingOverlay(page.querySelector('#bio-remote-results'),action+' έλεγχος μακρινών δημοσίων και B2B…','table')
     ];
     let done=false;
     try{
@@ -686,30 +667,60 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
   async function refreshHeartbeat(){
     const endOver=showLoadingOverlay(page.querySelector('#bio-live-status-status'),
       'Έλεγχος πραγματικής τελευταίας ωριαίας εκτέλεσης…','compact');
-    const endDiscovery=showLoadingOverlay(page.querySelector('#bio-live-status-discovery'),
-      'Ενημέρωση επαληθευμένου χρόνου εκτέλεσης…','compact');
     try{heartbeat=await api('/bioshield/discovery/heartbeat');}
     catch{heartbeat={status:'unavailable'};}
     if(page.isConnected)updateDiscoveryUI();
-    endOver();endDiscovery();
+    endOver();
   }
-  page.querySelector('#bio-home-search-form').addEventListener('submit',event=>{
-    event.preventDefault();
-    const term=page.querySelector('#bio-home-search').value.trim();
-    const discoverySearch=discoveryPanel.querySelector('#bio-ted-term');
-    if(discoverySearch){discoverySearch.value=term;filterTED();}
-    page.querySelector('[data-bio-home-public]')?.click();
+  // The menu belongs to New discoveries, not the landing overview.
+  page.querySelector('#bio-discovery-search-form').addEventListener('submit',event=>{
+    event.preventDefault();filterTED();
   });
+  function setDiscoveryCategory(category){
+    if(!['individual','public_sector','business'].includes(category))return;
+    discoveryCategory=category;
+    discoveryPanel.querySelectorAll('[data-bio-discovery-category]').forEach(button=>{
+      button.setAttribute('aria-pressed',String(button.dataset.bioDiscoveryCategory===category));
+    });
+    const publicPanel=page.querySelector('#bio-discovery-public-results');
+    const privatePanel=page.querySelector('#bio-discovery-private-results');
+    const publicOnly=category==='public_sector';
+    publicPanel.hidden=!publicOnly;
+    privatePanel.hidden=publicOnly;
+    const input=page.querySelector('#bio-ted-term');
+    const submit=page.querySelector('#bio-discovery-search-form button[type="submit"]');
+    if(input){input.disabled=!publicOnly;input.placeholder=publicOnly?'Σύμβαση, υπηρεσία, φορέας, αριθμός TED…':'Δεν υπάρχει ενεργή αναζήτηση αυτής της κατηγορίας';}
+    if(submit)submit.disabled=!publicOnly;
+    if(!publicOnly){
+      const heading=page.querySelector('#bio-discovery-private-heading');
+      const description=page.querySelector('#bio-discovery-private-description');
+      const body=page.querySelector('#bio-discovery-business-results');
+      const archive=page.querySelector('#bio-discovery-archive');
+      if(heading)heading.textContent=(category==='individual'?'Ιδιώτες':'Επιχειρήσεις')+' — νέες ανακαλύψεις';
+      if(description)description.textContent=category==='individual'?
+        'Δεν έχει συνδεθεί εγκεκριμένη ενεργή πηγή νέων ιδιωτικών αιτημάτων. Ιστορικές δημόσιες συζητήσεις δεν αποτελούν νέους πελάτες.':
+        'Οι δημόσιες συμβάσεις TED βρίσκονται μόνο στα «Δημόσια έργα». Εδώ εμφανίζονται αποκλειστικά τεκμηριωμένα επιχειρηματικά αιτήματα, εάν προκύψουν.';
+      if(body){
+        body.hidden=category!=='business';
+        if(category==='business')body.innerHTML=businessDiscoveryMarkup({segmented,esc,newIds:newSinceOpen,renderRows:remoteOpportunityRows});
+      }
+      if(archive)archive.dataset.bioDiscoveryArchive=category;
+    }
+    filterTED();
+  }
   page.addEventListener('click',event=>{
-    const category=event.target.closest('[data-bio-home-segment]');
-    if(category){
+    const selected=event.target.closest('[data-bio-discovery-category]');
+    if(selected)setDiscoveryCategory(selected.dataset.bioDiscoveryCategory);
+    const archive=event.target.closest('[data-bio-discovery-archive]');
+    if(archive){
       const filter=pilotPanel.querySelector('#bio-pilot-type');
-      if(filter){filter.value=category.dataset.bioHomeSegment;filterPilot();}
+      if(filter){filter.value=archive.dataset.bioDiscoveryArchive;filterPilot();}
     }
     if(event.target.closest('#bio-demo-refresh'))void refreshPilot();
     if(event.target.closest('#bio-ted-refresh'))void refreshTED(true);
     if(event.target.closest('#bio-map-refresh'))void refreshCoverage();
   });
+  setDiscoveryCategory('public_sector');
   filterPilot();
   filterTED();
   const refreshTimer=setInterval(()=>{
