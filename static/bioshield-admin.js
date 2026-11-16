@@ -509,6 +509,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
       if(currentButton){currentButton.disabled=false;currentButton.removeAttribute('aria-busy');}
     }
   }
+  let discoveryCategory='public_sector';
   function filterTED(){
     const host=page.querySelector('[data-bio-panel="discovery"]');
     const selection=host?.querySelector('#bio-ted-service')?.value||'all';
@@ -522,6 +523,8 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     });
     const label=host?.querySelector('#bio-ted-count');
     if(label)label.textContent=fmt(count)+' εμφανιζόμενες τεκμηριωμένες προκηρύξεις';
+    const noMatches=host?.querySelector('#bio-discovery-no-matches');
+    if(noMatches)noMatches.hidden=!(discoveryCategory==='public_sector' && count===0 && ted?.status==='ok');
   }
   page.addEventListener('change',event=>{
     if(event.target.id==='bio-ted-service')filterTED();
