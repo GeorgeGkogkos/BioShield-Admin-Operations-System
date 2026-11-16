@@ -143,3 +143,39 @@
 .bio-map-selected>button{float:right;border:none;background:transparent;font-size:25px;color:#355f63;cursor:pointer}
 .bio-map-zoom{position:absolute;top:13px;right:13px;display:flex;flex-direction:column;gap:3px;z-index:2}
 .bio-map-zoom button{width:35px;height:35px;border:1px solid #9fb9b8;background:#fff;border-radius:7px;font-size:23px;color:#285c61;cursor:pointer}
+
+/* BIO-18 — Actual OSM street/topographic basemap. No drawn pseudo-country. */
+.bio-map-canvas{
+  height:540px;min-height:360px;position:relative;
+  background:#e8edf1;border:1px solid var(--line);
+  border-radius:16px;overflow:hidden;z-index:0;
+}
+.bio-map-canvas.leaflet-container{font-family:inherit;font-size:14px}
+.bio-map-canvas .leaflet-control-zoom{border:1px solid #b9cfcb;box-shadow:0 2px 8px rgba(17,51,48,.14);overflow:hidden;border-radius:9px}
+.bio-map-canvas .leaflet-control-zoom a{width:37px;height:37px;line-height:37px;color:#124d48;background:#fff}
+.bio-map-canvas .leaflet-control-attribution{background:rgba(255,255,255,.93);padding:3px 7px;font-size:11px;color:#37545a}
+.bio-map-canvas .leaflet-popup-content{margin:12px 14px;font-family:inherit;line-height:1.48}
+.bio-map-popup strong{display:block;font-size:15px;color:#123a3b;margin:0 0 5px}
+.bio-map-popup p{margin:5px 0;color:#374e54}
+.bio-map-popup .bio-map-popup-warning{font-size:12px;color:#725029;background:#fff6e5;border:1px solid #f1deb7;border-radius:8px;padding:6px 8px}
+.bio-map-popup a{font-weight:700;display:inline-block;margin-top:7px}
+.bio-map-tiles-error{position:absolute;bottom:29px;left:12px;right:12px;z-index:700;
+  max-width:560px;padding:11px 14px;border-radius:10px;
+  background:rgba(255,250,239,.97);color:#5d4a30;border:1px solid #e9cc91;
+  font-size:13px;box-shadow:0 4px 14px rgba(30,45,40,.10)}
+.bio-map-tiles-error[hidden]{display:none}
+.bio-map-error{max-width:460px;margin:50px auto 10px;line-height:1.5;color:#435d60;text-align:center}
+.bio-map-canvas>.bio-map-error+a{display:block;text-align:center;margin:0 auto}
+.bio-map-legend{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:12px 0 4px;font-size:12px;color:var(--muted-strong)}
+.bio-map-legend span{display:inline-flex;align-items:center;gap:6px}
+.bio-map-legend i{display:inline-block;width:11px;height:11px;background:#19836f;border-radius:50%}
+.bio-map-legend .bio-issuer-dot{background:rgba(212,74,81,.45);border:2px dashed #cf4150;width:13px;height:13px}
+.bio-service-filter{gap:8px 12px;align-items:center;max-width:100%;overflow:visible}
+.bio-service-filter select{max-width:min(290px,100%);min-width:0}
+.bio-service-filter label{white-space:nowrap}
+.bio-coverage-layout{grid-template-columns:minmax(0,1.7fr) minmax(260px,.7fr);align-items:start}
+@media(max-width:900px){.bio-coverage-layout{grid-template-columns:1fr}.bio-map-canvas{height:450px}}
+@media(max-width:560px){.bio-map-canvas{height:350px;min-height:350px}
+.bio-service-filter{display:grid;grid-template-columns:90px 1fr;gap:7px}
+.bio-service-filter select{width:100%;max-width:100%}
+.bio-service-filter #bio-map-count{grid-column:1 / -1;padding-top:4px}}
