@@ -51,6 +51,9 @@ export function installNavigation(page: HTMLElement, onChange: RouteChange): () 
     // app chrome. Switch the real DOM panel instead; its in-flow CSS entrance
     // animation stays underneath the persistent header and sidebar.
     render();
+    // The newly selected page always begins at the top of the content area.
+    // Reset synchronously before the next paint; never scroll the persistent shell.
+    window.scrollTo(0,0);
   };
   const onClick=(event: MouseEvent): void=>{
     if(event.defaultPrevented || event.button!==0 || event.metaKey || event.ctrlKey ||
