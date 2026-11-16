@@ -180,15 +180,22 @@ function discoveries(state,esc,focused,heartbeat) {
 }
 
 export async function renderBioShieldAdmin(page,{api,esc}) {
-  page.innerHTML='<p role="status">Φόρτωση πραγματικών ευρημάτων BioShield…</p>';
-  const [pilotReply,tedReply,sourceReply,mapReply,researchReply]=await Promise.allSettled([
+  page.innerHTML=brandedLoader();
+  const selectedHome=safeHome();
+  const [pilotReply,tedReply,sourceReply,mapReply,researchReply,focusedReply,heartbeatReply,officialReply]=await Promise.allSettled([
     api('/bioshield/demo/evidence'), api('/bioshield/discovery/tenders'),
     api('/bioshield/discovery/sources'), api('/bioshield/discovery/map'),
-    api('/bioshield/research/config')
+    api('/bioshield/research/config'),
+    api('/bioshield/discovery/focused?home='+encodeURIComponent(selectedHome)),
+    api('/bioshield/discovery/heartbeat'),
+    api('/bioshield/discovery/official-sources')
   ]);
   let pilot=pilotReply.status==='fulfilled'?pilotReply.value:{demo_unavailable:true};
   let ted=tedReply.status==='fulfilled'?tedReply.value:{status:'unavailable'};
   const policy=sourceReply.status==='fulfilled'?sourceReply.value:null;
+  let focused=focusedReply.status==='fulfilled'?focusedReply.value:{status:'unavailable'};
+  let heartbeat=heartbeatReply.status==='fulfilled'?heartbeatReply.value:{status:'unavailable'};
+  const official=officialReply.status==='fulfilled'?officialReply.value:null;
   const research=researchReply.status==='fulfilled'?researchReply.value:null;
   let coverage=mapReply.status==='fulfilled'?mapReply.value:{status:'source_unavailable'};
   let mapCleanup=null;
@@ -197,12 +204,6 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
   const seg=pilot.demo_supabase_connected?pilot.segment_counts:{individual:0,public_sector:0,business:0,needs_review:0};
   page.innerHTML=[
     '<div class="bio-page">',
-    '<header class="bio-heading"><div><p class="eyebrow">BIOSHIELD / REAL EVIDENCE</p>',
-    '<h1>Κέντρο ανακάλυψης &amp; αξιολόγησης</h1>',
-    '<p>Πραγματικά δημόσια τεκμήρια, ταξινομημένα σε ιδιώτες, έργα Δημοσίου και επιχειρήσεις. Χωρίς συνθετικά αιτήματα, προσωπικές επαφές ή αυτόματη επικοινωνία.</p></div>',
-    '<span class="bio-stage">Official discovery · Public evidence</span></header>',
-    '<div class="bio-alert"><strong>Μόνο τεκμηριωμένες πηγές</strong>',
-    '<p>Οι παλιές συζητήσεις δεν εμφανίζονται ως νέοι πελάτες. Οι προκηρύξεις είναι δημόσια δεδομένα, όχι εξακριβωμένες αναθέσεις. Η εταιρική Supabase και η διαβίβαση στο τηλεφωνικό κέντρο παραμένουν απομονωμένες.</p></div>',
     '<nav class="bio-tabs" aria-label="Πλοήγηση BioShield">',
     '<a href="/admin/operations/overview" data-bio-tab="overview" class="active" aria-current="page">Επισκόπηση</a>',
     '<a href="/admin/operations/discovery" data-bio-tab="discovery">Νέες ανακαλύψεις</a>',
@@ -211,6 +212,13 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     '<a href="/admin/operations/sources" data-bio-tab="sources">Πηγές &amp; έλεγχοι</a>',
     '</nav>',
     '<section data-bio-panel="overview">',
+    '<header class="bio-heading"><div><p class="eyebrow">BIOSHIELD / REAL EVIDENCE</p>',
+    '<h1>Κέντρο ανακάλυψης &amp; αξιολόγησης</h1>',
+    '<p>Πραγματικά δημόσια τεκμήρια, ταξινομημένα σε ιδιώτες, έργα Δημοσίου και επιχειρήσεις. Χωρίς συνθετικά αιτήματα, προσωπικές επαφές ή αυτόματη επικοινωνία.</p></div>',
+    '<span class="bio-stage">Official discovery · Public evidence</span></header>',
+    '<div class="bio-alert"><strong>Μόνο τεκμηριωμένες πηγές</strong>',
+    '<p>Οι παλιές συζητήσεις δεν εμφανίζονται ως νέοι πελάτες. Οι προκηρύξεις είναι δημόσια δεδομένα, όχι εξακριβωμένες αναθέσεις. Η εταιρική Supabase και η διαβίβαση στο τηλεφωνικό κέντρο παραμένουν απομονωμένες.</p></div>',
+    '<div id="bio-live-status-overview">',automationStatus(heartbeat,ted,esc),'</div>',
     '<div class="bio-metrics">',
     countCard('Δημόσιες πηγές στη demo βάση',pilot.demo_supabase_connected?pilot.public_sources_reviewed:0,'Αποθηκευμένα πραγματικά δημόσια τεκμήρια'),
     countCard('Νέες προκηρύξεις TED',ted.status==='ok'?ted.count:0,'Ζωντανή αναζήτηση επίσημου API'),
@@ -224,13 +232,14 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     '<p>Οι μετρήσεις αφορούν το αποθηκευμένο δημόσιο δείγμα, όχι επαληθευμένη ενεργή ζήτηση.</p>',
     '<button class="bio-open-lab" type="button" data-bio-tab="pilot">Προβολή πηγών</button></article>',
     '</div></section>',
-    '<section data-bio-panel="discovery" hidden>',discoveries(ted,esc),'</section>',
+    '<section data-bio-panel="discovery" hidden>',discoveries(ted,esc,focused,heartbeat),'</section>',
     '<section data-bio-panel="pilot" hidden>',renderPublicPilot(pilot,esc),'</section>',
     '<section data-bio-panel="map" hidden>',coverageMarkup(coverage,esc),'</section>',
     '<section data-bio-panel="sources" hidden>',
     '<h2>Συνδεδεμένες &amp; εκκρεμείς πηγές</h2>',
     '<p class="bio-muted">Έγινε έρευνα σε Facebook, Instagram, TikTok και ανεξάρτητα ελληνικά forums. Εμφανίζονται μόνο πραγματικές καταστάσεις πρόσβασης· καμία κοινωνική πλατφόρμα δεν θεωρείται ενεργός crawler.</p>',
     sourceList(policy,esc),
+    officialSourceCards(official,esc),
     researchMarkup(research,esc),
     '<div class="bio-policy"><span>Firecrawl · τέσσερις λογαριασμοί (έλεγχος 16/11/2026)</span><strong>0 + 0 + 0 + 1.400 credits</strong></div>',
     '<p class="bio-note">Ο τέταρτος λογαριασμός είναι συνδεδεμένος στο ChatGPT. Για server-side rotation απαιτείται ξεχωριστή σύνδεση API key στο Render, που δεν έχει γίνει.</p>',
@@ -240,7 +249,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     '<div class="bio-policy"><span>Στοιχεία επαφών &amp; τηλεφωνικό κέντρο</span><strong>Απενεργοποιημένα</strong></div>',
     '<p class="bio-note">Για να ενεργοποιηθεί διαχείριση πραγματικών ιδιωτικών υποψηφίων χρειάζονται admin authentication, επιτρεπόμενοι πάροχοι, έλεγχος νόμιμης βάσης, δικαιώματα και εξωτερική ολοκλήρωση CRM.</p></section>',
     '<footer class="bio-footer"><span>BioShield · Δημόσια τεκμήρια · Όχι συνθετικά δεδομένα</span>',
-    '<a target="_blank" rel="noopener noreferrer" href="https://linear.app/gkg/project/bioshield-admin-operations-system-79b033ffab9a">Εργασίες Linear</a></footer>',
+    '<a target="_blank" rel="noopener noreferrer" href="https://app.notion.com/p/41a3740d593381c6899edce2dbbecd15">Ανεξάρτητη τεκμηρίωση BioShield</a></footer>',
     '</div>',
   ].join('');
   const panels=()=>[...page.querySelectorAll('[data-bio-panel]')];
