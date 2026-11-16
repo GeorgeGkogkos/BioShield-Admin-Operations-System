@@ -547,7 +547,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     if(!page.isConnected)return;
     const national=page.querySelector('#bio-ted-results');
     if(national)national.innerHTML=tenderRows(ted,esc,focused?.policy,newSinceOpen);
-    for(const id of ['bio-entry-status','bio-entry-discovery']){
+    for(const id of ['bio-entry-status']){
       const el=page.querySelector('#'+id);
       if(el)el.innerHTML=entryCheckMarkup(entryCheck,newSinceOpen,esc);
     }
@@ -561,7 +561,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     if(regional)regional.innerHTML=focusResults(focused,esc);
     const remote=page.querySelector('#bio-remote-results');
     if(remote)remote.innerHTML=remoteOpportunities(segmented,esc,newSinceOpen);
-    for(const id of ['bio-live-status-status','bio-live-status-discovery']){
+    for(const id of ['bio-live-status-status']){
       const target=page.querySelector('#'+id);
       if(target)target.innerHTML=automationStatus(heartbeat,ted,esc);
     }
@@ -611,8 +611,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     const releases=[
       showLoadingOverlay(page.querySelector('#bio-ted-results'),action+' αναζήτηση κοντινών προκηρύξεων…','table'),
       showLoadingOverlay(page.querySelector('#bio-focus-results'),action+' γεωγραφική αναζήτηση…','table'),
-      showLoadingOverlay(page.querySelector('#bio-remote-results'),action+' έλεγχος μακρινών δημοσίων και B2B…','table'),
-      showLoadingOverlay(page.querySelector('#bio-live-status-discovery'),'Επιβεβαίωση ώρας και κατάστασης έρευνας…','compact')
+      showLoadingOverlay(page.querySelector('#bio-remote-results'),action+' έλεγχος μακρινών δημοσίων και B2B…','table')
     ];
     let done=false;
     try{
@@ -668,12 +667,10 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
   async function refreshHeartbeat(){
     const endOver=showLoadingOverlay(page.querySelector('#bio-live-status-status'),
       'Έλεγχος πραγματικής τελευταίας ωριαίας εκτέλεσης…','compact');
-    const endDiscovery=showLoadingOverlay(page.querySelector('#bio-live-status-discovery'),
-      'Ενημέρωση επαληθευμένου χρόνου εκτέλεσης…','compact');
     try{heartbeat=await api('/bioshield/discovery/heartbeat');}
     catch{heartbeat={status:'unavailable'};}
     if(page.isConnected)updateDiscoveryUI();
-    endOver();endDiscovery();
+    endOver();
   }
   page.querySelector('#bio-home-search-form').addEventListener('submit',event=>{
     event.preventDefault();
