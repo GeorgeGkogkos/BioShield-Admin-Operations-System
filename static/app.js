@@ -62,7 +62,8 @@ menuBackdrop.addEventListener('click',()=>{setMenuOpen(false);menuToggle.focus()
 menuSidebar.addEventListener('click',event=>{
   if(event.target instanceof Element && event.target.closest('[data-bio-tab]')){
     setMenuOpen(false,false);
-    document.getElementById('content').focus();
+    // Focus the new content for keyboard users without undoing the route scroll reset.
+    document.getElementById('content').focus({preventScroll:true});
   }
 });
 document.addEventListener('keydown',event=>{
