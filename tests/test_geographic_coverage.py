@@ -92,7 +92,8 @@ def test_hourly_action_schedule_and_map_assets():
     assert "cdn.jsdelivr.net/npm/leaflet" not in html
     assert "/static/vendor/leaflet.js" in html
     assert "/static/vendor/leaflet.css" in html
-    assert "Χάρτης / Κάλυψη" in ui
+    assert "Χάρτης / Κάλυψη" in html
+    assert 'data-bio-tab="map"' in html
     assert "discovery/map" in ui
     assert "export function setupCoverageMap" in js
     assert "lib.map(container" in js

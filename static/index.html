@@ -19,16 +19,25 @@
 <div class="site">
 <header class="topbar"><div class="topbar-inner">
 <a href="/admin/operations" class="brand"><img class="brand-logo" src="/static/bioshield-company-logo.png" alt="Λογότυπο BioShield" width="56" height="56"><span><strong>BioShield</strong><small>ADMIN OPERATIONS</small></span></a>
-<div class="tools"><span class="status">Real-source research</span><button type="button" id="theme-toggle">Θέμα</button><a href="https://dst-web.onrender.com" rel="noopener noreferrer">DST</a></div>
+<div class="tools"><button type="button" id="bio-mobile-menu-toggle" class="mobile-menu-toggle" aria-controls="bio-sidebar" aria-expanded="false" aria-label="Άνοιγμα πλοήγησης">☰ <span>Μενού</span></button><span class="status">Real-source research</span><button type="button" id="theme-toggle">Θέμα</button><a href="https://dst-web.onrender.com" rel="noopener noreferrer">DST</a></div>
 </div></header>
 <div class="layout">
-<aside class="sidebar" aria-label="Πλοήγηση">
-<p class="side-label">WORKSPACE</p><a class="nav-current" href="/admin/operations">Operations Dashboard</a>
+<aside class="sidebar" id="bio-sidebar" aria-label="Πλοήγηση">
+<p class="side-label">WORKSPACE</p>
+<div class="workspace-home">Operations Dashboard</div>
+<nav id="bio-shell-nav" class="side-pages" aria-label="Σελίδες BioShield">
+<a href="/admin/operations/overview" data-bio-tab="overview">Επισκόπηση</a>
+<a href="/admin/operations/discovery" data-bio-tab="discovery">Νέες ανακαλύψεις</a>
+<a href="/admin/operations/evidence" data-bio-tab="pilot">Αποθηκευμένα ευρήματα</a>
+<a href="/admin/operations/map" data-bio-tab="map">Χάρτης / Κάλυψη</a>
+<a href="/admin/operations/sources" data-bio-tab="sources">Πηγές &amp; έλεγχοι</a>
+</nav>
 <p class="side-label">PROJECT</p>
 <a href="https://linear.app/gkg/project/bioshield-admin-operations-system-79b033ffab9a" target="_blank" rel="noopener noreferrer">Linear Tasks</a>
 <a href="https://github.com/GeorgeGkogkos/BioShield-Admin-Operations-System" target="_blank" rel="noopener noreferrer">GitHub</a>
 <div class="side-info"><strong>Privacy first</strong><p>Μόνο δημόσια τεκμήρια. Ο επίσημος πάροχος TED αναζητά νέες προκηρύξεις· τα στοιχεία επαφών παραμένουν απενεργοποιημένα.</p></div>
 </aside>
+<button type="button" class="sidebar-backdrop" id="bio-sidebar-backdrop" aria-label="Κλείσιμο πλοήγησης"></button>
 <main id="content" tabindex="-1"><div id="app"><div class="bio-start-loader" role="status" aria-live="polite"><div class="bio-logo-pulse"><img src="/static/bioshield-company-logo.png" width="108" height="108" alt=""></div><strong>BioShield</strong><span>Φόρτωση επισκόπησης και επίσημων πηγών…</span></div></div></main>
 </div>
 <footer class="footer"><span>BioShield Admin Operations · DST workspace</span><span>Private CRM disconnected</span></footer>
