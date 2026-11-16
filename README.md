@@ -33,3 +33,8 @@ This repository is currently PUBLIC. Never commit Supabase secrets, Firecrawl/Ti
 - Render DST project assignment is still unverified because the connected service-creation tool has no project/environment argument. Track as Linear DST-271; use the Render Dashboard's Move control to group this service under the existing DST project without modifying dst-web.
 
 The page is a PUBLIC setup preview and MUST NOT contain any personal/contact data until proper admin authentication and the external business database are verified.
+
+
+## Performance lab (before external Supabase)
+
+BIO-08/BIO-09: a deterministic 30-case synthetic Greek corpus, conservative request classifier, URL dedupe and Firecrawl/TinyFish mock failover. No external network requests or PII. Test CPU-only throughput via `python -m bioshield.benchmark --iterations 10000 --check` (also GitHub Actions artifact). Details: [docs/PRE_SUPABASE_TESTING.md](docs/PRE_SUPABASE_TESTING.md). This is NOT real-world precision or provider/backend load testing.

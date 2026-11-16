@@ -15,3 +15,10 @@ jobs:
       - run: python -m pip install -r requirements-dev.txt
       - run: python -m compileall -q app.py
       - run: python -m pytest -q
+      - name: Synthetic qualification and CPU throughput (offline)
+        run: python -m bioshield.benchmark --iterations 10000 --output benchmark-results.json --check
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bioshield-synthetic-benchmark
+          path: benchmark-results.json
+          retention-days: 14
