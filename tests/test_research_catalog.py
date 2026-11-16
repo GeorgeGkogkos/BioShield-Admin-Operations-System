@@ -48,7 +48,7 @@ def test_excluded_marketplaces_not_sources_of_public_discussion_leads():
     for host in EXCLUDED_DOMAINS:
         assert exclude_url(f"https://www.{host}/job") is True
     assert exclude_url(SOURCE) is False
-    assert exclude_url("http://localhost/") is False or exclude_url("http://localhost/") is True
+    assert normalize("katsarides και απολίμανση") == "κατσαριδες και απολυμανση"
     assert triage(
         "Ψάχνω απεντόμωση στο Περιστέρι",
         "2026-11-15T12:00:00+00:00",
