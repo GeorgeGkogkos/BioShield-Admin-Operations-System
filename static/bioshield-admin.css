@@ -408,3 +408,8 @@
 .bio-remote-panel .bio-table{margin-top:12px}
 .bio-remote-unknown{color:var(--muted);font-size:.8rem;line-height:1.55}
 @media(max-width:760px){.bio-remote-split{grid-template-columns:1fr}}
+
+/* BIO-23: app-entry official-source freshness; these are not verified customers. */
+.bio-entry-check{background:var(--soft-surface);border:1px solid var(--line-strong);border-radius:12px;padding:14px 17px;line-height:1.55;font-size:.87rem;color:var(--muted-strong);margin:14px 0 18px}
+.bio-entry-check strong{color:var(--ink)}
+.bio-new-official{display:inline-block;margin-inline-start:8px;padding:2px 7px;border:1px solid var(--line-strong);border-radius:6px;background:var(--accent-soft);color:var(--ink);font-size:.69rem;font-weight:750;vertical-align:middle}

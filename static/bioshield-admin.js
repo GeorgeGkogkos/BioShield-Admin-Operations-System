@@ -1,4 +1,5 @@
 import {renderPublicPilot} from './real-pilot.js';
+import {reconcileEntryDiscovery} from './entry-discovery.js';
 import {coverageMarkup,setupCoverageMap} from './geographic-map.js';
 import {installNavigation} from './typed/navigation.js';
 import {researchMarkup,setupResearchPlaybook} from './typed/research-view.js';
@@ -61,9 +62,10 @@ const dateTime = raw => {
       day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(parsed);
 };
 function countCard(title,value,note){
-  return '<article class="bio-metric"><span>'+title+'</span><strong>'+fmt(value)+'</strong><small>'+note+'</small></article>';
+  const id=title==='Νέα από προηγούμενη επίσκεψη'?' id="bio-new-since-visit"':'';
+  return '<article class="bio-metric"><span>'+title+'</span><strong'+id+'>'+fmt(value)+'</strong><small>'+note+'</small></article>';
 }
-function tenderRows(state,esc,policy) {
+function tenderRows(state,esc,policy,newIds=new Set()) {
   if (state?.status !== 'ok') return '<p class="bio-note">Δεν υπάρχει διαθέσιμη επιβεβαιωμένη απάντηση από το επίσημο TED API. Δεν εμφανίζονται κατασκευασμένα ή παλιά αποτελέσματα ως νέα.</p>';
   const source=state.notices||[];
   const allowed=new Set(policy?.combined_nuts||['EL301','EL302','EL303','EL304','EL305','EL306','EL307','EL642','EL652']);
@@ -74,7 +76,9 @@ function tenderRows(state,esc,policy) {
   return '<div class="bio-scroll"><table class="bio-table bio-real-table"><thead><tr>'+
     '<th>Αριθμός TED</th><th>Ημ/νία δημοσίευσης</th><th>Υπηρεσία</th><th>Δημόσιος αγοραστής</th><th>Αντικείμενο</th><th>NUTS / αξία</th><th>Πρωτογενής πηγή</th>'+
     '</tr></thead><tbody>'+found.map(x=>
-      '<tr data-ted-row data-services="'+esc((x.service_codes||[]).join(','))+'" data-search="'+esc([x.title,x.buyer,x.notice_number].join(' ').toLocaleLowerCase('el-GR'))+'"><td><strong>'+esc(x.notice_number)+'</strong></td><td>'+esc(x.published_on)+'</td>'+
+      '<tr data-ted-row data-services="'+esc((x.service_codes||[]).join(','))+'" data-search="'+esc([x.title,x.buyer,x.notice_number].join(' ').toLocaleLowerCase('el-GR'))+'"><td><strong>'+esc(x.notice_number)+'</strong>'+
+      (newIds.has(x.id)?'<span class="bio-new-official">ΝΕΟ</span>':'')+
+      '</td><td>'+esc(x.published_on)+'</td>'+
       '<td>'+esc((x.service_codes||[]).map(k=>serviceLabels[k]||k).join(', '))+'</td>'+
       '<td>'+esc(x.buyer)+'</td><td>'+esc(x.title)+'</td><td>'+esc((x.place_of_performance_nuts||[]).join(', '))+
       (x.official_total_value_eur?' · '+esc(x.official_total_value_eur.toLocaleString('el-GR'))+' €':' · αξία μη επιβεβαιωμένη')+'</td>'+
@@ -84,7 +88,7 @@ function tenderRows(state,esc,policy) {
 }
 
 /** Separate faraway government and verified business requests. */
-function remoteOpportunityRows(items,esc){
+function remoteOpportunityRows(items,esc,newIds=new Set()){
   if(!items?.length)return '<p class="bio-note">Δεν υπάρχουν αυτή τη στιγμή επαληθευμένα μακρινά ευρήματα αυτής της κατηγορίας.</p>';
   return '<div class="bio-scroll"><table class="bio-table bio-real-table">'+
     '<thead><tr><th>Ημερομηνία</th><th>Τίτλος / εργασία</th><th>Αγοραστής</th>'+
@@ -92,14 +96,14 @@ function remoteOpportunityRows(items,esc){
     items.map(x=>
     '<tr data-remote-row data-services="'+esc((x.service_codes||[]).join(','))+
     '" data-search="'+esc([x.title,x.buyer,x.notice_number].join(' ').toLocaleLowerCase('el-GR'))+'">'+
-    '<td>'+esc(x.published_on||'—')+'</td>'+
+    '<td>'+esc(x.published_on||'—')+(newIds.has(x.id)?'<span class="bio-new-official">ΝΕΟ</span>':'')+'</td>'+
     '<td>'+esc(x.title||'Χωρίς τίτλο')+'</td>'+
     '<td>'+esc(x.buyer||'—')+'</td>'+
     '<td>'+esc((x.place_of_performance_nuts||[]).join(', '))+'</td>'+
     '<td><a href="'+esc(x.source_url)+'" target="_blank" rel="noopener noreferrer">Επίσημο τεκμήριο</a></td></tr>'
     ).join('')+'</tbody></table></div>';
 }
-function remoteOpportunities(segmented,esc){
+function remoteOpportunities(segmented,esc,newIds=new Set()){
   if(segmented?.status!=='ok'){
     return '<div role="status" class="bio-note">Οι μακρινές προκηρύξεις δεν μπορούν να επαληθευτούν τώρα. '+
       'Δεν προβάλλονται παλιές ή ανεπιβεβαίωτες ευκαιρίες ως ενεργές.</div>';
@@ -116,10 +120,10 @@ function remoteOpportunities(segmented,esc){
     '<div class="bio-remote-split">'+
     '<section class="bio-remote-panel" aria-labelledby="bio-remote-public-title"><h4 id="bio-remote-public-title">Δημόσιες προκηρύξεις εκτός περιοχής</h4>'+
     '<span class="bio-remote-count"><strong>'+esc(publicItems.length)+'</strong> τεκμηριωμένες δημοσιεύσεις</span>'+
-    remoteOpportunityRows(publicItems,esc)+'</section>'+
+    remoteOpportunityRows(publicItems,esc,newIds)+'</section>'+
     '<section class="bio-remote-panel" aria-labelledby="bio-remote-business-title"><h4 id="bio-remote-business-title">Επιχειρηματικά έργα εκτός περιοχής</h4>'+
     '<span class="bio-remote-count"><strong>'+esc(businessItems.length)+'</strong> πρωτογενώς επαληθευμένες αναφορές</span>'+
-    remoteOpportunityRows(businessItems,esc)+
+    remoteOpportunityRows(businessItems,esc,newIds)+
     '<p class="bio-remote-unknown">Δεν υποθέτουμε αιτήματα ξενοδοχείων ή εταιρειών από γενικές διαφημίσεις. '+
     'Ο τρέχων ζωντανός αυτοματοποιημένος πάροχος είναι το TED, το οποίο δημοσιεύει δημόσιες συμβάσεις.</p>'+
     '</section></div>'+
@@ -127,6 +131,16 @@ function remoteOpportunities(segmented,esc){
     ' χωρίς επαληθευμένη περιοχή εκτέλεσης, '+esc(counts.needs_audience_review||0)+
     ' με μη επαληθευμένη κατηγορία. Αποκλείστηκαν '+esc(counts.excluded_remote_individual||0)+
     ' μακρινά αιτήματα ιδιωτών.</p></div>';
+}
+
+function entryCheckMarkup(state,ids,esc){
+  if(state.status==='source_unavailable')return '<strong>Αυτόματος έλεγχος κατά το άνοιγμα:</strong> Η επίσημη πηγή TED δεν απάντησε. Δεν εμφανίζονται ανεπιβεβαίωτες εγγραφές ως νέες.';
+  if(state.status==='storage_unavailable')return '<strong>Η πηγή TED ελέγχθηκε</strong> · '+esc(dateTime(state.checkedAt))+' · Ο browser δεν επέτρεψε αποθήκευση ιστορικού· δεν μπορεί να προσδιοριστεί τι είναι νέο από την προηγούμενη επίσκεψη.';
+  if(state.status==='baseline')return '<strong>Ο αυτόματος έλεγχος ολοκληρώθηκε</strong> · '+esc(dateTime(state.checkedAt))+' · Πρώτη επιτυχής επίσκεψη: δημιουργήθηκε τοπική βάση σύγκρισης. Οι υπάρχουσες ανακοινώσεις δεν βαφτίζονται νέες.';
+  return '<strong>Αυτόματος έλεγχος επίσημων πηγών</strong> · '+esc(dateTime(state.checkedAt))+
+    ' · <strong>'+esc(ids.size)+' νέες ανακοινώσεις TED</strong> από την προηγούμενη επίσκεψη σε αυτόν τον browser'+
+    (state.previousCheck?' · προηγούμενος έλεγχος: '+esc(dateTime(state.previousCheck)):'')+
+    '. Δεν σημαίνει ότι η προκήρυξη είναι ακόμη ενεργή ή ότι υπάρχει εγκεκριμένος πελάτης.';
 }
 
 function brandedLoader(){
@@ -268,6 +282,15 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
   ]);
   let pilot=pilotReply.status==='fulfilled'?pilotReply.value:{demo_unavailable:true};
   let ted=tedReply.status==='fulfilled'?tedReply.value:{status:'unavailable'};
+  const newSinceOpen=new Set();
+  let entryCheck={status:'source_unavailable',newIds:[],checkedAt:null,previousCheck:null};
+  function recordOfficialEntryCheck(){
+    let store=null;
+    try{store=window.localStorage;}catch{/* Browser storage may be forbidden. */}
+    entryCheck=reconcileEntryDiscovery(ted,store);
+    for(const id of entryCheck.newIds)newSinceOpen.add(id);
+  }
+  recordOfficialEntryCheck();
   const policy=sourceReply.status==='fulfilled'?sourceReply.value:null;
   let focused=focusedReply.status==='fulfilled'?focusedReply.value:{status:'unavailable'};
   let segmented=segmentedReply.status==='fulfilled'?segmentedReply.value:{status:'unavailable'};
@@ -297,10 +320,11 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     '<div class="bio-alert"><strong>Μόνο τεκμηριωμένες πηγές</strong>',
     '<p>Οι παλιές συζητήσεις δεν εμφανίζονται ως νέοι πελάτες. Οι προκηρύξεις είναι δημόσια δεδομένα, όχι εξακριβωμένες αναθέσεις. Η εταιρική Supabase και η διαβίβαση στο τηλεφωνικό κέντρο παραμένουν απομονωμένες.</p></div>',
     '<div id="bio-live-status-overview">',automationStatus(heartbeat,ted,esc),'</div>',
+    '<div class="bio-entry-check" id="bio-entry-overview" role="status">',entryCheckMarkup(entryCheck,newSinceOpen,esc),'</div>',
     '<div class="bio-metrics">',
     countCard('Δημόσιες πηγές στη demo βάση',pilot.demo_supabase_connected?pilot.public_sources_reviewed:0,'Αποθηκευμένα πραγματικά δημόσια τεκμήρια'),
     countCard('Νέες προκηρύξεις TED',ted.status==='ok'?ted.count:0,'Ζωντανή αναζήτηση επίσημου API'),
-    countCard('Πρόσφατες συζητήσεις 30ημέρου',pilot.reddit_freshness?.recent_posts_30d||0,'Όχι επιβεβαιωμένα αιτήματα εργασίας'),
+    countCard('Νέα από προηγούμενη επίσκεψη',newSinceOpen.size,'Επίσημα TED μόνο · σύγκριση στον ίδιο browser'),
     countCard('Εγκεκριμένες επαφές',0,'Καμία συλλογή προσωπικών στοιχείων'),
     '</div><div class="bio-grid">',
     '<article class="bio-card"><h2>Ανακάλυψη νέων δεδομένων</h2><p>Το TED ερευνά αυτόματα ελληνικά δημόσια έργα στις υπηρεσίες απεντόμωσης, μυοκτονίας, απολύμανσης, <strong>υδραυλικού</strong> και <strong>αποφράξεων</strong>. Επανέλεγχος κάθε ώρα στο :17 μέσω GitHub Actions.</p>',
@@ -310,7 +334,9 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     '<p>Οι μετρήσεις αφορούν το αποθηκευμένο δημόσιο δείγμα, όχι επαληθευμένη ενεργή ζήτηση.</p>',
     '<button class="bio-open-lab" type="button" data-bio-tab="pilot">Προβολή πηγών</button></article>',
     '</div></section>',
-    '<section data-bio-panel="discovery" hidden>',discoveries(ted,esc,focused,heartbeat,segmented),'</section>',
+    '<section data-bio-panel="discovery" hidden>',
+    '<div class="bio-entry-check" id="bio-entry-discovery" role="status">',entryCheckMarkup(entryCheck,newSinceOpen,esc),'</div>',
+    discoveries(ted,esc,focused,heartbeat,segmented),'</section>',
     '<section data-bio-panel="pilot" hidden>',renderPublicPilot(pilot,esc),'</section>',
     '<section data-bio-panel="map" hidden>',coverageMarkup(coverage,esc),'</section>',
     '<section data-bio-panel="sources" hidden>',
@@ -331,6 +357,10 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     '<a target="_blank" rel="noopener noreferrer" href="https://app.notion.com/p/41a3740d593381c6899edce2dbbecd15">Ανεξάρτητη τεκμηρίωση BioShield</a></footer>',
     '</div>',
   ].join('');
+  const initialRows=page.querySelector('#bio-ted-results');
+  if(initialRows)initialRows.innerHTML=tenderRows(ted,esc,focused?.policy,newSinceOpen);
+  const initialRemote=page.querySelector('#bio-remote-results');
+  if(initialRemote)initialRemote.innerHTML=remoteOpportunities(segmented,esc,newSinceOpen);
   const panels=()=>[...page.querySelectorAll('[data-bio-panel]')];
   function selectTab(name){
     // Release old Leaflet instance when leaving map page, avoiding orphan maps.
@@ -439,11 +469,17 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
   function updateDiscoveryUI(){
     if(!page.isConnected)return;
     const national=page.querySelector('#bio-ted-results');
-    if(national)national.innerHTML=tenderRows(ted,esc,focused?.policy);
+    if(national)national.innerHTML=tenderRows(ted,esc,focused?.policy,newSinceOpen);
+    for(const id of ['bio-entry-overview','bio-entry-discovery']){
+      const el=page.querySelector('#'+id);
+      if(el)el.innerHTML=entryCheckMarkup(entryCheck,newSinceOpen,esc);
+    }
+    const count=page.querySelector('#bio-new-since-visit');
+    if(count)count.textContent=fmt(newSinceOpen.size);
     const regional=page.querySelector('#bio-focus-results');
     if(regional)regional.innerHTML=focusResults(focused,esc);
     const remote=page.querySelector('#bio-remote-results');
-    if(remote)remote.innerHTML=remoteOpportunities(segmented,esc);
+    if(remote)remote.innerHTML=remoteOpportunities(segmented,esc,newSinceOpen);
     for(const id of ['bio-live-status-overview','bio-live-status-discovery']){
       const target=page.querySelector('#'+id);
       if(target)target.innerHTML=automationStatus(heartbeat,ted,esc);
@@ -538,7 +574,10 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
         segmented={status:'unavailable'};
       }
     }finally{
-      if(revision===geoRequestRevision&&page.isConnected)updateDiscoveryUI();
+      if(revision===geoRequestRevision&&page.isConnected){
+        if(ted?.status==='ok'&&done)recordOfficialEntryCheck();
+        updateDiscoveryUI();
+      }
       releases.forEach(release=>release());
       searchBusy=false;
       if(button){button.disabled=false;button.textContent='Εκτέλεση χειροκίνητης αναζήτησης τώρα';}
