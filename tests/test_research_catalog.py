@@ -152,5 +152,7 @@ def test_compiled_ts_navigation_and_pdf_research_are_connected():
     assert "api('/bioshield/research/config')" in browser
     assert 'value="7d">Reddit · έως 7 ημέρες' in real
     assert "data-bio-tab" in browser
-    assert (root/"static/typed/navigation.js").exists()
+    compiled=(root/"static/typed/navigation.js").read_text()
+    assert " as Screen" not in compiled
+    assert "return legacy;" in compiled
     assert (root/"static/typed/research-view.js").exists()
