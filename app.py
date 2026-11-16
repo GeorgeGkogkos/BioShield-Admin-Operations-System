@@ -129,6 +129,7 @@ def source_provider_status():
 # BIO-20 read-only, bounded official procurement focus and actual heartbeat.
 from bioshield.focused_discovery import focused_report
 from bioshield.geographic_focus import LOCATIONS, location_policy
+from bioshield.opportunity_routing import partition_opportunities
 from bioshield.automation_status import get_schedule_heartbeat
 
 OFFICIAL_GREEK_SOURCES = [
@@ -173,6 +174,39 @@ def focused_search(home: str = Query(default="ilion",max_length=20),
     return JSONResponse(focused_report(home=home,temporary=temporary),
                         headers={"Cache-Control":"no-store"})
 
+@app.get("/api/bioshield/discovery/segmented")
+def segmented_official_opportunities(
+    home: str = Query(default="ilion",max_length=20),
+    temporary: str = Query(default="",max_length=20)
+):
+    """Public readonly groups: nearby vs distant public/business.
+    
+    Unknown location or buyer role stays separate and unverified; no remote
+    private individual is ever published. TED notices are government notices,
+    not automatically confirmed tender eligibility.
+    """
+    if home not in LOCATIONS or (temporary and temporary not in LOCATIONS):
+        raise HTTPException(422,"Unsupported coarse region")
+    source=live_ted_report()
+    policy=location_policy(home=home,temporary=temporary)
+    if source.get("status")!="ok":
+        return JSONResponse({
+            "version":"bio21_geo_audience_v1", "status":"unavailable",
+            "source_status":source.get("status"),"policy":policy,
+            "nearby":[],"remote_public":[],"remote_business":[],
+            "needs_location_review":[],"needs_audience_review":[],
+            "excluded_remote_individual_count":0,
+            "message":"Η επίσημη πηγή TED δεν απάντησε. Καμία παλιά εγγραφή δεν δηλώνεται νέα."
+        },headers={"Cache-Control":"no-store"})
+    grouped=partition_opportunities(source["notices"],policy=policy)
+    return JSONResponse({
+        "version":"bio21_geo_audience_v1", "status":"ok",
+        "source":"official_live_ted",
+        "searched_at_utc":source.get("searched_at_utc"),
+        "cached":source.get("cached",False),
+        "policy":policy, **grouped
+    }, headers={"Cache-Control":"no-store"})
+
 @app.get("/api/bioshield/discovery/manual")
 def manual_official_search(home: str = Query(default="ilion",max_length=20),
                            temporary: str = Query(default="",max_length=20)):
@@ -185,6 +219,17 @@ def manual_official_search(home: str = Query(default="ilion",max_length=20),
     national=live_ted_report(force=True)
     return JSONResponse({"status":"ok" if result["status"]=="ok" or national["status"]=="ok" else "unavailable",
                          "manual_executed":True,"focused":result,"national":national,
+                         "segmented":({
+                             "version":"bio21_geo_audience_v1",
+                             "status":"ok",
+                             "source":"official_live_ted",
+                             "searched_at_utc":national.get("searched_at_utc"),
+                             "policy":location_policy(home=home,temporary=temporary),
+                             **partition_opportunities(
+                                 national.get("notices",[]),
+                                 policy=location_policy(home=home,temporary=temporary)
+                             )
+                         } if national["status"]=="ok" else {"status":"unavailable"}),
                          "selected_temporary_region":temporary,
                          "notes":"Only bounded official TED queries, never social crawling, outreach or any private location storage."},
                         headers={"Cache-Control":"no-store"})
