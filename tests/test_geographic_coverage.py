@@ -110,6 +110,10 @@ def test_hourly_action_schedule_and_map_assets():
     assert (root/"static/vendor/leaflet.css").stat().st_size > 10_000
     assert "crossOrigin:true" not in js
     assert "tileWaitTimeout=setTimeout" in js
-    assert "new URLSearchParams(window.location.search).get('tab')" in ui
+    # BIO-19: deep link and old ?tab=map fallback moved into typed router.
+    assert "installNavigation(page,selectTab)" in ui
+    nav=(root/"src/navigation.ts").read_text()
+    assert "new URLSearchParams(location.search).get('tab')" in nav
+    assert "ROUTES[screen]===path" in nav
     license=(root/"static/vendor/LEAFLET_LICENSE.txt").read_text()
     assert "BSD 2-Clause" in license
