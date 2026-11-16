@@ -136,16 +136,21 @@ def test_manual_read_only_endpoint_is_bounded_and_rate_limited(monkeypatch):
     ted._cache.update(until=0.,value=None)
 
 
-def test_official_greek_portals_are_research_only():
+def test_official_kimdis_is_on_demand_but_other_greek_portals_remain_research_only():
     with TestClient(app) as client:
         r=client.get("/api/bioshield/discovery/official-sources")
         assert r.status_code==200
         data=r.json()
-        assert data["active_non_ted_providers"]==0
+        assert data["active_non_ted_providers"]==1
         assert len(data["providers"])==4
         assert {x["id"] for x in data["providers"]} == {
             "kimdis","esidis_services","esidis_works","diavgeia"}
         assert all(x["automated_ingestion"] is False for x in data["providers"])
+        kimdis=next(x for x in data["providers"] if x["id"]=="kimdis")
+        assert kimdis["status"]=="active_readonly_on_demand_cached"
+        assert kimdis["live_readonly_api"] is True
+        assert all(x["status"]=="verified_official_public_search" for x in data["providers"]
+                   if x["id"] in ("esidis_services","esidis_works"))
         diavgeia=next(x for x in data["providers"] if x["id"]=="diavgeia")
         assert "partial" in diavgeia["status"]
         assert r.headers["cache-control"]=="no-store"
