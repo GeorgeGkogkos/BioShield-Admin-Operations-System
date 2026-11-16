@@ -37,12 +37,12 @@ def classify(text: str) -> Decision:
     if not isinstance(text, str) or len(text) > 12000:
         raise ValueError("Text must be at most 12000 characters")
     clean = normalize(text)
-    category = next((k for k, v in SERVICE.items() if any(stem in clean for stem in v)), None)
+    category = next((k for k, v in SERVICE.items() if any(normalize(stem) in clean for stem in v)), None)
     if category is None:
         return Decision(False, None, .02, "out_of_service_scope")
-    if any(term in clean for term in EXCLUDE):
+    if any(normalize(term) in clean for term in EXCLUDE):
         return Decision(False, category, .07, "advertisement_or_non_hiring")
-    if any(term in clean for term in REQUEST):
+    if any(normalize(term) in clean for term in REQUEST):
         return Decision(True, category, .90, "explicit_hiring_intent")
     return Decision(False, category, .25, "discussion_without_request")
 
