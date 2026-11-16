@@ -23,7 +23,8 @@ CPVS = frozenset().union(*SERVICE_CPVS.values())
 FIELDS = [
     "publication-number", "notice-title", "buyer-name", "buyer-country",
     "publication-date", "classification-cpv",
-    "deadline-receipt-tender-date-lot",
+    "deadline-receipt-tender-date-lot", "place-of-performance",
+    "total-value", "total-value-cur",
 ]
 MAX_NOTICES = 35
 MAX_BODY_BYTES = 900_000
@@ -104,7 +105,14 @@ def extract_notices(payload, *, today=None):
         if not title or not buyer:
             continue
         seen.add(ident)
+        from bioshield.geographic_focus import official_nuts_from_value, posted_eur_from_fields
+        perf_nuts=official_nuts_from_value(item.get("place-of-performance"))
+        exact_value=posted_eur_from_fields(item)
         records.append({
+            "place_of_performance_nuts": perf_nuts,
+            "official_total_value_eur":exact_value,
+            "worksite_exact_address_verified":False,
+            "geography_evidence":"official_ted_performance_nuts" if perf_nuts else "unlocated_review_required",
             "id": "TED-" + ident,
             "notice_number": ident,
             "published_on": published.isoformat(),
