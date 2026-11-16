@@ -98,3 +98,15 @@
 .bio-demo-offline{border-color:var(--danger)}
 .bio-demo-offline strong{color:var(--danger)}
 @media(max-width:680px){.bio-demo-connection{flex-direction:column;align-items:flex-start;width:100%}.bio-demo-connection .bio-open-lab{width:100%}}
+
+/* BIO-16: real service filters and honest source-policy registry. */
+.bio-service-filter{display:flex;align-items:center;justify-content:flex-start;flex-wrap:wrap;margin:20px 0 4px}
+.bio-service-filter label{font-size:.9rem;color:var(--muted-strong);font-weight:650}
+.bio-service-filter #bio-ted-count{font-size:.82rem;color:var(--muted)}
+.bio-source-row{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;
+  padding:17px 0;border-bottom:1px solid var(--line)}
+.bio-source-row strong{font-weight:700;color:var(--ink)}
+.bio-source-row p{font-size:.83rem;max-width:660px;line-height:1.5;color:var(--muted);margin:7px 0}
+.bio-source-row a{font-size:.8rem;color:var(--accent);text-decoration:underline}
+.bio-source-row>span{font-size:.8rem;color:var(--muted-strong);font-weight:650;text-align:right;max-width:230px}
+@media(max-width:720px){.bio-source-row{flex-direction:column;gap:7px}.bio-source-row>span{text-align:left}}
