@@ -89,9 +89,14 @@ def test_hourly_action_schedule_and_map_assets():
     html=(root/"static/index.html").read_text()
     ui=(root/"static/bioshield-admin.js").read_text()
     js=(root/"static/geographic-map.js").read_text()
-    assert "leaflet@1.9.4" in html
+    assert "cdn.jsdelivr.net/npm/leaflet" not in html
     assert "Χάρτης / Κάλυψη" in ui
     assert "discovery/map" in ui
-    assert "map.invalidateSize()" in js
-    assert "OpenStreetMap contributors" in js
+    assert "export function setupCoverageMap" in js
+    assert "GREECE_OUTLINE" in js
+    assert "bio-map-service" in js and "bio-map-region" in js
     assert "buyer_only_not_work_site" in js
+    assert "Natural Earth" in js
+    outline=(root/"static/greece-outline.js").read_text()
+    assert 'MultiPolygon' in outline
+    assert "Natural Earth" in outline
