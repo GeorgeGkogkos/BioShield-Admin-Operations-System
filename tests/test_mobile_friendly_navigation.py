@@ -65,3 +65,13 @@ def test_drawer_has_close_button_focus_management_and_background_lock():
     assert "event.key==='Escape'" in js
     assert "event.key!=='Tab'" in js
     assert "menuSidebar.querySelectorAll('a[href],button:not([disabled])')" in js
+
+
+def test_touch_press_has_no_webkit_halo_and_keyboard_focus_remains_visible():
+    css = (STATIC / "shell.css").read_text(encoding="utf-8")
+    # Chrome for Android paints a bright blue tap flash unless explicitly disabled.
+    assert 'a,button,[role="button"]{-webkit-tap-highlight-color:transparent}' in css
+    assert 'button:focus:not(:focus-visible)' in css
+    # Keep discoverable focus styling for keyboard and assistive-navigation users.
+    assert '.mobile-menu-toggle:focus-visible' in css
+    assert '.bottom-link:focus-visible' in css
