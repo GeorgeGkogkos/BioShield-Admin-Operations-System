@@ -151,7 +151,7 @@ def test_actual_skeleton_modules_and_loading_lifecycle():
     assert "prefers-reduced-motion:reduce" in css
     assert "bio-remote-container" in css
     assert "bio-discovery-business-results" in app and "businessDiscoveryMarkup(" in app  # B2B moved to its own category
-    assert "bio-remote-public-title" in app
+    assert "Δημόσιες συμβάσεις εκτός βασικής περιοχής" in app
     assert "≥100.000€" not in app
     assert "remote_min_value_eur" not in app
     assert (ROOT/"static/index.html").exists()
