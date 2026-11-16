@@ -111,3 +111,16 @@ The Sources page contains a searchable categorized Greek **Perplexity 28-page PD
 
 See [BIO-19 technical source-based design](docs/BIO19_TS_PAGES_PERPLEXITY_RESEARCH.md).
 
+
+## BIO-20 — Actual discovery clocks, geographic priorities and black UI
+
+- The Overview and Discovery pages display the actual `searched_at_utc` of the last TED API check and a distinct last genuinely observed scheduled GitHub Actions run timestamp/conclusion, not a fabricated hourly success.
+- A manual official TED search button supports service, text, permanent base and temporary region options; force refresh is globally rate-limited to one run per 180 seconds per process.
+- Home default Ilion triggers additional official NUTS queries across Attica, Evia and Corinthia. An explicitly selected temporary region adds a separate query instead of replacing home. Device location is optional and permission-based, reduced client-side to a coarse zone; exact GPS is not stored or uploaded.
+- Distant national tenders enter the actionable list only when official notice NUTS location and EUR total-value >= 100000 have been verified. Unknown tender values/locations remain review-only. No live B2B or hotel social crawler is implied.
+- Candidate official Greek sources beyond TED: KIMDIS, ESIDIS services, ESIDIS works and Diavgeia, clearly marked as verified public pages but not yet connected ingestion; Diavgeia has a reported search limitation as of 2026-11-16.
+- Hourly verified official TED snapshot now preserves `first_seen_at_utc` and `last_seen_at_utc` for each notice, separate from `published_on` and live server query clocks.
+- The oversized shared header/alert was moved into Overview only. The first load shows the real BioShield logo; dark theme now uses black and neutral charcoal surfaces.
+- Independent, private [BioShield Project Knowledge Base on Notion](https://app.notion.com/p/41a3740d593381c6899edce2dbbecd15) has its own project history rather than living under DST.
+
+Read [BIO-20 detailed engineering notes](docs/BIO20_GEOFOCUS_MANUAL_HEARTBEAT_UI.md) for official source URLs, permission and location limitations, QA and launch requirements.
