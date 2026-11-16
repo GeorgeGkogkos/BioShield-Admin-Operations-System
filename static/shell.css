@@ -169,7 +169,7 @@ main{padding:35px 42px;min-width:0}#content{position:relative;z-index:0;isolatio
 }
 
 
-/* Phone navigation is entirely handled by the five fixed bottom actions.
+/* Phone navigation is entirely handled by the four fixed bottom actions.
    Retain the optional drawer for 701–960px tablets, where the bottom bar is absent.
    Keep secondary project links available in the footer, without a duplicate menu. */
 .mobile-project-links{display:none}
@@ -184,5 +184,5 @@ main{padding:35px 42px;min-width:0}#content{position:relative;z-index:0;isolatio
   .mobile-project-links a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 }
 
-/* BIO-34: one centered mobile primary destination; diagnostics remain secondary. */
-@media(max-width:700px){.mobile-bottom-nav{grid-template-columns:minmax(0,1fr);justify-items:center}.mobile-bottom-nav .bottom-link{width:min(240px,100%);min-height:58px}}
+/* BIO-35: four original mobile destinations; New + Findings become one Search. */
+@media(max-width:700px){.mobile-bottom-nav{grid-template-columns:repeat(4,minmax(0,1fr));justify-items:stretch}.mobile-bottom-nav .bottom-link{width:auto;min-height:58px}}

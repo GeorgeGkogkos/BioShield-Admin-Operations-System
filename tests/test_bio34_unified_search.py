@@ -7,7 +7,7 @@ from app import app
 ROOT=Path(__file__).resolve().parents[1]
 STATIC=ROOT/"static"
 
-def test_search_is_only_primary_navigation_destination():
+def test_only_new_and_findings_merge_into_search_while_other_pages_remain():
     with TestClient(app) as client:
         html=client.get("/admin/operations/discovery").text
         for previous in ("/admin/operations", "/admin/operations/overview",
@@ -15,17 +15,26 @@ def test_search_is_only_primary_navigation_destination():
             assert client.get(previous).status_code==200
     desktop=html.split('id="bio-shell-nav"',1)[1].split("</nav>",1)[0]
     mobile=html.split('id="bio-bottom-nav"',1)[1].split("</nav>",1)[0]
-    for nav in (desktop,mobile):
-        assert nav.count('data-bio-tab=')==1
-        assert 'data-bio-tab="discovery"' in nav
-    assert 'href="/admin/operations/status" data-bio-tab="status"' in html
-    assert 'href="/admin/operations/sources" data-bio-tab="sources"' in html
+    for screen in ('overview','discovery','map','sources'):
+        assert desktop.count(f'data-bio-tab="{screen}"')==1
+        assert mobile.count(f'data-bio-tab="{screen}"')==1
+    assert desktop.count('data-bio-tab="status"')==1
+    assert 'data-bio-tab="status"' not in mobile
+    assert desktop.count('data-bio-tab=')==5
+    assert mobile.count('data-bio-tab=')==4
+    assert 'data-bio-tab="pilot"' not in html
+    assert '<span>Αναζήτηση</span>' in html
+    assert '<span>Νέα</span>' not in html
+    assert '<span>Ευρήματα</span>' not in html
     boot=(STATIC/"app.js").read_text(encoding="utf-8")
-    assert "canonicalPaths" in boot and "replaceState" in boot
+    assert "oldPath==='/admin/operations/evidence'" in boot
+    assert "oldPath==='/admin/operations/map'" not in boot
     for router in (ROOT/"src/navigation.ts",STATIC/"typed/navigation.js"):
         text=router.read_text(encoding="utf-8")
         assert "canonical(" in text
-        assert "return 'discovery';" in text
+        assert "return 'overview';" in text
+        assert "pilot" in text and "canonical" in text
+        assert "['overview','pilot','map'].includes" not in text
 
 def test_all_user_specified_facets_live_under_one_search():
     layout=(STATIC/"discovery-layout.js").read_text(encoding="utf-8")

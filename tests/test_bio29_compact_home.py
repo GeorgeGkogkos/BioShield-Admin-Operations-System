@@ -55,7 +55,7 @@ def test_status_is_not_a_sixth_mobile_bottom_tab():
     bottom = html.split('id="bio-bottom-nav"', 1)[1].split("</nav>", 1)[0]
     desktop = html.split('id="bio-shell-nav"', 1)[1].split("</nav>", 1)[0]
     assert 'data-bio-tab="status"' not in bottom
-    assert 'data-bio-tab="status"' not in desktop
+    assert 'data-bio-tab="status"' in desktop
     assert 'href="/admin/operations/status" data-bio-tab="status"' in html
     ts = (ROOT / "src/navigation.ts").read_text(encoding="utf-8")
     js = (ROOT / "static/typed/navigation.js").read_text(encoding="utf-8")

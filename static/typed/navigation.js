@@ -11,7 +11,7 @@ export const ROUTES = {
   status: '/admin/operations/status',
 };
 
-const canonical = screen => ['overview','pilot','map'].includes(screen)?'discovery':screen;
+const canonical = screen => screen==='pilot'?'discovery':screen;
 const SCREENS = ['overview','discovery','pilot','map','sources','status'];
 
 export function currentScreen(location = window.location) {
@@ -23,7 +23,7 @@ export function currentScreen(location = window.location) {
     const legacy=new URLSearchParams(location.search).get('tab');
     if(legacy && SCREENS.includes(legacy))return canonical(legacy);
   }
-  return 'discovery';
+  return 'overview';
 }
 
 export function installNavigation(page, onChange) {
@@ -53,7 +53,7 @@ export function installNavigation(page, onChange) {
       document.documentElement.dataset.bioScreen=next;
       onChange(next);
       document.title='BioShield — '+({
-        overview:'Επισκόπηση',discovery:'Νέες ανακαλύψεις',
+        overview:'Επισκόπηση',discovery:'Αναζήτηση',
         pilot:'Αποθηκευμένα ευρήματα',map:'Χάρτης / Κάλυψη',
         sources:'Πηγές & έλεγχοι',status:'Κατάσταση & διαφάνεια',
       })[next];

@@ -100,7 +100,7 @@ test('search and secondary system screens transition only mounted content panels
   assert.equal(screens.at(-1),'sources','reduced-motion uses immediate update');
   assert.equal(animations.length,3);
   click(side,'overview');
-  assert.equal(screens.at(-1),'discovery','legacy overview falls through to search');
+  assert.equal(screens.at(-1),'overview','overview still navigates independently');
   assert.equal(animations.length,3);
   cleanup();
   assert.equal(events.has('popstate'),false);
