@@ -157,17 +157,19 @@ def discovery_heartbeat():
     return JSONResponse(get_schedule_heartbeat(),headers={"Cache-Control":"no-store"})
 
 @app.get("/api/bioshield/discovery/focused")
-def focused_search(temporary: str = Query(default="",max_length=20)):
-    if temporary and temporary not in LOCATIONS:
-        raise HTTPException(422,"Unsupported coarse temporary region")
-    return JSONResponse(focused_report(temporary=temporary),
+def focused_search(home: str = Query(default="ilion",max_length=20),
+                   temporary: str = Query(default="",max_length=20)):
+    if home not in LOCATIONS or (temporary and temporary not in LOCATIONS):
+        raise HTTPException(422,"Unsupported coarse region")
+    return JSONResponse(focused_report(home=home,temporary=temporary),
                         headers={"Cache-Control":"no-store"})
 
 @app.get("/api/bioshield/discovery/manual")
-def manual_official_search(temporary: str = Query(default="",max_length=20)):
-    if temporary and temporary not in LOCATIONS:
-        raise HTTPException(422,"Unsupported coarse temporary region")
-    result=focused_report(temporary=temporary,force=True)
+def manual_official_search(home: str = Query(default="ilion",max_length=20),
+                           temporary: str = Query(default="",max_length=20)):
+    if home not in LOCATIONS or (temporary and temporary not in LOCATIONS):
+        raise HTTPException(422,"Unsupported coarse region")
+    result=focused_report(home=home,temporary=temporary,force=True)
     if result["status"]=="rate_limited":
         return JSONResponse(result,status_code=429,
                             headers={"Cache-Control":"no-store","Retry-After":str(result["retry_after_seconds"])})
