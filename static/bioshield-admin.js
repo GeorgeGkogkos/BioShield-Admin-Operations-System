@@ -458,49 +458,102 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     if(badge)badge.textContent=ted?.status==='ok'?'API TED · ΕΠΙΤΥΧΙΑ':'TED · ΜΗ ΔΙΑΘΕΣΙΜΟ';
     filterTED();
   }
+  let searchBusy=false;
+  let geoRequestRevision=0;
   async function refreshFocused(choice){
     if(!page.isConnected)return;
+    const revision=++geoRequestRevision;
     const target=page.querySelector('#bio-focus-results');
-    if(target)target.innerHTML='<p role="status">Αναζήτηση επίσημων τοπικών δημοσιεύσεων…</p>';
+    const remote=page.querySelector('#bio-remote-results');
+    const endNearby=showLoadingOverlay(target,'Αυτόματη αναζήτηση κοντινών δημόσιων έργων…','table');
+    const endRemote=showLoadingOverlay(remote,'Έλεγχος μακρινών προκηρύξεων Δημοσίου και επιχειρήσεων…','table');
     const qp=new URLSearchParams({home:choice.home,temporary:choice.temporary});
-    try{focused=await api('/bioshield/discovery/focused?'+qp.toString());}
-    catch{focused={status:'unavailable'};}
-    updateDiscoveryUI();
+    const result=await Promise.allSettled([
+      api('/bioshield/discovery/focused?'+qp.toString()),
+      api('/bioshield/discovery/segmented?'+qp.toString())
+    ]);
+    if(page.isConnected&&revision===geoRequestRevision){
+      focused=result[0].status==='fulfilled'?result[0].value:{status:'unavailable'};
+      segmented=result[1].status==='fulfilled'?result[1].value:{status:'unavailable'};
+      updateDiscoveryUI();
+    }
+    endNearby();endRemote();
   }
   async function refreshTED(manual=false){
+    if(searchBusy||!page.isConnected)return;
+    searchBusy=true;
+    const revision=++geoRequestRevision;
     const choice=focusController.selection();
     const qp=new URLSearchParams({home:choice.home,temporary:choice.temporary});
     const button=page.querySelector('#bio-ted-refresh');
-    if(button&&manual){button.disabled=true;button.textContent='Εκτελείται πραγματική αναζήτηση TED…';}
+    const status=page.querySelector('#bio-manual-message');
+    const action=manual?'Χειροκίνητη':'Αυτόματη';
+    if(button){button.disabled=true;button.textContent=action+' αναζήτηση σε εξέλιξη…';}
+    if(status)status.textContent=action+' αναζήτηση επίσημων TED — γίνεται πραγματικός έλεγχος πηγών. '+
+      'Τα προηγούμενα τεκμήρια διατηρούνται μέχρι να ολοκληρωθεί.';
+    const releases=[
+      showLoadingOverlay(page.querySelector('#bio-ted-results'),action+' αναζήτηση κοντινών προκηρύξεων…','table'),
+      showLoadingOverlay(page.querySelector('#bio-focus-results'),action+' γεωγραφική αναζήτηση…','table'),
+      showLoadingOverlay(page.querySelector('#bio-remote-results'),action+' έλεγχος μακρινών δημοσίων και B2B…','table'),
+      showLoadingOverlay(page.querySelector('#bio-live-status-discovery'),'Επιβεβαίωση ώρας και κατάστασης έρευνας…','compact')
+    ];
+    let done=false;
     try{
       if(manual){
         const result=await api('/bioshield/discovery/manual?'+qp.toString());
-        ted=result.national;
-        focused=result.focused;
+        if(revision===geoRequestRevision&&page.isConnected){
+          ted=result.national;
+          focused=result.focused;
+          segmented=result.segmented||{status:'unavailable'};
+          done=ted?.status==='ok'||focused?.status==='ok';
+        }
       }else{
         const replies=await Promise.allSettled([
           api('/bioshield/discovery/tenders'),
-          api('/bioshield/discovery/focused?'+qp.toString())
+          api('/bioshield/discovery/focused?'+qp.toString()),
+          api('/bioshield/discovery/segmented?'+qp.toString())
         ]);
-        ted=replies[0].status==='fulfilled'?replies[0].value:{status:'unavailable'};
-        focused=replies[1].status==='fulfilled'?replies[1].value:{status:'unavailable'};
+        if(revision===geoRequestRevision&&page.isConnected){
+          ted=replies[0].status==='fulfilled'?replies[0].value:{status:'unavailable'};
+          focused=replies[1].status==='fulfilled'?replies[1].value:{status:'unavailable'};
+          segmented=replies[2].status==='fulfilled'?replies[2].value:{status:'unavailable'};
+          done=ted?.status==='ok'||focused?.status==='ok';
+        }
+      }
+      if(status&&revision===geoRequestRevision){
+        status.textContent=done?
+          action+' έλεγχος ολοκληρώθηκε. Ώρα TED: '+dateTime(ted?.searched_at_utc||ted?.checked_at_utc)+
+          '. Τα ευρήματα δεν είναι αυτομάτως επιβεβαιωμένες αναθέσεις.':
+          'Οι επίσημες αναζητήσεις δεν επέστρεψαν επαληθευμένη επιτυχία. Ελέγξτε την κατάσταση πηγής.';
       }
     }catch(error){
-      const status=page.querySelector('#bio-manual-message');
-      if(status)status.textContent=manual?
-        'Ο χειροκίνητος έλεγχος δεν ολοκληρώθηκε. Υπάρχει όριο επανάληψης 3 λεπτών ή ο πάροχος δεν απάντησε.':
-        'Αδυναμία ελέγχου της επίσημης πηγής.';
-      if(!manual){ted={status:'unavailable'};focused={status:'unavailable'};}
+      if(status&&revision===geoRequestRevision){
+        status.textContent=manual?
+          'Η χειροκίνητη αναζήτηση δεν ολοκληρώθηκε (ενδέχεται να ισχύει όριο επανάληψης 3 λεπτών ή διακοπή TED).':
+          'Η αυτόματη αναζήτηση δεν ολοκληρώθηκε. Δεν προβάλλονται εικονικές επιτυχίες.';
+      }
+      if(!manual&&revision===geoRequestRevision){
+        ted={status:'unavailable'};
+        focused={status:'unavailable'};
+        segmented={status:'unavailable'};
+      }
     }finally{
+      if(revision===geoRequestRevision&&page.isConnected)updateDiscoveryUI();
+      releases.forEach(release=>release());
+      searchBusy=false;
       if(button){button.disabled=false;button.textContent='Εκτέλεση χειροκίνητης αναζήτησης τώρα';}
     }
-    updateDiscoveryUI();
-    if(manual)void refreshCoverage();
+    if(manual&&done)void refreshCoverage();
   }
   async function refreshHeartbeat(){
+    const endOver=showLoadingOverlay(page.querySelector('#bio-live-status-overview'),
+      'Έλεγχος πραγματικής τελευταίας ωριαίας εκτέλεσης…','compact');
+    const endDiscovery=showLoadingOverlay(page.querySelector('#bio-live-status-discovery'),
+      'Ενημέρωση επαληθευμένου χρόνου εκτέλεσης…','compact');
     try{heartbeat=await api('/bioshield/discovery/heartbeat');}
     catch{heartbeat={status:'unavailable'};}
-    updateDiscoveryUI();
+    if(page.isConnected)updateDiscoveryUI();
+    endOver();endDiscovery();
   }
   page.addEventListener('click',event=>{
     if(event.target.closest('#bio-demo-refresh'))void refreshPilot();
