@@ -155,5 +155,6 @@ def test_compiled_ts_navigation_and_pdf_research_are_connected():
     assert "data-bio-tab" in browser
     compiled=(root/"static/typed/navigation.js").read_text()
     assert " as Screen" not in compiled
-    assert "return legacy;" in compiled
+    assert "return canonical(legacy);" in compiled
+    assert "return 'discovery';" in compiled
     assert (root/"static/typed/research-view.js").exists()
