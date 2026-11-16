@@ -19,12 +19,13 @@
 <div class="site">
 <header class="topbar"><div class="topbar-inner">
 <a href="/admin/operations" class="brand"><img class="brand-logo" src="/static/bioshield-company-logo.png" alt="Λογότυπο BioShield" width="56" height="56"><span><strong>BioShield</strong><small>ADMIN OPERATIONS</small></span></a>
-<div class="tools"><button type="button" id="bio-mobile-menu-toggle" class="mobile-menu-toggle" aria-controls="bio-sidebar" aria-expanded="false" aria-label="Άνοιγμα πλοήγησης">☰ <span>Μενού</span></button><span class="status">Real-source research</span><button type="button" id="theme-toggle">Θέμα</button><a href="https://dst-web.onrender.com" rel="noopener noreferrer">DST</a></div>
+<div class="tools"><button type="button" id="bio-mobile-menu-toggle" class="mobile-menu-toggle" aria-controls="bio-sidebar" aria-expanded="false" aria-label="Άνοιγμα πλοήγησης"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span>Μενού</span></button><span class="status">Real-source research</span><button type="button" id="theme-toggle">Θέμα</button><a href="https://dst-web.onrender.com" rel="noopener noreferrer">DST</a></div>
 </div></header>
 <div class="layout">
 <aside class="sidebar" id="bio-sidebar" aria-label="Πλοήγηση">
+<div class="sidebar-mobile-heading"><div><small>BioShield</small><strong>Μενού πλοήγησης</strong></div><button type="button" id="bio-mobile-menu-close" class="sidebar-close" aria-label="Κλείσιμο μενού"><span aria-hidden="true">×</span></button></div>
 <div class="sidebar-primary">
-<p class="side-label">WORKSPACE</p>
+<p class="side-label">ΕΝΟΤΗΤΕΣ</p>
 <nav id="bio-shell-nav" class="side-pages" aria-label="Σελίδες BioShield">
 <a href="/admin/operations/overview" data-bio-tab="overview"><svg class="side-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>Επισκόπηση</span></a>
 <a href="/admin/operations/discovery" data-bio-tab="discovery"><svg class="side-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="7"/><path d="m16 16 5 5"/></svg><span>Νέες ανακαλύψεις</span></a>
@@ -34,14 +35,22 @@
 </nav>
 </div>
 <div class="sidebar-secondary">
-<p class="side-label">PROJECT</p>
+<p class="side-label">ΣΥΝΔΕΣΜΟΙ</p>
 <a class="side-project-link" href="https://linear.app/gkg/project/bioshield-admin-operations-system-79b033ffab9a" target="_blank" rel="noopener noreferrer"><svg class="side-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 5 15 15M4 10l10 10M4 15l5 5M4 20h1"/></svg><span>Linear Tasks</span><svg class="side-external-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 5h5v5M10 14l9-9"/><path d="M19 13v6H5V5h6"/></svg></a>
 <a class="side-project-link" href="https://github.com/GeorgeGkogkos/BioShield-Admin-Operations-System" target="_blank" rel="noopener noreferrer"><svg class="side-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-4 1-4-2-6-2m12 4v-3a3 3 0 0 0-1-2c3-.3 6-1.6 6-7a5.4 5.4 0 0 0-1.5-3.7 5 5 0 0 0-.1-3.7S17 1.4 14.6 3A13 13 0 0 0 9.4 3C7 1.4 5.6 1.6 5.6 1.6a5 5 0 0 0-.1 3.7A5.4 5.4 0 0 0 4 9c0 5.4 3 6.7 6 7a3 3 0 0 0-1 2v3"/></svg><span>GitHub</span><svg class="side-external-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 5h5v5M10 14l9-9"/><path d="M19 13v6H5V5h6"/></svg></a>
+<a class="sidebar-dst-link" href="https://dst-web.onrender.com" target="_blank" rel="noopener noreferrer"><span>DST Workspace</span><svg class="side-external-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M14 5h5v5M10 14l9-9"/><path d="M19 13v6H5V5h6"/></svg></a>
 </div>
 </aside>
 <button type="button" class="sidebar-backdrop" id="bio-sidebar-backdrop" aria-label="Κλείσιμο πλοήγησης"></button>
 <main id="content" tabindex="-1"><div id="app"><div class="bio-start-loader" role="status" aria-live="polite"><div class="bio-logo-pulse"><img src="/static/bioshield-company-logo.png" width="108" height="108" alt=""></div><strong>BioShield</strong><span>Φόρτωση επισκόπησης και επίσημων πηγών…</span></div></div></main>
 </div>
+<nav id="bio-bottom-nav" class="mobile-bottom-nav" aria-label="Γρήγορη πλοήγηση">
+<a class="bottom-link" data-bio-tab="overview" href="/admin/operations/overview" aria-label="Επισκόπηση"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg><span>Αρχική</span></a>
+<a class="bottom-link" data-bio-tab="discovery" href="/admin/operations/discovery" aria-label="Νέες ανακαλύψεις"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><span>Νέα</span></a>
+<a class="bottom-link" data-bio-tab="pilot" href="/admin/operations/evidence" aria-label="Αποθηκευμένα ευρήματα"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><span>Ευρήματα</span></a>
+<a class="bottom-link" data-bio-tab="map" href="/admin/operations/map" aria-label="Χάρτης / Κάλυψη"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg><span>Χάρτης</span></a>
+<a class="bottom-link" data-bio-tab="sources" href="/admin/operations/sources" aria-label="Πηγές και έλεγχοι"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2" fill="var(--paper)"/><circle cx="15" cy="17" r="2" fill="var(--paper)"/></svg><span>Πηγές</span></a>
+</nav>
 <footer class="footer"><span>BioShield Admin Operations · DST workspace</span><span>Private CRM disconnected</span></footer>
 </div>
 </body>

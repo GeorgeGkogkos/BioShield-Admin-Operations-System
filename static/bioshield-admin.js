@@ -363,8 +363,10 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
       mapCleanup=null;
       mapInitialized=false;
     }
-    // Update only the persistent sidebar links; page CTAs are not tabs.
-    document.querySelectorAll('#bio-shell-nav [data-bio-tab]').forEach(link=>{
+    // Keep persistent sidebar and bottom navigation synchronized without replacing either.
+    const shellLinks=[...document.querySelectorAll('#bio-shell-nav [data-bio-tab]'),
+      ...document.querySelectorAll('#bio-bottom-nav [data-bio-tab]')];
+    shellLinks.forEach(link=>{
       const active=link.dataset.bioTab===name;
       link.classList.toggle('active',active);
       if(active)link.setAttribute('aria-current','page');

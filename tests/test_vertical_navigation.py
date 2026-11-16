@@ -81,8 +81,12 @@ def test_sidebar_visual_polish_is_flat_compact_and_not_duplicated():
     assert html.count('class="side-project-link"') == 2
     assert html.index('class="sidebar-primary"') < html.index('class="sidebar-secondary"')
     assert "Operations Dashboard" not in html
+    # One persistent desktop sidebar link and one mobile-only bottom link per screen.
+    desktop_nav = html.split('id="bio-shell-nav"', 1)[1].split("</nav>", 1)[0]
+    phone_nav = html.split('id="bio-bottom-nav"', 1)[1].split("</nav>", 1)[0]
     for screen in ROUTES:
-        assert html.count(f'data-bio-tab="{screen}"') == 1
+        assert desktop_nav.count(f'data-bio-tab="{screen}"') == 1
+        assert phone_nav.count(f'data-bio-tab="{screen}"') == 1
     assert "link.setAttribute('aria-current','page')" in admin
 
     # The navigation remains grouped and scrollable if the viewport is short.
