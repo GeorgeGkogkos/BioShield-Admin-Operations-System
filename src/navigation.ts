@@ -29,6 +29,8 @@ export function currentScreen(location: Pick<Location,'pathname'|'search'> = win
 export function installNavigation(page: HTMLElement, onChange: RouteChange): () => void {
   const shellNavigation=document.getElementById('bio-shell-nav');
   const bottomNavigation=document.getElementById('bio-bottom-nav');
+  // Native history restoration can reapply a previous page's offset after popstate.
+  if('scrollRestoration' in window.history)window.history.scrollRestoration='manual';
   let active: Screen = currentScreen();
   const change=(next: Screen, push: boolean): void=>{
     if(!SCREENS.includes(next))return;
