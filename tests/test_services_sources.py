@@ -74,9 +74,9 @@ def test_social_crawl_is_not_authorized_by_third_party_scraper():
     assert data["automated_forum_crawls_enabled"] is False
     assert data["verified_new_private_customer_requests"] == 0
     assert set(x["id"] for x in data["platforms"]) == {
-        "ted", "reddit", "facebook", "instagram", "tiktok", "independent_forums"
+        "ted", "reddit", "facebook", "instagram", "tiktok", "x", "independent_forums"
     }
-    for platform in ("reddit", "facebook", "instagram", "tiktok"):
+    for platform in ("reddit", "facebook", "instagram", "tiktok", "x"):
         for provider in ("firecrawl", "tinyfish"):
             assert permitted_to_crawl(source_id=platform,provider=provider,
                                       provider_credits=1000) is False
@@ -99,3 +99,20 @@ def test_social_crawl_is_not_authorized_by_third_party_scraper():
         assert r.json()["services"]["plumbing"] == "Υδραυλικός"
         assert r.json()["verified_new_private_customer_requests"]==0
         assert r.headers["cache-control"]=="no-store"
+
+def test_fourth_firecrawl_credit_observation_and_x_terms():
+    data = source_status()
+    balance = data["firecrawl_credit_observation"]
+    assert balance["primary_remaining"] == 0
+    assert balance["second_backup_remaining"] == 0
+    assert balance["third_backup_remaining"] == 0
+    assert balance["fourth_backup_remaining"] == 1400
+    assert balance["account_order"][-1] == "fourth_backup"
+    assert balance["operational_fallback_status"] == "connected_to_chat_only_not_to_render_runtime"
+    x = next(item for item in data["platforms"] if item["id"] == "x")
+    assert x["status"] == "blocked_pending_platform_permission"
+    assert x["method"] == "approved_x_api_only"
+    assert x["url"] == "https://x.com/en/tos"
+    assert not permitted_to_crawl(source_id="x", provider="firecrawl",
+        provider_credits=1400, written_commercial_permission=False,
+        robots_and_terms_verified=True)
