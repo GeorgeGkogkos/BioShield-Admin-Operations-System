@@ -10,7 +10,7 @@
 .layout{max-width:1560px;width:100%;margin:auto;display:grid;grid-template-columns:272px minmax(0,1fr);flex:1}
 .sidebar{position:sticky;top:var(--bio-shell-header-height);align-self:start;height:calc(100vh - var(--bio-shell-header-height));height:calc(100dvh - var(--bio-shell-header-height));overflow-y:auto;overscroll-behavior:contain;z-index:20;border-right:1px solid var(--line);padding:27px 14px;display:flex;flex-direction:column;gap:6px}.sidebar a{font-size:.89rem;padding:13px 15px;border-radius:12px;color:var(--muted-strong)}.sidebar a:hover,.sidebar .nav-current{background:var(--accent-soft);color:var(--ink);font-weight:650}.side-label{margin:25px 15px 7px;color:var(--muted);letter-spacing:.13em;font-size:.66rem;font-weight:700}
 .side-info{margin-top:auto;padding:15px;background:var(--soft-surface);border:1px solid var(--line);border-radius:13px;font-size:.85rem}.side-info p{font-size:.78rem;color:var(--muted);line-height:1.6}
-main{padding:35px 42px;min-width:0}.footer{display:flex;gap:20px;justify-content:space-between;border-top:1px solid var(--line);color:var(--muted);font-size:.78rem;padding:17px 30px}
+main{padding:35px 42px;min-width:0}#content{position:relative;z-index:0;isolation:isolate;overflow-x:clip}.footer{display:flex;gap:20px;justify-content:space-between;border-top:1px solid var(--line);color:var(--muted);font-size:.78rem;padding:17px 30px}
 /* BIO-23: Vertical page navigation lives in the persistent application sidebar. */
 .workspace-home{display:block;margin:0 2px 4px;padding:13px 14px;border-radius:11px;
   background:var(--soft-surface);color:var(--ink);font-size:.92rem;font-weight:730}
