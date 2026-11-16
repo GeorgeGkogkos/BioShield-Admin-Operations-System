@@ -58,6 +58,11 @@ jobs:
         run: |
           node --input-type=module --check < static/geographic-map.js
           node --test tests/test_mobile_map.mjs
+      - name: Verify official Greek KΗΜΔΗΣ read-only search and unified filtering
+        run: |
+          node --input-type=module --check < static/kimdis-results.js
+          node --test tests/test_kimdis_results.mjs
+          python -m pytest -q tests/test_kimdis_discovery.py
       - run: python -m pytest -q
       - name: Run TED source-validation regression
         run: python -m pytest -q tests/test_ted_discovery.py
