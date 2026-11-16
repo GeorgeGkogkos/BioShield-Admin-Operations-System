@@ -1,6 +1,6 @@
 """Standalone BioShield public-source discovery preview. No PII or outreach."""
 from pathlib import Path
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -14,7 +14,7 @@ async def protect(request, call_next):
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-Robots-Tag"] = "noindex, nofollow"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(self)"
     response.headers["Content-Security-Policy"] = (
         "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self';"
         " img-src 'self' data: https://tile.openstreetmap.org; object-src 'none'; base-uri 'none'; frame-ancestors 'none';"
@@ -116,6 +116,69 @@ def source_provider_status():
         "outreach": "disabled",
         "synthetic_requests": 0,
     }, headers={"Cache-Control": "no-store"})
+
+# BIO-20 read-only, bounded official procurement focus and actual heartbeat.
+from bioshield.focused_discovery import focused_report
+from bioshield.geographic_focus import LOCATIONS, location_policy
+from bioshield.automation_status import get_schedule_heartbeat
+
+OFFICIAL_GREEK_SOURCES = [
+    {"id":"kimdis","name":"ΚΗΜΔΗΣ — Δημοσιότητα Δημοσίων Συμβάσεων",
+     "url":"https://portal.eprocurement.gov.gr/esidisportal/",
+     "status":"verified_official_public_search",
+     "automated_ingestion":False,
+     "notes":"Επίσημη αναζήτηση και Open Data API αναφέρονται στην πύλη ΕΣΗΔΗΣ. Όχι ακόμη πραγματική σύνδεση στο BioShield."},
+    {"id":"esidis_services","name":"ΕΣΗΔΗΣ — Προμήθειες & Υπηρεσίες",
+     "url":"https://nepps-search.eprocurement.gov.gr/actSearch/faces/active_search_main.jspx",
+     "status":"verified_official_public_search",
+     "automated_ingestion":False,
+     "notes":"Αναζήτηση διαγωνισμών υπηρεσιών. Χωρίς ενεργό API connector."},
+    {"id":"esidis_works","name":"ΕΣΗΔΗΣ — Δημόσια Έργα",
+     "url":"https://portal.eprocurement.gov.gr/esidisportal/",
+     "status":"verified_official_public_search",
+     "automated_ingestion":False,
+     "notes":"Διαγωνισμοί έργων και τεχνικών υπηρεσιών. Όχι ενεργός crawler."},
+    {"id":"diavgeia","name":"Διαύγεια — Πράξεις δημόσιας διοίκησης",
+     "url":"https://diavgeia.gov.gr/search",
+     "status":"partial_search_only_by_ADA_2026_11_16",
+     "automated_ingestion":False,
+     "notes":"Στις 16/11/2026 η επίσημη σελίδα αναφέρει προσωρινή αναζήτηση μόνο με ΑΔΑ."},
+]
+
+@app.get("/api/bioshield/discovery/official-sources")
+def official_sources():
+    return JSONResponse({"providers":OFFICIAL_GREEK_SOURCES,
+                         "active_non_ted_providers":0,
+                         "status":"verified_official_pages_pending_integration"},
+                        headers={"Cache-Control":"no-store"})
+
+@app.get("/api/bioshield/discovery/heartbeat")
+def discovery_heartbeat():
+    return JSONResponse(get_schedule_heartbeat(),headers={"Cache-Control":"no-store"})
+
+@app.get("/api/bioshield/discovery/focused")
+def focused_search(home: str = Query(default="ilion",max_length=20),
+                   temporary: str = Query(default="",max_length=20)):
+    if home not in LOCATIONS or (temporary and temporary not in LOCATIONS):
+        raise HTTPException(422,"Unsupported coarse region")
+    return JSONResponse(focused_report(home=home,temporary=temporary),
+                        headers={"Cache-Control":"no-store"})
+
+@app.get("/api/bioshield/discovery/manual")
+def manual_official_search(home: str = Query(default="ilion",max_length=20),
+                           temporary: str = Query(default="",max_length=20)):
+    if home not in LOCATIONS or (temporary and temporary not in LOCATIONS):
+        raise HTTPException(422,"Unsupported coarse region")
+    result=focused_report(home=home,temporary=temporary,force=True)
+    if result["status"]=="rate_limited":
+        return JSONResponse(result,status_code=429,
+                            headers={"Cache-Control":"no-store","Retry-After":str(result["retry_after_seconds"])})
+    national=live_ted_report(force=True)
+    return JSONResponse({"status":"ok" if result["status"]=="ok" or national["status"]=="ok" else "unavailable",
+                         "manual_executed":True,"focused":result,"national":national,
+                         "selected_temporary_region":temporary,
+                         "notes":"Only bounded official TED queries, never social crawling, outreach or any private location storage."},
+                        headers={"Cache-Control":"no-store"})
 
 # Read-only, explicitly unlicensed Perplexity keyword/provider research metadata.
 # It does NOT trigger social crawling, outreach or collect private contacts.
