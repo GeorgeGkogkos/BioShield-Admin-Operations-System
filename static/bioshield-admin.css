@@ -283,8 +283,6 @@
 @media(max-width:650px){.bio-focus-panel{padding:13px}
   .bio-focus-controls{grid-template-columns:1fr;gap:8px}
   .bio-automation-stats{grid-template-columns:1fr}
-  .bio-logo-pulse{width:116px;height:116px}
-  .bio-logo-pulse img{width:96px;height:96px}
   .bio-service-filter input{width:100%;max-width:100%}}
 
 /* BIO-21 — Acme-style layered skeleton load states for BioShield.
