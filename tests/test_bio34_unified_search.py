@@ -45,8 +45,7 @@ def test_all_user_specified_facets_live_under_one_search():
         assert f'data-bio-discovery-category="{category}"' in menu
     for mode in ("current","home","custom"):
         assert f'data-bio-location-mode="{mode}"' in menu
-    for view in ("list","map"):
-        assert f'data-bio-search-view="{view}"' in menu
+    assert 'data-bio-search-view' not in menu
     assert "Το TED είναι επίσημη πηγή" in menu
 
 def test_source_evidence_is_preserved_without_pretending_historical_is_new():
@@ -60,7 +59,8 @@ def test_source_evidence_is_preserved_without_pretending_historical_is_new():
     assert "Δεν παρουσιάζονται δεδομένα cache ως ζωντανά" in archive
     assert "https://" in archive and "noopener noreferrer" in archive
     assert "searchTerm" in map_module
-    assert "source.value=discoveryCategory==='ted'?'ted':'all'" in script
+    assert "refreshInlineMap" not in script
+    assert "setupCoverageMap(page.querySelector('[data-bio-panel=\"map\"]')" in script
     assert "effectiveFocusChoice" in script
     assert "bio-focus-gps-start" in script
     assert "data-bio-location-mode" in script
