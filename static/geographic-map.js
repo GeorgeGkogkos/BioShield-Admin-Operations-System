@@ -30,15 +30,15 @@ export function coverageMarkup(report,esc){
     '<article class="bio-metric"><span>Χωρίς επαρκή γεωγραφική αναφορά</span><strong>',esc(report.unlocated_notice_count),'</strong><small>Δεν τοποθετήθηκαν αυθαίρετα</small></article>',
     '<article class="bio-metric"><span>Περιφέρειες χωρίς καταγραφή TED</span><strong>',esc(report.zero_observed_regions),'</strong><small>Όχι απόδειξη ανυπαρξίας ζήτησης</small></article>',
     '</div>',
-    '<div class="bio-lab-filter bio-service-filter">',
-    '<label for="bio-map-service">Υπηρεσία</label><select id="bio-map-service"><option value="all">Όλες</option>',
+    '<div class="bio-lab-filter bio-service-filter bio-map-filters" role="group" aria-label="Φίλτρα χάρτη">',
+    '<div class="bio-map-filter-field"><label for="bio-map-service">Υπηρεσία</label><select id="bio-map-service"><option value="all">Όλες</option>',
     ...Object.keys(SERVICE_NAME).map(x=>'<option value="'+x+'">'+esc(SERVICE_NAME[x])+'</option>'),
-    '</select><label for="bio-map-region">Περιοχή</label>',
+    '</select></div><div class="bio-map-filter-field"><label for="bio-map-region">Περιοχή</label>',
     '<select id="bio-map-region"><option value="all">Όλη η Ελλάδα</option>',
     ...regions.map(r=>'<option value="'+esc(r.region)+'">'+esc(r.region)+'</option>'),
-    '</select><label for="bio-map-days">Χρόνος</label>',
+    '</select></div><div class="bio-map-filter-field"><label for="bio-map-days">Χρόνος</label>',
     '<select id="bio-map-days"><option value="30">Τελευταίες 30 ημέρες</option><option value="7">Τελευταίες 7 ημέρες</option></select>',
-    '<span id="bio-map-count" role="status"></span></div>',
+    '</div><span id="bio-map-count" role="status" aria-live="polite"></span></div>',
     '<div class="bio-coverage-layout">',
     '<div class="bio-map-host"><div id="bio-coverage-map" class="bio-map-canvas" role="region" aria-label="Χάρτης γεωγραφικής κάλυψης πραγματικών πηγών TED">',
     '<p role="status">Φόρτωση κανονικού διαδραστικού χάρτη…</p></div>',
@@ -108,10 +108,15 @@ export function setupCoverageMap(panel,report,esc){
   }
   // Load only tiles viewed by the user. No offline download, bulk prefetch or
   // proxy. Browser manages HTTP cache and automatically sends Referer.
+  const mobileViewport=window.matchMedia('(max-width: 640px)');
   const map=lib.map(container,{
-    zoomControl:true,scrollWheelZoom:false,zoomSnap:0.5,zoomDelta:0.5,
+    zoomControl:false,scrollWheelZoom:false,zoomSnap:0.5,zoomDelta:0.5,
     minZoom:5,maxZoom:17,worldCopyJump:false,preferCanvas:true
   }).setView([38.35,24.2],6);
+  // Keep the zoom buttons away from the selected-point card on phones.
+  const zoomControl=lib.control.zoom({
+    position:mobileViewport.matches?'topright':'topleft'
+  }).addTo(map);
   const tiles=lib.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
     attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>',
     minZoom:5,maxZoom:17,maxNativeZoom:17,detectRetina:false,
@@ -131,6 +136,35 @@ export function setupCoverageMap(panel,report,esc){
   ext.textContent='Άνοιγμα χάρτη OpenStreetMap';
   failed.append(document.createTextNode(' '),ext);
   container.append(failed);
+  // A Leaflet popup can overflow or be clipped by the map on narrow phones.
+  // Show the same verified source details inside a scrollable in-map card.
+  const mobileDetail=document.createElement('aside');
+  mobileDetail.className='bio-map-mobile-detail';
+  mobileDetail.hidden=true;
+  mobileDetail.setAttribute('role','region');
+  mobileDetail.setAttribute('aria-label','Πληροφορίες επιλεγμένου στίγματος');
+  mobileDetail.setAttribute('aria-live','polite');
+  const closeDetailButton=document.createElement('button');
+  closeDetailButton.type='button';
+  closeDetailButton.className='bio-map-mobile-close';
+  closeDetailButton.setAttribute('aria-label','Κλείσιμο πληροφοριών σημείου');
+  closeDetailButton.textContent='×';
+  const detailBody=document.createElement('div');
+  detailBody.className='bio-map-mobile-detail-body';
+  mobileDetail.append(closeDetailButton,detailBody);
+  container.append(mobileDetail);
+  lib.DomEvent.disableClickPropagation(mobileDetail);
+  lib.DomEvent.disableScrollPropagation(mobileDetail);
+  function hideDetail(){
+    mobileDetail.hidden=true;
+    detailBody.replaceChildren();
+  }
+  closeDetailButton.addEventListener('click',hideDetail);
+  const onDetailKeydown=event=>{
+    if(event.key==='Escape'&&!mobileDetail.hidden)hideDetail();
+  };
+  container.addEventListener('keydown',onDetailKeydown);
+  map.on('click',hideDetail);
   tiles.on('tileload',()=>{hadTile=true;failed.hidden=true;});
   // Fail visibly when images are entirely absent (some browsers block map
   // images without even reporting tileerror). Never display blank as success.
@@ -143,6 +177,8 @@ export function setupCoverageMap(panel,report,esc){
   });
   const sourceMarkers=[];
   function draw(){
+    hideDetail();
+    map.closePopup();
     sourceLayer.clearLayers();
     sourceMarkers.length=0;
     const service=panel.querySelector('#bio-map-service')?.value||'all';
@@ -162,9 +198,19 @@ export function setupCoverageMap(panel,report,esc){
       const marker=lib.circleMarker([p.latitude,p.longitude],{
         radius:issuer?9:11,color:shade,fillColor:shade,
         fillOpacity:issuer?0.40:0.85,weight:issuer?3:2,
-        dashArray:issuer?'5 4':null,interactive:true
+        dashArray:issuer?'5 4':null,interactive:true,bubblingMouseEvents:false
       });
-      marker.bindPopup(popupContent(p),{maxWidth:350});
+      if(mobileViewport.matches){
+        marker.on('click',()=>{
+          detailBody.replaceChildren(popupContent(p));
+          mobileDetail.hidden=false;
+        });
+      }else{
+        marker.bindPopup(popupContent(p),{
+          maxWidth:Math.max(180,Math.min(350,container.clientWidth-52)),
+          autoPan:true,autoPanPadding:[20,20],keepInView:true
+        });
+      }
       marker.bindTooltip(p.location_text,{direction:'top',offset:[0,-8]});
       marker.addTo(sourceLayer);
       sourceMarkers.push(marker);
@@ -185,6 +231,16 @@ export function setupCoverageMap(panel,report,esc){
     if(['bio-map-service','bio-map-region','bio-map-days'].includes(e.target.id))draw();
   };
   panel.addEventListener('change',onChange);
+  const onViewportChange=()=>{
+    zoomControl.setPosition(mobileViewport.matches?'topright':'topleft');
+    draw();
+  };
+  if(mobileViewport.addEventListener)mobileViewport.addEventListener('change',onViewportChange);
+  else mobileViewport.addListener(onViewportChange);
+  // Leaflet otherwise keeps the previous tile layout after orientation changes.
+  const resizeObserver=typeof ResizeObserver==='function'?
+    new ResizeObserver(()=>map.invalidateSize({pan:false})):null;
+  resizeObserver?.observe(container);
   draw();
   requestAnimationFrame(()=>map.invalidateSize({pan:false}));
   // A second layout pass handles tab visibility/size changes in slower
@@ -192,6 +248,12 @@ export function setupCoverageMap(panel,report,esc){
   const resizeTimeout=setTimeout(()=>map.invalidateSize({pan:false}),200);
   return ()=>{
     panel.removeEventListener('change',onChange);
+    if(mobileViewport.removeEventListener)mobileViewport.removeEventListener('change',onViewportChange);
+    else mobileViewport.removeListener(onViewportChange);
+    resizeObserver?.disconnect();
+    container.removeEventListener('keydown',onDetailKeydown);
+    closeDetailButton.removeEventListener('click',hideDetail);
+    map.off('click',hideDetail);
     clearTimeout(tileWaitTimeout);
     clearTimeout(resizeTimeout);
     tiles.off();
