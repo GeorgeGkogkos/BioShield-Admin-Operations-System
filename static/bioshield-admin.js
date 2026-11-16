@@ -339,7 +339,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     '<a href="/admin/operations/evidence" data-bio-tab="pilot" id="bio-discovery-archive" data-bio-discovery-archive="individual">Αποθηκευμένα δημόσια τεκμήρια ›</a></div>',
     '</section>',
     '<section data-bio-panel="pilot" hidden>',renderPublicPilot(pilot,esc),'</section>',
-    '<section data-bio-panel="map" hidden>',coverageMarkup(coverage,esc),'</section>',
+    '<section data-bio-panel="map" hidden>',coverageMarkup(coverage,esc,pilot),'</section>',
     '<section data-bio-panel="sources" hidden>',
     '<h2>Συνδεδεμένες &amp; εκκρεμείς πηγές</h2>',
     '<p class="bio-muted">Έγινε έρευνα σε Facebook, Instagram, TikTok και ανεξάρτητα ελληνικά forums. Εμφανίζονται μόνο πραγματικές καταστάσεις πρόσβασης· καμία κοινωνική πλατφόρμα δεν θεωρείται ενεργός crawler.</p>',
@@ -382,7 +382,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     panels().forEach(p=>p.hidden=p.dataset.bioPanel!==name);
     if(name==='map'&&!mapInitialized){
       mapInitialized=true;
-      mapCleanup=setupCoverageMap(page.querySelector('[data-bio-panel="map"]'),coverage,esc);
+      mapCleanup=setupCoverageMap(page.querySelector('[data-bio-panel="map"]'),coverage,esc,pilot);
     }
   }
   // Typed TypeScript router supplies distinct URLs, transitions and back/forward.
@@ -476,6 +476,15 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
         pilotPanel.innerHTML=renderPublicPilot(next,esc);
       }
       pilot=next;
+      // Refresh the public archive layer when the demo evidence changes.
+      // Never fetch or expose private business prospect records on the map.
+      const activeMap=page.querySelector('[data-bio-panel="map"]');
+      if(activeMap && !activeMap.hidden){
+        if(typeof mapCleanup==='function')mapCleanup();
+        activeMap.innerHTML=coverageMarkup(coverage,esc,pilot);
+        mapCleanup=setupCoverageMap(activeMap,coverage,esc,pilot);
+        mapInitialized=true;
+      }
       pilotPanel.querySelector('[data-pilot-refresh-error]')?.remove();
       filterPilot(); // Reapply selected filters without changing the controls.
     }catch{
@@ -535,15 +544,15 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     if(mapBusy)return;
     mapBusy=true;
     const mapPanel=page.querySelector('[data-bio-panel="map"]');
-    const release=showLoadingOverlay(mapPanel,'Αυτόματη ενημέρωση πραγματικού χάρτη TED…','map');
+    const release=showLoadingOverlay(mapPanel,'Ενημέρωση TED και αρχείου δημόσιων τεκμηρίων…','map');
     try{coverage=await api('/bioshield/discovery/map');}catch{coverage={status:'source_unavailable'};}
     release();mapBusy=false;
     if(!page.isConnected)return;
     if(typeof mapCleanup==='function')mapCleanup();
     const panel=page.querySelector('[data-bio-panel="map"]');
-    panel.innerHTML=coverageMarkup(coverage,esc);
+    panel.innerHTML=coverageMarkup(coverage,esc,pilot);
     mapInitialized=false;
-    if(!panel.hidden){mapInitialized=true;mapCleanup=setupCoverageMap(panel,coverage,esc);}
+    if(!panel.hidden){mapInitialized=true;mapCleanup=setupCoverageMap(panel,coverage,esc,pilot);}
   }
   function updateDiscoveryUI(){
     if(!page.isConnected)return;
