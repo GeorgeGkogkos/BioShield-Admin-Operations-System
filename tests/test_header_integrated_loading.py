@@ -66,3 +66,27 @@ def test_busy_state_is_local_to_header_and_clears_on_success_or_failure():
     assert "classList.remove('bio-is-loading')" in app_js
     assert "bio-initial-load-error" in ui_css
     assert "bio-start-loader" not in ui_css
+
+
+def test_logo_splash_is_part_of_shared_document_but_not_the_page_panel():
+    html = client.get("/admin/operations/overview").text
+    boot = (ROOT / "static" / "splash-init.js").read_text(encoding="utf-8")
+    app_js = (ROOT / "static" / "app.js").read_text(encoding="utf-8")
+    css = (ROOT / "static" / "shell.css").read_text(encoding="utf-8")
+
+    assert '<script src="/static/splash-init.js"></script>' in html
+    assert html.index('src="/static/splash-init.js"') < html.index('href="/static/shell.css"')
+    assert html.count('id="bio-launch-splash"') == 1
+    assert html.count('class="bio-launch-logo"') == 1
+    assert html.index('id="bio-launch-splash"') < html.index('class="site"')
+    assert html.index('id="bio-launch-splash"') < html.index('id="app"')
+    assert "sessionStorage.getItem('bioshield-splash-seen')" in boot
+    assert "sessionStorage.setItem('bioshield-splash-seen','1')" in boot
+    assert "navigation?.type==='reload'" in boot
+    assert "document.documentElement.dataset.bioSplash='show'" in boot
+    assert ":root[data-bio-splash=\"show\"] .bio-launch-splash{display:flex}" in css
+    assert "@media(prefers-reduced-motion:reduce)" in css
+    assert "splash?.classList.add('is-leaving')" in app_js
+    assert "document.documentElement.removeAttribute('data-bio-splash')" in app_js
+    assert "window.setTimeout(releaseSplash,12000)" in app_js
+    assert "releaseSplash();" in app_js

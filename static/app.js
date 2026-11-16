@@ -85,6 +85,30 @@ document.addEventListener('keydown',event=>{
 window.addEventListener('popstate',()=>setMenuOpen(false));
 mobileViewport.addEventListener('change',()=>setMenuOpen(false));
 drawerViewport.addEventListener('change',()=>setMenuOpen(false));
+// Show the branded splash only on first tab-session entry or browser reload.
+const splash=document.getElementById('bio-launch-splash');
+const showSplash=document.documentElement.dataset.bioSplash==='show';
+let splashReleased=false;
+function releaseSplash(){
+  if(!showSplash||splashReleased)return;
+  splashReleased=true;
+  const started=window.__bioSplashStartedAt??performance.now();
+  const minimumWait=Math.max(0,600-(performance.now()-started));
+  window.setTimeout(()=>{
+    splash?.classList.add('is-leaving');
+    document.querySelector('.site')?.removeAttribute('inert');
+    window.setTimeout(()=>{
+      document.documentElement.removeAttribute('data-bio-splash');
+      splash?.remove();
+    },200);
+  },minimumWait);
+}
+if(showSplash){
+  document.querySelector('.site')?.setAttribute('inert','');
+  // A stalled provider must not trap navigation behind the splash.
+  window.setTimeout(releaseSplash,12000);
+}else splash?.remove();
+
 // Keep the application shell mounted: only the header's status changes.
 const appMount=document.getElementById('app');
 renderBioShieldAdmin(appMount,{api,esc}).catch(error=>{
@@ -92,4 +116,5 @@ renderBioShieldAdmin(appMount,{api,esc}).catch(error=>{
   appMount.innerHTML='<div class="bio-initial-load-error" role="alert"><strong>Αδυναμία φόρτωσης δεδομένων</strong><p>Δεν ήταν δυνατή η αρχική εμφάνιση των δεδομένων. Δοκιμάστε ανανέωση της σελίδας.</p></div>';
 }).finally(()=>{
   document.querySelector('.topbar')?.classList.remove('bio-is-loading');
+  releaseSplash();
 });
