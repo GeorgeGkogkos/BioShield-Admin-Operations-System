@@ -170,6 +170,7 @@ def _fresh_report(feed_urls):
     reports = []
     total = 0
     hints = 0
+    buyer_hints = {"individual": 0, "public_sector": 0, "business": 0, "unknown": 0}
     dupes = 0
     errors = 0
     all_rejected = 0
@@ -182,6 +183,9 @@ def _fresh_report(feed_urls):
                             "hints_unverified": sum(r["potential_request_unverified"] for r in data["records"])})
             total += len(data["records"])
             hints += sum(r["potential_request_unverified"] for r in data["records"])
+            for row in data["records"]:
+                if row["potential_request_unverified"]:
+                    buyer_hints[row["buyer_segment_hint"] or "unknown"] += 1
             dupes += data["duplicates"]
             all_rejected += data["rejected"]
         except (ValueError, OSError, HTTPError, URLError, TimeoutError):
@@ -193,6 +197,7 @@ def _fresh_report(feed_urls):
         "provider": "google_alerts", "mode": "rss_atom_readonly",
         "configured_feeds": len(feed_urls), "fetched_feeds": len(feed_urls) - errors,
         "entries_unique_unverified": total, "potential_request_hints_unverified": hints,
+        "buyer_hint_counts_unverified": buyer_hints,
         "duplicates_within_alert_feeds": dupes, "rejected_entries": all_rejected,
         "feeds": reports, "original_sources_verified": 0,
         "confirmed_contactable_leads": 0, "outreach_enabled": False,
@@ -213,6 +218,7 @@ def alerts_status():
         return {"status": "awaiting_feed_configuration", "provider": "google_alerts",
                 "configured_feeds": 0, "fetched_feeds": 0,
                 "entries_unique_unverified": None, "potential_request_hints_unverified": None,
+                "buyer_hint_counts_unverified": None,
                 "original_sources_verified": 0, "confirmed_contactable_leads": 0,
                 "outreach_enabled": False,
                 "note": "Create an authorized Google Alert with RSS delivery and configure its URL privately in Render."}
