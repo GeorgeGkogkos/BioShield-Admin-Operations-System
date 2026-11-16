@@ -37,6 +37,8 @@ jobs:
           node --test tests/test_entry_discovery.mjs
       - name: Verify page route transitions never retain previous scroll offset
         run: node --test tests/test_route_scroll.mjs
+      - name: Verify restored in-flow fade transitions without app shell animation
+        run: node --test tests/test_panel_transitions.mjs
       - name: Verify BIO-30 logo splash only on first session entry or browser refresh
         run: |
           node --check static/splash-init.js
