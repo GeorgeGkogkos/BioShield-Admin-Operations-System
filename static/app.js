@@ -1,4 +1,5 @@
 import {renderBioShieldAdmin} from './bioshield-admin.js';
+import {currentScreen} from './typed/navigation.js';
 const esc = value => String(value??'').replace(/[&<>"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
 async function api(path) {
   const response=await fetch('/api'+path,{credentials:'same-origin',cache:'no-store'});
@@ -18,6 +19,14 @@ applyTheme();
 themeButton.addEventListener('click',()=>{
   theme=theme==='system'?'dark':theme==='dark'?'light':'system';
   localStorage.setItem('bioshield-theme',theme);applyTheme();
+});
+// Highlight the correct destination immediately, even while discovery APIs load.
+const initialScreen=currentScreen();
+document.querySelectorAll('#bio-shell-nav [data-bio-tab]').forEach(link=>{
+  const active=link.dataset.bioTab===initialScreen;
+  link.classList.toggle('active',active);
+  if(active)link.setAttribute('aria-current','page');
+  else link.removeAttribute('aria-current');
 });
 // Shell navigation belongs to the application frame, not the changing page.
 const menuToggle=document.getElementById('bio-mobile-menu-toggle');
