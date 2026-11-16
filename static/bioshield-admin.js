@@ -62,7 +62,8 @@ const dateTime = raw => {
       day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(parsed);
 };
 function countCard(title,value,note){
-  const id=title==='Νέα από προηγούμενη επίσκεψη'?' id="bio-new-since-visit"':'';
+  const id=title==='Νέα από προηγούμενη επίσκεψη'?' id="bio-new-since-visit"':
+    title==='Δημόσιες πηγές στη demo βάση'?' id="bio-sources-overview"':'';
   return '<article class="bio-metric"><span>'+title+'</span><strong'+id+'>'+fmt(value)+'</strong><small>'+note+'</small></article>';
 }
 function tenderRows(state,esc,policy,newIds=new Set()) {
@@ -330,7 +331,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     '<article class="bio-card"><h2>Ανακάλυψη νέων δεδομένων</h2><p>Το TED ερευνά αυτόματα ελληνικά δημόσια έργα στις υπηρεσίες απεντόμωσης, μυοκτονίας, απολύμανσης, <strong>υδραυλικού</strong> και <strong>αποφράξεων</strong>. Επανέλεγχος κάθε ώρα στο :17 μέσω GitHub Actions.</p>',
     '<button class="bio-open-lab" type="button" data-bio-tab="discovery">Προβολή πραγματικών αποτελεσμάτων</button></article>',
     '<article class="bio-card"><h2>Διαχωρισμός αιτούντων</h2>',
-    '<p>Ιδιώτες: <strong>',fmt(seg.individual),'</strong> · Έργα Δημοσίου: <strong>',fmt(seg.public_sector),'</strong> · Επιχειρήσεις: <strong>',fmt(seg.business),'</strong> · Αδιευκρίνιστα: <strong>',fmt(seg.needs_review),'</strong>.</p>',
+    '<p id="bio-overview-segments">Ιδιώτες: <strong>',fmt(seg.individual),'</strong> · Έργα Δημοσίου: <strong>',fmt(seg.public_sector),'</strong> · Επιχειρήσεις: <strong>',fmt(seg.business),'</strong> · Αδιευκρίνιστα: <strong>',fmt(seg.needs_review),'</strong>.</p>',
     '<p>Οι μετρήσεις αφορούν το αποθηκευμένο δημόσιο δείγμα, όχι επαληθευμένη ενεργή ζήτηση.</p>',
     '<button class="bio-open-lab" type="button" data-bio-tab="pilot">Προβολή πηγών</button></article>',
     '</div></section>',
@@ -412,24 +413,85 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
   }
   pilotPanel.addEventListener('input',filterPilot);
   pilotPanel.addEventListener('change',filterPilot);
+  // Poll the read-only demo without replacing the mounted panel or its user controls.
+  // Initial page loads may use skeletons; subsequent successful reads never do.
+  function updateLiveText(node, value, html=false){
+    if(!node)return;
+    const property=html?'innerHTML':'textContent';
+    if(node[property]===value)return;
+    node[property]=value;
+    if(node.tagName==='STRONG' && typeof node.animate==='function' &&
+       !(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)){
+      node.animate([{opacity:.65,transform:'translateY(2px)'},{opacity:1,transform:'none'}],
+        {duration:220,easing:'ease-out'});
+    }
+  }
+  function patchPilot(next){
+    const preview=document.createElement('div');
+    preview.innerHTML=renderPublicPilot(next,esc);
+    // Only update values whose actual source data has changed.
+    for(const incoming of preview.querySelectorAll('[data-live-stat]')){
+      const name=incoming.dataset.liveStat;
+      const current=pilotPanel.querySelector('[data-live-stat="'+name+'"]');
+      updateLiveText(current,incoming.innerHTML,true);
+    }
+    // Keep table wrappers and scrolling intact; update rows only on a real data change.
+    for(const segment of ['public_sector','individual']){
+      const selector='[data-pilot-section="'+segment+'"] tbody';
+      const current=pilotPanel.querySelector(selector);
+      const incoming=preview.querySelector(selector);
+      if(current&&incoming&&current.innerHTML!==incoming.innerHTML){
+        current.innerHTML=incoming.innerHTML;
+      }
+    }
+    // The B2B section can switch between an honest empty state and a real table.
+    const business=pilotPanel.querySelector('[data-pilot-section="business"]');
+    const updatedBusiness=preview.querySelector('[data-pilot-section="business"]');
+    if(business&&updatedBusiness&&business.innerHTML!==updatedBusiness.innerHTML){
+      business.innerHTML=updatedBusiness.innerHTML;
+    }
+    updateLiveText(page.querySelector('#bio-sources-overview'),fmt(next.public_sources_reviewed));
+    const counts=next.segment_counts;
+    const summary=page.querySelectorAll('#bio-overview-segments strong');
+    [counts.individual,counts.public_sector,counts.business,counts.needs_review]
+      .forEach((count,index)=>updateLiveText(summary[index],fmt(count)));
+  }
   let pilotBusy=false;
   async function refreshPilot(){
-    if(pilotBusy)return;
+    if(pilotBusy||!page.isConnected)return;
     pilotBusy=true;
-    const release=showLoadingOverlay(pilotPanel,'Ενημέρωση αποθηκευμένων πραγματικών πηγών…','table');
-    const oldQuery=pilotPanel.querySelector('#bio-pilot-search')?.value||'';
-    const oldType=pilotPanel.querySelector('#bio-pilot-type')?.value||'all';
-    const oldAge=pilotPanel.querySelector('#bio-pilot-recency')?.value||'7d';
-    try{pilot=await api('/bioshield/demo/evidence');}catch{pilot={demo_unavailable:true};}
-    release();pilotBusy=false;
-    if(!page.isConnected)return;
-    pilotPanel.innerHTML=renderPublicPilot(pilot,esc);
-    const query=pilotPanel.querySelector('#bio-pilot-search'),type=pilotPanel.querySelector('#bio-pilot-type'),
-      age=pilotPanel.querySelector('#bio-pilot-recency');
-    if(query)query.value=oldQuery;
-    if(type)type.value=oldType;
-    if(age)age.value=oldAge;
-    filterPilot();
+    const button=pilotPanel.querySelector('#bio-demo-refresh');
+    if(button){button.disabled=true;button.setAttribute('aria-busy','true');}
+    try{
+      const next=await api('/bioshield/demo/evidence');
+      if(!page.isConnected)return;
+      if(next?.demo_supabase_connected!==true)throw new Error('Demo Supabase unavailable');
+      if(pilot.demo_supabase_connected===true){
+        patchPilot(next);
+      }else{
+        // Recover from a first-load offline state; no existing results to preserve.
+        pilotPanel.innerHTML=renderPublicPilot(next,esc);
+      }
+      pilot=next;
+      pilotPanel.querySelector('[data-pilot-refresh-error]')?.remove();
+      filterPilot(); // Reapply selected filters without changing the controls.
+    }catch{
+      if(page.isConnected && pilot.demo_supabase_connected===true){
+        const connection=pilotPanel.querySelector('#bio-demo-sync > div');
+        if(connection&&!connection.querySelector('[data-pilot-refresh-error]')){
+          const warning=document.createElement('p');
+          warning.dataset.pilotRefreshError='true';
+          warning.setAttribute('role','alert');
+          warning.textContent='Αδυναμία ανανέωσης · εμφανίζονται τα τελευταία επιτυχώς φορτωμένα δεδομένα.';
+          connection.append(warning);
+        }
+      }
+      // Never replace a successful snapshot with zeroes or a skeleton on failure.
+    }finally{
+      pilotBusy=false;
+      const currentButton=pilotPanel.querySelector('#bio-demo-refresh');
+      if(currentButton){currentButton.disabled=false;currentButton.removeAttribute('aria-busy');}
+    }
   }
   function filterTED(){
     const host=page.querySelector('[data-bio-panel="discovery"]');
