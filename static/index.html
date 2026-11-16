@@ -8,6 +8,7 @@
 <title>BioShield — Real Public Sources</title>
 <link rel="icon" type="image/png" sizes="64x64" href="/static/bioshield-company-logo.png">
 <link rel="apple-touch-icon" href="/static/bioshield-company-logo.png">
+<script src="/static/splash-init.js"></script>
 <link rel="stylesheet" href="/static/shell.css">
 <link rel="stylesheet" href="/static/vendor/leaflet.css">
 <link rel="stylesheet" href="/static/bioshield-admin.css">
@@ -16,6 +17,16 @@
 </head>
 <body>
 <a class="skip" href="#content">Μετάβαση στο περιεχόμενο</a>
+<div id="bio-launch-splash" class="bio-launch-splash" role="status" aria-live="polite" aria-label="Εκκίνηση BioShield">
+  <div class="bio-launch-content">
+    <div class="bio-launch-mark">
+      <img class="bio-launch-logo" src="/static/bioshield-company-logo.png" alt="" width="132" height="132">
+    </div>
+    <strong>BioShield</strong>
+    <span>ADMIN OPERATIONS</span>
+    <div class="bio-launch-progress"><span class="bio-launch-spinner" aria-hidden="true"></span><span>Φόρτωση πραγματικών δεδομένων…</span></div>
+  </div>
+</div>
 <div class="site">
 <header class="topbar bio-is-loading"><div class="topbar-inner">
 <a href="/admin/operations" class="brand"><img class="brand-logo" src="/static/bioshield-company-logo.png" alt="Λογότυπο BioShield" width="56" height="56"><span><strong>BioShield</strong><small>ADMIN OPERATIONS</small></span></a>
