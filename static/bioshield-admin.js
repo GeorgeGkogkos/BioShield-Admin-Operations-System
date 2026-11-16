@@ -148,14 +148,16 @@ function discoveries(state,esc,focused,heartbeat) {
     '<div class="bio-lab-top"><div><p class="eyebrow">OFFICIAL EU OPEN DATA / LIVE SEARCH</p>',
     '<h2>Αυτόματη ανακάλυψη — δημόσια έργα</h2>',
     '<p class="bio-muted">Πραγματική αναζήτηση δημοσίων συμβάσεων για απεντομώσεις, μυοκτονίες, απολυμάνσεις, <strong>υδραυλικά</strong> και <strong>αποφράξεις</strong> βάσει επίσημων CPV. Δεν τεκμηριώνει από μόνη της ότι ένας διαγωνισμός είναι ανοιχτός.</p></div>',
-    '<span class="bio-test-badge">',state?.status==='ok'?'API TED · ΑΝΑΓΝΩΣΗ':'TED · ΜΗ ΔΙΑΘΕΣΙΜΟ','</span></div>',
+    '<span id="bio-ted-state" class="bio-test-badge">',state?.status==='ok'?'API TED · ΑΝΑΓΝΩΣΗ':'TED · ΜΗ ΔΙΑΘΕΣΙΜΟ','</span></div>',
     '<div id="bio-live-status-discovery">',automationStatus(heartbeat,state,esc),'</div>',
     '<div class="bio-demo-connection"><div><strong>',state?.status==='ok'?'Τελευταία επιτυχής αναζήτηση':'Αδυναμία επαλήθευσης TED',
-    '</strong><p>Ώρα Αθήνας: ',dateTime(state?.searched_at_utc||state?.checked_at_utc),
+    '</strong><p id="bio-ted-substatus">Ώρα Αθήνας: ',dateTime(state?.searched_at_utc||state?.checked_at_utc),
     ' · ',state?.status==='ok'?'Επιστράφηκαν '+fmt(state.count)+' πραγματικές προκηρύξεις από '+fmt(state.raw_count)+' εγγραφές απάντησης.':'Δεν χρησιμοποιούμε εικονικά αποτελέσματα.', '</p></div>',
     '<button id="bio-ted-refresh" type="button" class="bio-open-lab">Εκτέλεση χειροκίνητης αναζήτησης τώρα</button></div>',
+    '<p id="bio-manual-message" role="status" aria-live="polite" class="bio-note">Η χειροκίνητη αναζήτηση εκτελεί νέα ελεγχόμενη κλήση TED. Όριο: μία επανάληψη ανά 3 λεπτά στο ίδιο instance.</p>',
     '<div class="bio-metrics bio-lab-metrics">',
-    countCard('Ευρήματα TED',state?.status==='ok'?state.count:0,'Έλεγχος αρχικής διακήρυξης απαιτείται'),
+    '<article class="bio-metric"><span>Ευρήματα TED</span><strong id="bio-ted-total">'+fmt(state?.status==='ok'?state.count:0)+'</strong>'+
+    '<small>Έλεγχος αρχικής διακήρυξης απαιτείται</small></article>',
     countCard('Επιβεβαιωμένοι ιδιώτες',0,'Δεν συλλέγονται προσωπικά στοιχεία'),
     countCard('Επιβεβαιωμένες επιχειρήσεις',0,'Δεν δημιουργούνται εικονικά αιτήματα'),
     countCard('Επιτρεπόμενες επαφές',0,'Επικοινωνία απενεργοποιημένη'),
@@ -356,6 +358,8 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
       const target=page.querySelector('#'+id);
       if(target)target.innerHTML=automationStatus(heartbeat,ted,esc);
     }
+    const total=page.querySelector('#bio-ted-total');
+    if(total)total.textContent=fmt(ted?.status==='ok'?ted.count:0);
     const stamp=page.querySelector('#bio-ted-substatus');
     if(stamp)stamp.textContent='Ώρα Αθήνας: '+dateTime(ted?.searched_at_utc||ted?.checked_at_utc)+
       ' · '+(ted?.status==='ok'?'Τεκμηριωμένη απάντηση TED ('+fmt(ted.count)+' εγγραφές)':'Ανεπιτυχής έλεγχος πηγής')+
