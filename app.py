@@ -95,6 +95,7 @@ def handoff():
 
 # Real public-source discovery, no invented entries and no private contacts.
 from bioshield.ted_discovery import live_ted_report
+from bioshield.kimdis_discovery import live_kimdis_report
 from bioshield.geographic_coverage import coverage_report
 
 @app.get("/api/bioshield/discovery/map")
@@ -107,6 +108,11 @@ def public_geographic_coverage():
 def public_tender_discovery():
     """Bounded, cached official TED query; never accepts user URLs."""
     return JSONResponse(live_ted_report(), headers={"Cache-Control": "no-store"})
+
+@app.get("/api/bioshield/discovery/kimdis")
+def greek_procurement_open_data():
+    """Official KΗΜΔΗΣ read-only search; fixed queries, no caller URLs or PII."""
+    return JSONResponse(live_kimdis_report(), headers={"Cache-Control": "no-store"})
 
 @app.get("/api/bioshield/discovery/providers")
 def source_provider_status():
@@ -134,10 +140,12 @@ from bioshield.automation_status import get_schedule_heartbeat
 
 OFFICIAL_GREEK_SOURCES = [
     {"id":"kimdis","name":"ΚΗΜΔΗΣ — Δημοσιότητα Δημοσίων Συμβάσεων",
-     "url":"https://portal.eprocurement.gov.gr/esidisportal/",
-     "status":"verified_official_public_search",
+     "url":"https://cerpp.eprocurement.gov.gr/khmdhs-opendata/help",
+     "status":"active_readonly_on_demand_cached",
      "automated_ingestion":False,
-     "notes":"Επίσημη αναζήτηση και Open Data API αναφέρονται στην πύλη ΕΣΗΔΗΣ. Όχι ακόμη πραγματική σύνδεση στο BioShield."},
+     "live_readonly_api":True,
+     "notes":"Ενεργό επίσημο Open Data API μόνο ανάγνωσης στην ενιαία αναζήτηση Δημοσίου. "
+             "Ερωτήματα αποθήκευσης cache έως 1 ώρα, χωρίς scheduled importer ή CRM."},
     {"id":"esidis_services","name":"ΕΣΗΔΗΣ — Προμήθειες & Υπηρεσίες",
      "url":"https://nepps-search.eprocurement.gov.gr/actSearch/faces/active_search_main.jspx",
      "status":"verified_official_public_search",
@@ -158,8 +166,8 @@ OFFICIAL_GREEK_SOURCES = [
 @app.get("/api/bioshield/discovery/official-sources")
 def official_sources():
     return JSONResponse({"providers":OFFICIAL_GREEK_SOURCES,
-                         "active_non_ted_providers":0,
-                         "status":"verified_official_pages_pending_integration"},
+                         "active_non_ted_providers":1,
+                         "status":"kimdis_active_other_sources_pending_integration"},
                         headers={"Cache-Control":"no-store"})
 
 @app.get("/api/bioshield/discovery/heartbeat")
