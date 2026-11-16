@@ -82,37 +82,3 @@ def canonical_url(value: str) -> str:
 def source_key(url: str) -> str:
     return hashlib.sha256(canonical_url(url).encode()).hexdigest()
 
-def mock_hits(firecrawl_available=True) -> list[dict]:
-    """Fictional provider outputs, deliberately overlapping, no external calls."""
-    from .fixtures import CASES
-    hits = []
-    if firecrawl_available:
-        for i, case in enumerate(CASES):
-            if i % 2 == 0 or i < 8:
-                hits.append({"provider": "firecrawl_mock", "case": case,
-                             "url": "https://example.com/synthetic/" + case.id + "?utm_source=firecrawl"})
-    for i, case in enumerate(CASES):
-        if i % 2 == 1 or i < 8:
-            hits.append({"provider": "tinyfish_mock", "case": case,
-                         "url": "https://example.com/synthetic/" + case.id + "?utm_source=tinyfish"})
-    return hits
-
-def mock_run(firecrawl_available=True) -> dict:
-    hits = mock_hits(firecrawl_available)
-    seen = set()
-    unique = []
-    for hit in hits:
-        key = source_key(hit["url"])
-        if key not in seen:
-            seen.add(key)
-            unique.append(hit)
-    return {
-        "scenario": "normal" if firecrawl_available else "firecrawl_unavailable",
-        "synthetic": True, "real_provider_calls": 0, "database_writes": 0,
-        "external_cost": None, "raw_hits": len(hits),
-        "unique_sources": len(unique), "duplicates_excluded": len(hits) - len(unique),
-        "classified_requests": sum(classify(hit["case"].text).is_request for hit in unique),
-        "contact_eligible": 0, "coverage_complete": bool(firecrawl_available),
-        "provider_status": {"firecrawl": "mock" if firecrawl_available else "mock_unavailable",
-                            "tinyfish": "mock"},
-    }

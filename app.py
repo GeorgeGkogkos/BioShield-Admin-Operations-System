@@ -1,4 +1,4 @@
-"""Standalone BioShield read-only setup preview. No PII or provider calls."""
+"""Standalone BioShield public-source discovery preview. No PII or outreach."""
 from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
@@ -41,19 +41,19 @@ def health():
 def overview():
     return JSONResponse({
         "project":"BioShield Admin Operations System",
-        "phase":"staging_setup",
+        "phase":"real_public_source_discovery",
         "connection":"awaiting_external_supabase_access",
-        "discovery_enabled":False,
+        "discovery_enabled":True,
         "contact_handoff_enabled":False,
         "metrics":{"discovered":None,"review_required":None,
                    "outreach_eligible":None,"completed_runs":None},
         "providers":[
-            {"id":"firecrawl","name":"Firecrawl","status":"not_configured"},
-            {"id":"tinyfish","name":"TinyFish","status":"not_configured"}
+            {"id":"ted","name":"EU TED","status":"enabled_public_notices"},
+            {"id":"reddit","name":"Reddit","status":"commercial_approval_required"}
         ],
         "candidates":[],"sources":[],"runs":[],
         "contact_gate":"review_required",
-        "message":"Η εξωτερική Supabase δεν έχει συνδεθεί και δεν εκτελείται συλλογή δεδομένων. Η σελίδα είναι δοκιμαστική."
+        "message":"Η εταιρική Supabase δεν έχει συνδεθεί. Οι δημόσιες προκηρύξεις αναζητούνται από το επίσημο TED API. Οι ιδιωτικοί υποψήφιοι παραμένουν απενεργοποιημένοι."
     },headers={"Cache-Control":"no-store"})
 
 @app.get("/api/bioshield/candidates")
@@ -68,42 +68,30 @@ def discover():
 def handoff():
     raise HTTPException(403,"Call-center handoff is disabled until legal and human review")
 
-# Publicly viewable examples are ALL fabricated and read-only; no live lead data.
-from functools import lru_cache
-from bioshield.fixtures import CASES
-from bioshield.engine import classify
-from bioshield.benchmark import report as synthetic_benchmark
+# Real public-source discovery, no invented entries and no private contacts.
+from bioshield.ted_discovery import live_ted_report
 
-@app.get("/api/bioshield/lab/cases")
-def lab_cases():
+@app.get("/api/bioshield/discovery/tenders")
+def public_tender_discovery():
+    """Bounded, cached official TED query; never accepts user URLs."""
+    return JSONResponse(live_ted_report(), headers={"Cache-Control": "no-store"})
+
+@app.get("/api/bioshield/discovery/providers")
+def source_provider_status():
     return JSONResponse({
-        "version": "synthetic_v1", "synthetic_only": True,
-        "count": len(CASES),
-        "cases": [{
-            "id": case.id, "text": case.text, "expected_request": case.expected,
-            "predicted_request": (decision := classify(case.text)).is_request,
-            "category": decision.category, "reason": decision.reason,
-            "confidence_is_calibrated": False, "contact_eligible": False,
-            "source": "synthetic_fixture",
-        } for case in CASES],
+        "official_ted": {
+            "status": "enabled",
+            "description": "EU official public procurement notices (query on dashboard load, cached up to 15 min)",
+            "automated_snapshots": "GitHub Actions scheduled every six hours",
+        },
+        "reddit": {
+            "status": "blocked_pending_permission",
+            "description": "Commercial automated Reddit data access requires Reddit approval; RSS ended Nov 13 2026.",
+        },
+        "private_lead_intake": "disabled",
+        "outreach": "disabled",
+        "synthetic_requests": 0,
     }, headers={"Cache-Control": "no-store"})
-
-@lru_cache(maxsize=1)
-def measured_lab_report():
-    # One CPU-only bounded measurement per process. Does not perform HTTP calls.
-    return synthetic_benchmark(1200)
-
-@app.get("/api/bioshield/lab/report")
-def lab_report():
-    return JSONResponse(measured_lab_report(), headers={"Cache-Control": "no-store"})
-
-
-from bioshield.real_pilot import pilot_report
-
-@app.get("/api/bioshield/pilot/evidence")
-def public_evidence_pilot():
-    """Dated, read-only public evidence research, no personal contacts or network calls."""
-    return JSONResponse(pilot_report(), headers={"Cache-Control":"no-store"})
 
 # Only public, anonymized, read-only demo metadata from the isolated second account.
 # The business-owned Supabase remains disconnected and private lead endpoints remain 403.

@@ -1,212 +1,174 @@
 import {renderPublicPilot} from './real-pilot.js';
-/* Synthetic lab and real public evidence are separate. */
-function metric(title,value,esc,explain='') {
-  const display=value==null?'—':esc(value);
-  return '<article class="bio-metric"><span>'+esc(title)+'</span><strong>'+display+'</strong><small>'+esc(explain|| (value==null?'Δεν υπάρχουν πραγματικά δεδομένα':'Επαληθευμένη τιμή'))+'</small></article>';
-}
-function emptyView(title,body) {
-  return '<div class="bio-empty"><strong>'+title+'</strong><p>'+body+'</p></div>';
-}
-function percentage(x) { return (x*100).toLocaleString('el-GR',{maximumFractionDigits:1})+'%'; }
-function number(x) { return Number(x).toLocaleString('el-GR',{maximumFractionDigits:1}); }
-const categoryNames={
-  disinfection:'Απολύμανση', pest_control:'Απεντόμωση', rodent_control:'Μυοκτονία'
+
+/* BIO-14: REAL public-source evidence only; the synthetic request lab is removed. */
+const fmt = x => Number(x || 0).toLocaleString('el-GR');
+const dateTime = raw => {
+  if (!raw) return '—';
+  const parsed=new Date(raw);
+  return Number.isNaN(parsed.getTime())?'—':
+    new Intl.DateTimeFormat('el-GR',{timeZone:'Europe/Athens',
+      day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(parsed);
 };
+function countCard(title,value,note){
+  return '<article class="bio-metric"><span>'+title+'</span><strong>'+fmt(value)+'</strong><small>'+note+'</small></article>';
+}
+function tenderRows(state,esc) {
+  if (state?.status !== 'ok') return '<p class="bio-note">Δεν υπάρχει διαθέσιμη επιβεβαιωμένη απάντηση από το επίσημο TED API. Δεν εμφανίζονται κατασκευασμένα ή παλιά αποτελέσματα ως νέα.</p>';
+  const found=state.notices||[];
+  if(!found.length)return '<p class="bio-note">Η τελευταία πραγματική αναζήτηση TED ολοκληρώθηκε, αλλά δεν επέστρεψε πρόσφατες εγγραφές που να καλύπτουν όλα τα κριτήρια.</p>';
+  return '<div class="bio-scroll"><table class="bio-table bio-real-table"><thead><tr>'+
+    '<th>Αριθμός TED</th><th>Ημ/νία δημοσίευσης</th><th>Δημόσιος αγοραστής</th><th>Αντικείμενο</th><th>CPV</th><th>Πρωτογενής πηγή</th>'+
+    '</tr></thead><tbody>'+found.map(x=>
+      '<tr><td><strong>'+esc(x.notice_number)+'</strong></td><td>'+esc(x.published_on)+'</td>'+
+      '<td>'+esc(x.buyer)+'</td><td>'+esc(x.title)+'</td><td>'+esc((x.cpv_codes||[]).join(', '))+'</td>'+
+      '<td><a href="'+esc(x.source_url)+'" target="_blank" rel="noopener noreferrer">Επίσημο TED</a>'+
+      '<small class="bio-evidence-note">Ελέγχονται η διακήρυξη και η δυνατότητα υποβολής</small></td></tr>'
+    ).join('')+'</tbody></table></div>';
+}
+function discoveries(state,esc) {
+  return [
+    '<div class="bio-lab-top"><div><p class="eyebrow">OFFICIAL EU OPEN DATA / LIVE SEARCH</p>',
+    '<h2>Αυτόματη ανακάλυψη — δημόσια έργα</h2>',
+    '<p class="bio-muted">Πραγματική αναζήτηση στο επίσημο TED API για ελληνικές δημόσιες συμβάσεις απεντόμωσης, μυοκτονίας και απολύμανσης (CPV 90921000, 90922000, 90923000, 90924000). Αφορά δημοσιευμένες προκηρύξεις, όχι όλες τις εθνικές μικρές προμήθειες.</p></div>',
+    '<span class="bio-test-badge">',state?.status==='ok'?'API TED · ΑΝΑΓΝΩΣΗ':'TED · ΜΗ ΔΙΑΘΕΣΙΜΟ','</span></div>',
+    '<div class="bio-demo-connection"><div><strong>',state?.status==='ok'?'Τελευταία επιτυχής αναζήτηση':'Αδυναμία επαλήθευσης TED',
+    '</strong><p>Ώρα Αθήνας: ',dateTime(state?.searched_at_utc||state?.checked_at_utc),
+    ' · ',state?.status==='ok'?'Επιστράφηκαν '+fmt(state.count)+' πραγματικές προκηρύξεις από '+fmt(state.raw_count)+' εγγραφές απάντησης.':'Δεν χρησιμοποιούμε εικονικά αποτελέσματα.', '</p></div>',
+    '<button id="bio-ted-refresh" type="button" class="bio-open-lab">Ανανέωση αναζήτησης</button></div>',
+    '<div class="bio-metrics bio-lab-metrics">',
+    countCard('Ευρήματα TED',state?.status==='ok'?state.count:0,'Έλεγχος αρχικής διακήρυξης απαιτείται'),
+    countCard('Επιβεβαιωμένοι ιδιώτες',0,'Δεν συλλέγονται προσωπικά στοιχεία'),
+    countCard('Επιβεβαιωμένες επιχειρήσεις',0,'Δεν δημιουργούνται εικονικά αιτήματα'),
+    countCard('Επιτρεπόμενες επαφές',0,'Επικοινωνία απενεργοποιημένη'),
+    '</div>',
+    tenderRows(state,esc),
+    '<p class="bio-note">Η ανακάλυψη ενεργοποιείται αυτόματα με το άνοιγμα της σελίδας (έως 15 λεπτά cache ανά instance) και προγραμματίστηκε ξεχωριστός έλεγχος GitHub Actions ανά 6 ώρες. Εάν ο πάροχος δεν απαντά, η κατάσταση φαίνεται ως μη διαθέσιμη.</p>',
+    '<p class="bio-note"><strong>Reddit:</strong> η εμπορική αυτοματοποιημένη συλλογή παραμένει απενεργοποιημένη μέχρι να εγκριθεί από το Reddit. Τα ιστορικά δημόσια ευρήματα βρίσκονται στη διπλανή καρτέλα.</p>',
+  ].join('');
+}
 
 export async function renderBioShieldAdmin(page,{api,esc}) {
-  page.innerHTML='<p role="status">Φόρτωση BioShield Admin Operations…</p>';
-  try {
-    const [data,lab,examples,firstPilot]=await Promise.all([
-      api('/bioshield/overview'),
-      api('/bioshield/lab/report'),
-      api('/bioshield/lab/cases'),
-      api('/bioshield/demo/evidence').catch(()=>({demo_unavailable:true}))
-    ]);
-    let pilot=firstPilot;
-    if(!page.isConnected)return;
-    const q=lab.quality, speed=lab.throughput, normal=lab.mock_normal, outage=lab.mock_fallback;
-    const providerRows=data.providers.map(p=>
-      '<tr><td><strong>'+esc(p.name)+'</strong></td><td>Δεν έχει συνδεθεί</td><td>Καμία πραγματική εκτέλεση</td></tr>'
-    ).join('');
-    const caseRows=examples.cases.map(c=>
-      '<tr data-lab-case data-status="'+(c.predicted_request?'request':'skip')+'" data-search="'+esc((c.id+' '+c.text+' '+(categoryNames[c.category]||'')).toLocaleLowerCase('el-GR'))+'">'+
-      '<td class="bio-nowrap"><strong>'+esc(c.id)+'</strong></td>'+
-      '<td>'+esc(c.text)+'</td>'+
-      '<td><span class="bio-pill '+(c.expected_request?'positive':'neutral')+'">'+(c.expected_request?'Αίτημα':'Μη αίτημα')+'</span></td>'+
-      '<td><span class="bio-pill '+(c.predicted_request?'positive':'neutral')+'">'+(c.predicted_request?'Προς αξιολόγηση':'Απόρριψη')+'</span></td>'+
-      '<td>'+esc(categoryNames[c.category]||'Άλλο')+'</td></tr>'
-    ).join('');
-    page.innerHTML=[
-      '<div class="bio-page">',
-      '<header class="bio-heading"><div><p class="eyebrow">DST / BIOSHIELD OPERATIONS</p>',
-      '<h1>BioShield Admin Operations System</h1>',
-      '<p>Αναζήτηση αιτημάτων, αξιολόγηση καταλληλότητας και διαχείριση πηγών για το τηλεφωνικό κέντρο.</p>',
-      '</div><span class="bio-stage">Demo Supabase · Read-only</span></header>',
-      '<div class="bio-alert" role="status"><strong>Σύστημα δοκιμών, χωρίς στοιχεία πραγματικών πελατών</strong><p>',
-      'Η εταιρική Supabase παραμένει ασύνδετη. Μόνο η ξεχωριστή δοκιμαστική βάση του δεύτερου λογαριασμού τροφοδοτεί τα δημόσια ευρήματα, χωρίς στοιχεία επικοινωνίας.</p></div>',
-      '<nav class="bio-tabs" aria-label="Ενότητες BioShield">',
-      '<button type="button" data-bio-tab="overview" class="active" aria-pressed="true">Επισκόπηση</button>',
-      '<button type="button" data-bio-tab="pilot" aria-pressed="false">Πραγματικά ευρήματα</button>',
-      '<button type="button" data-bio-tab="lab" aria-pressed="false">Εργαστήριο απόδοσης</button>',
-      '<button type="button" data-bio-tab="candidates" aria-pressed="false">Υποψήφιοι</button>',
-      '<button type="button" data-bio-tab="sources" aria-pressed="false">Πηγές</button>',
-      '<button type="button" data-bio-tab="runs" aria-pressed="false">Εκτελέσεις</button>',
-      '<button type="button" data-bio-tab="privacy" aria-pressed="false">Επικοινωνία</button>',
-      '</nav>',
-      '<section data-bio-panel="overview"><div class="bio-metrics">',
-      metric('Πραγματικές αναρτήσεις',data.metrics.discovered,esc),
-      metric('Πραγματικά προς αξιολόγηση',data.metrics.review_required,esc),
-      metric('Επιλέξιμα για επικοινωνία',data.metrics.outreach_eligible,esc),
-      metric('Πραγματικές εκτελέσεις',data.metrics.completed_runs,esc),
-      '</div><div class="bio-grid">',
-      '<article class="bio-card"><h2>Διασυνδέσεις</h2><p>Η εταιρική/production Supabase και η συλλογή leads παραμένουν κλειστές. Η χωριστή Supabase Demo είναι μόνο για δημόσια δεδομένα και ανάγνωση.</p>',
-      '<div class="bio-scroll"><table class="bio-table"><thead><tr><th>Πάροχος</th><th>Κατάσταση</th><th>Λειτουργία</th></tr></thead><tbody>',providerRows,'</tbody></table></div></article>',
-      '<article class="bio-card"><h2>Offline qualification lab</h2>',
-      '<p>Το πρώτο δοκιμαστικό σύνολο περιλαμβάνει <strong>',number(q.fixture_count),
-      ' συνθετικές αναρτήσεις</strong>. Μετράμε ακρίβεια αναγνώρισης, διπλότυπα και χρόνο επεξεργασίας.</p>',
-      '<div class="bio-inline-facts"><span>Recall <strong>',percentage(q.recall),'</strong></span>',
-      '<span>Precision <strong>',percentage(q.precision),'</strong></span>',
-      '</div><button class="bio-open-lab" type="button" data-bio-tab="lab">Προβολή δοκιμών και παραδειγμάτων</button>',
-      '</article></div></section>',
-      '<section data-bio-panel="pilot" hidden>',renderPublicPilot(pilot,esc),'</section>',
-      '<section data-bio-panel="lab" hidden>',
-      '<div class="bio-lab-top"><div><p class="eyebrow">BIO-08 / BIO-09</p><h2>Performance &amp; Relevance Laboratory</h2>',
-      '<p class="bio-muted">Οι παρακάτω τιμές αφορούν μόνο ',number(q.fixture_count),
-      ' κατασκευασμένα παραδείγματα και επεξεργασία μέσα στον Python server. Δεν αποτελούν μέτρηση πραγματικών Firecrawl/TinyFish, Supabase ή εμπορικής απόδοσης.</p></div>',
-      '<span class="bio-test-badge">100% SYNTHETIC</span></div>',
-      '<div class="bio-metrics bio-lab-metrics">',
-      metric('Precision · συνθετικό',percentage(q.precision),esc, 'False positives: '+number(q.fp)),
-      metric('Recall · συνθετικό',percentage(q.recall),esc,'False negatives: '+number(q.fn)),
-      metric('Επεξεργασία / δευτερόλεπτο',number(speed.documents_per_second),esc,'CPU-only, όχι API ή crawl'),
-      metric('P95 ανά εγγραφή',number(speed.p95_item_ms)+' ms',esc,'CPU-only, όχι καθυστέρηση δικτύου'),
-      '</div>',
-      '<div class="bio-grid"><article class="bio-card"><h3>Προσομοίωση δύο παρόχων</h3>',
-      '<p>Τα δύο mock adapters έχουν επικαλυπτόμενες πηγές και αφαιρούν τα ίδια URLs μετά την κανονικοποίηση.</p>',
-      '<table class="bio-table"><thead><tr><th>Σενάριο</th><th>Ευρήματα</th><th>Μοναδικά</th><th>Διπλότυπα</th></tr></thead><tbody>',
-      '<tr><td>Firecrawl + TinyFish (mock)</td><td>',number(normal.raw_hits),'</td><td>',number(normal.unique_sources),'</td><td>',number(normal.duplicates_excluded),'</td></tr>',
-      '<tr><td>Firecrawl unavailable (mock)</td><td>',number(outage.raw_hits),'</td><td>',number(outage.unique_sources),'</td><td>',number(outage.duplicates_excluded),'</td></tr>',
-      '</tbody></table><p class="bio-note">Η προσομοιωμένη απώλεια του Firecrawl μειώνει την κάλυψη. Δεν χαρακτηρίζεται ως πλήρης έρευνα.</p></article>',
-      '<article class="bio-card"><h3>Τι μετρήθηκε</h3>',
-      '<ul class="bio-explainer"><li>Ταξινόμηση ρητών αιτημάτων έναντι διαφημίσεων και συζητήσεων</li>',
-      '<li>Κανονικοποίηση και αναγνώριση διπλότυπων URLs</li>',
-      '<li>CPU latency και throughput σε ',number(speed.iterations),' επαναλήψεις</li>',
-      '<li>Ασφαλής διακοπή διαβίβασης προς τηλεφωνικό κέντρο</li></ul>',
-      '<p class="bio-note"><strong>Δεν μετρήθηκαν:</strong> πραγματικές ιστοσελίδες, χρόνοι crawler, κόστος credits, ανθρώπινη απόκριση ή βάση Supabase.</p></article></div>',
-      '<article class="bio-card bio-lab-table-card"><div class="bio-lab-table-heading"><div><h3>Επισημασμένα ελληνικά παραδείγματα</h3><p class="bio-muted">Πλασματικά κείμενα χωρίς στοιχεία προσώπων. Το αποτέλεσμα «προς αξιολόγηση» δεν επιτρέπει επικοινωνία.</p></div>',
-      '<div class="bio-lab-filter"><input type="search" id="bio-sample-search" aria-label="Αναζήτηση συνθετικών παραδειγμάτων" placeholder="Αναζήτηση περίπτωσης…">',
-      '<select id="bio-sample-status" aria-label="Φίλτρο αποτελέσματος"><option value="all">Όλα</option><option value="request">Προς αξιολόγηση</option><option value="skip">Απόρριψη</option></select></div></div>',
-      '<div class="bio-scroll bio-lab-scroll"><table class="bio-table"><thead><tr><th>ID</th><th>Επινοημένη ανάρτηση</th><th>Σωστή ετικέτα</th><th>Αποτέλεσμα</th><th>Υπηρεσία</th></tr></thead><tbody>',
-      caseRows,'</tbody></table></div><p class="bio-note" id="bio-sample-count">',number(examples.count),' / ',number(examples.count),' παραδείγματα</p></article></section>',
-      '<section data-bio-panel="candidates" hidden><h2>Πραγματικοί υποψήφιοι</h2>',
-      emptyView('Δεν υπάρχει πραγματική ουρά','Δεν συλλέγονται προσωπικά στοιχεία. Για δοκιμαστικές κατατάξεις χρησιμοποίησε το Εργαστήριο απόδοσης.'),'</section>',
-      '<section data-bio-panel="sources" hidden><h2>Μητρώο πραγματικών πηγών</h2>',
-      emptyView('Αναμονή έγκρισης πηγών','Δεν γίνεται συλλογή από forums, social ή άλλες ιστοσελίδες. Μόνο επινοημένες πηγές χρησιμοποιούνται στο εργαστήριο.'),'</section>',
-      '<section data-bio-panel="runs" hidden><h2>Πραγματικές εκτελέσεις</h2>',
-      emptyView('Δεν υπάρχει ενεργός crawler','Οι mock εκτελέσεις εμφανίζονται ξεχωριστά στο εργαστήριο. Δεν έχουν καταναλώσει credits.'),'</section>',
-      '<section data-bio-panel="privacy" hidden><h2>Προϋποθέσεις επικοινωνίας</h2>',
-      '<p>Η δημόσια ανάρτηση δεν είναι αυτόματα νόμιμη βάση για τηλεφωνική εμπορική επικοινωνία. Απαιτούνται έλεγχος νόμιμης βάσης, αντιρρήσεων και ανθρώπινη αξιολόγηση.</p>',
-      '<div class="bio-policy">Αυτόματη διαβίβαση σε τηλεφωνικό κέντρο <strong>Απενεργοποιημένη</strong></div>',
-      '<div class="bio-policy">Συλλογή τηλεφώνων από δημόσια προφίλ <strong>Απενεργοποιημένη</strong></div>',
-      '<div class="bio-policy">Εταιρική Supabase <strong>Απενεργοποιημένη</strong></div>',
-      '<div class="bio-policy">Ξεχωριστή δοκιμαστική Supabase <strong>Μόνο ανάγνωση δημόσιων ευρημάτων</strong></div>',
-      '<div class="bio-policy">Πραγματικά API Firecrawl και TinyFish <strong>Απενεργοποιημένα</strong></div></section>',
-      '<footer class="bio-footer"><span>Independent Supabase demo connected for read-only public evidence; company Supabase disconnected.</span>',
-      '<a href="https://linear.app/gkg/project/bioshield-admin-operations-system-79b033ffab9a" rel="noopener noreferrer" target="_blank">Linear project</a></footer>',
-      '</div>'
-    ].join('');
-    function selectTab(tab){
-      page.querySelectorAll('[data-bio-tab]').forEach(button=>{
-        const selected=button.dataset.bioTab===tab;
-        button.classList.toggle('active',selected);
-        button.setAttribute('aria-pressed',String(selected));
-      });
-      page.querySelectorAll('[data-bio-panel]').forEach(section=>{
-        section.hidden=section.dataset.bioPanel!==tab;
-      });
-    }
-    page.querySelectorAll('[data-bio-tab]').forEach(button=>button.addEventListener('click',()=>selectTab(button.dataset.bioTab)));
-    const search=page.querySelector('#bio-sample-search'),status=page.querySelector('#bio-sample-status');
-    function filterCases(){
-      const term=search.value.trim().toLocaleLowerCase('el-GR'),choice=status.value;
-      let visible=0;
-      page.querySelectorAll('[data-lab-case]').forEach(row=>{
-        const keep=(!term||row.dataset.search.includes(term))&&(choice==='all'||row.dataset.status===choice);
-        row.hidden=!keep;
-        if(keep)visible++;
-      });
-      page.querySelector('#bio-sample-count').textContent=number(visible)+' / '+number(examples.count)+' παραδείγματα';
-    }
-    search.addEventListener('input',filterCases);
-    status.addEventListener('change',filterCases);
-    const pilotPanel=page.querySelector('[data-bio-panel="pilot"]');
-    let loadingDemo=false;
-    function filterPilot(){
-      const search=pilotPanel.querySelector('#bio-pilot-search');
-      const type=pilotPanel.querySelector('#bio-pilot-type');
-      const recency=pilotPanel.querySelector('#bio-pilot-recency');
-      if(!search||!type||!recency||!pilot.demo_supabase_connected)return;
-      const term=search.value.trim().toLocaleLowerCase('el-GR'), kind=type.value;
-      let visible=0;
-      pilotPanel.querySelectorAll('[data-pilot-row]').forEach(row=>{
-        const allowedDate=row.dataset.kind!=='forum'||recency.value==='all'||
-          (recency.value==='30d'&&row.dataset.redditRecent==='true')||
-          (recency.value==='7d'&&row.dataset.redditWeek==='true');
-        const matches=allowedDate&&(kind==='all'||kind===row.dataset.segment)&&(!term||row.dataset.search.includes(term));
-        row.hidden=!matches;
-        if(matches)visible++;
-      });
-      pilotPanel.querySelectorAll('[data-pilot-section]').forEach(section=>{
-        const target=section.dataset.pilotSection;
-        section.hidden=!(kind==='all'||kind===target||(kind==='needs_review'&&target==='individual'));
-      });
-      const count=pilotPanel.querySelector('#bio-pilot-count');
-      if(count)count.textContent=number(visible)+' / '+number(pilot.public_sources_reviewed)+' εγγραφές';
-    }
-    pilotPanel.addEventListener('input',event=>{
-      if(event.target.id==='bio-pilot-search')filterPilot();
+  page.innerHTML='<p role="status">Φόρτωση πραγματικών ευρημάτων BioShield…</p>';
+  const [pilotReply,tedReply]=await Promise.allSettled([
+    api('/bioshield/demo/evidence'), api('/bioshield/discovery/tenders')
+  ]);
+  let pilot=pilotReply.status==='fulfilled'?pilotReply.value:{demo_unavailable:true};
+  let ted=tedReply.status==='fulfilled'?tedReply.value:{status:'unavailable'};
+  if(!page.isConnected)return;
+  const seg=pilot.demo_supabase_connected?pilot.segment_counts:{individual:0,public_sector:0,business:0,needs_review:0};
+  page.innerHTML=[
+    '<div class="bio-page">',
+    '<header class="bio-heading"><div><p class="eyebrow">BIOSHIELD / REAL EVIDENCE</p>',
+    '<h1>Κέντρο ανακάλυψης &amp; αξιολόγησης</h1>',
+    '<p>Πραγματικά δημόσια τεκμήρια, ταξινομημένα σε ιδιώτες, έργα Δημοσίου και επιχειρήσεις. Χωρίς συνθετικά αιτήματα, προσωπικές επαφές ή αυτόματη επικοινωνία.</p></div>',
+    '<span class="bio-stage">Official discovery · Public evidence</span></header>',
+    '<div class="bio-alert"><strong>Μόνο τεκμηριωμένες πηγές</strong>',
+    '<p>Οι παλιές συζητήσεις δεν εμφανίζονται ως νέοι πελάτες. Οι προκηρύξεις είναι δημόσια δεδομένα, όχι εξακριβωμένες αναθέσεις. Η εταιρική Supabase και η διαβίβαση στο τηλεφωνικό κέντρο παραμένουν απομονωμένες.</p></div>',
+    '<nav class="bio-tabs" aria-label="Πλοήγηση BioShield">',
+    '<button type="button" data-bio-tab="overview" class="active" aria-pressed="true">Επισκόπηση</button>',
+    '<button type="button" data-bio-tab="discovery" aria-pressed="false">Νέες ανακαλύψεις</button>',
+    '<button type="button" data-bio-tab="pilot" aria-pressed="false">Αποθηκευμένα ευρήματα</button>',
+    '<button type="button" data-bio-tab="sources" aria-pressed="false">Πηγές &amp; έλεγχοι</button>',
+    '</nav>',
+    '<section data-bio-panel="overview">',
+    '<div class="bio-metrics">',
+    countCard('Δημόσιες πηγές στη demo βάση',pilot.demo_supabase_connected?pilot.public_sources_reviewed:0,'Αποθηκευμένα πραγματικά δημόσια τεκμήρια'),
+    countCard('Νέες προκηρύξεις TED',ted.status==='ok'?ted.count:0,'Ζωντανή αναζήτηση επίσημου API'),
+    countCard('Πρόσφατες συζητήσεις 30ημέρου',pilot.reddit_freshness?.recent_posts_30d||0,'Όχι επιβεβαιωμένα αιτήματα εργασίας'),
+    countCard('Εγκεκριμένες επαφές',0,'Καμία συλλογή προσωπικών στοιχείων'),
+    '</div><div class="bio-grid">',
+    '<article class="bio-card"><h2>Ανακάλυψη νέων δεδομένων</h2><p>Το TED τροφοδοτεί αυτόματα τον έλεγχο ελληνικών δημοσίων συμβάσεων μέσω ανοιχτών επίσημων δεδομένων. Επανέλεγχος κατά την επίσκεψη στην εφαρμογή και προγραμματισμένη αναζήτηση κάθε 6 ώρες.</p>',
+    '<button class="bio-open-lab" type="button" data-bio-tab="discovery">Προβολή πραγματικών αποτελεσμάτων</button></article>',
+    '<article class="bio-card"><h2>Διαχωρισμός αιτούντων</h2>',
+    '<p>Ιδιώτες: <strong>',fmt(seg.individual),'</strong> · Έργα Δημοσίου: <strong>',fmt(seg.public_sector),'</strong> · Επιχειρήσεις: <strong>',fmt(seg.business),'</strong> · Αδιευκρίνιστα: <strong>',fmt(seg.needs_review),'</strong>.</p>',
+    '<p>Οι μετρήσεις αφορούν το αποθηκευμένο δημόσιο δείγμα, όχι επαληθευμένη ενεργή ζήτηση.</p>',
+    '<button class="bio-open-lab" type="button" data-bio-tab="pilot">Προβολή πηγών</button></article>',
+    '</div></section>',
+    '<section data-bio-panel="discovery" hidden>',discoveries(ted,esc),'</section>',
+    '<section data-bio-panel="pilot" hidden>',renderPublicPilot(pilot,esc),'</section>',
+    '<section data-bio-panel="sources" hidden>',
+    '<h2>Συνδεδεμένες &amp; εκκρεμείς πηγές</h2>',
+    '<div class="bio-policy"><span>TED — Ευρωπαϊκή Υπηρεσία Δημοσίων Συμβάσεων</span><strong>Ενεργή επίσημη αναζήτηση</strong></div>',
+    '<div class="bio-policy"><span>Supabase Demo (δεύτερος λογαριασμός)</span><strong>Μόνο ανάγνωση</strong></div>',
+    '<div class="bio-policy"><span>Reddit — εμπορική αυτοματοποιημένη χρήση</span><strong>Απαιτεί έγκριση παρόχου</strong></div>',
+    '<div class="bio-policy"><span>Firecrawl / TinyFish — server-side ingestion</span><strong>Δεν έχει ενεργοποιηθεί</strong></div>',
+    '<div class="bio-policy"><span>Εταιρικό CRM / Supabase</span><strong>Ασύνδετο</strong></div>',
+    '<div class="bio-policy"><span>Στοιχεία επαφών &amp; τηλεφωνικό κέντρο</span><strong>Απενεργοποιημένα</strong></div>',
+    '<p class="bio-note">Για να ενεργοποιηθεί διαχείριση πραγματικών ιδιωτικών υποψηφίων χρειάζονται admin authentication, επιτρεπόμενοι πάροχοι, έλεγχος νόμιμης βάσης, δικαιώματα και εξωτερική ολοκλήρωση CRM.</p></section>',
+    '<footer class="bio-footer"><span>BioShield · Δημόσια τεκμήρια · Όχι συνθετικά δεδομένα</span>',
+    '<a target="_blank" rel="noopener noreferrer" href="https://linear.app/gkg/project/bioshield-admin-operations-system-79b033ffab9a">Εργασίες Linear</a></footer>',
+    '</div>',
+  ].join('');
+  const panels=()=>[...page.querySelectorAll('[data-bio-panel]')];
+  function selectTab(name){
+    page.querySelectorAll('[data-bio-tab]').forEach(b=>{
+      const active=b.dataset.bioTab===name;
+      b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));
     });
-    pilotPanel.addEventListener('change',event=>{
-      if(event.target.id==='bio-pilot-type')filterPilot();
-    });
-    async function refreshDemo(){
-      if(loadingDemo||!page.isConnected)return;
-      loadingDemo=true;
-      const oldQuery=pilotPanel.querySelector('#bio-pilot-search')?.value||'';
-      const oldType=pilotPanel.querySelector('#bio-pilot-type')?.value||'all';
-      const oldRecency=pilotPanel.querySelector('#bio-pilot-recency')?.value||'30d';
-      const button=pilotPanel.querySelector('#bio-demo-refresh');
-      if(button){button.disabled=true;button.textContent='Ανανέωση…';}
-      try{
-        const newData=await api('/bioshield/demo/evidence');
-        if(!page.isConnected)return;
-        pilot=newData;
-      }catch(error){
-        if(!page.isConnected)return;
-        pilot={demo_unavailable:true};
-      }finally{
-        if(page.isConnected){
-          pilotPanel.innerHTML=renderPublicPilot(pilot,esc);
-          const query=pilotPanel.querySelector('#bio-pilot-search');
-          const type=pilotPanel.querySelector('#bio-pilot-type');
-          const recency=pilotPanel.querySelector('#bio-pilot-recency');
-          if(query)query.value=oldQuery;
-          if(type&&Array.from(type.options).some(o=>o.value===oldType))type.value=oldType;
-          if(recency&&Array.from(recency.options).some(o=>o.value===oldRecency))recency.value=oldRecency;
-          filterPilot();
-        }
-        loadingDemo=false;
-      }
-    }
-    pilotPanel.addEventListener('click',event=>{
-      if(event.target.id==='bio-demo-refresh')void refreshDemo();
-    });
-    filterPilot();
-    const interval=setInterval(()=>{
-      if(!page.isConnected){clearInterval(interval);return;}
-      if(!pilotPanel.hidden&&!document.hidden)void refreshDemo();
-    },30000);
-  }catch(error){
-    if(!page.isConnected)return;
-    page.textContent='Το περιβάλλον εργαστηρίου δεν είναι διαθέσιμο. Ελέγξτε την κατάσταση της υπηρεσίας.';
+    panels().forEach(p=>p.hidden=p.dataset.bioPanel!==name);
   }
+  page.addEventListener('click',event=>{
+    const tab=event.target.closest('[data-bio-tab]');
+    if(tab)selectTab(tab.dataset.bioTab);
+  });
+  const pilotPanel=page.querySelector('[data-bio-panel="pilot"]');
+  function filterPilot(){
+    const query=pilotPanel.querySelector('#bio-pilot-search');
+    const type=pilotPanel.querySelector('#bio-pilot-type');
+    const age=pilotPanel.querySelector('#bio-pilot-recency');
+    if(!query||!type||!age||!pilot.demo_supabase_connected)return;
+    const term=query.value.trim().toLocaleLowerCase('el-GR');
+    let visible=0;
+    pilotPanel.querySelectorAll('[data-pilot-row]').forEach(row=>{
+      const allowedAge=row.dataset.kind!=='forum'||age.value==='all'||
+        (age.value==='30d'&&row.dataset.redditRecent==='true')||
+        (age.value==='7d'&&row.dataset.redditWeek==='true');
+      const show=allowedAge&&(type.value==='all'||type.value===row.dataset.segment)&&
+        (!term||row.dataset.search.includes(term));
+      row.hidden=!show;if(show)visible++;
+    });
+    pilotPanel.querySelectorAll('[data-pilot-section]').forEach(section=>{
+      section.hidden=type.value!=='all'&&type.value!==section.dataset.pilotSection&&
+        !(type.value==='needs_review'&&section.dataset.pilotSection==='individual');
+    });
+    const count=pilotPanel.querySelector('#bio-pilot-count');
+    if(count)count.textContent=fmt(visible)+' / '+fmt(pilot.public_sources_reviewed)+' εγγραφές';
+  }
+  pilotPanel.addEventListener('input',filterPilot);
+  pilotPanel.addEventListener('change',filterPilot);
+  async function refreshPilot(){
+    const oldQuery=pilotPanel.querySelector('#bio-pilot-search')?.value||'';
+    const oldType=pilotPanel.querySelector('#bio-pilot-type')?.value||'all';
+    const oldAge=pilotPanel.querySelector('#bio-pilot-recency')?.value||'30d';
+    try{pilot=await api('/bioshield/demo/evidence');}catch{pilot={demo_unavailable:true};}
+    if(!page.isConnected)return;
+    pilotPanel.innerHTML=renderPublicPilot(pilot,esc);
+    const query=pilotPanel.querySelector('#bio-pilot-search'),type=pilotPanel.querySelector('#bio-pilot-type'),
+      age=pilotPanel.querySelector('#bio-pilot-recency');
+    if(query)query.value=oldQuery;
+    if(type)type.value=oldType;
+    if(age)age.value=oldAge;
+    filterPilot();
+  }
+  async function refreshTED(){
+    try{ted=await api('/bioshield/discovery/tenders');}catch{ted={status:'unavailable'};}
+    if(!page.isConnected)return;
+    page.querySelector('[data-bio-panel="discovery"]').innerHTML=discoveries(ted,esc);
+  }
+  page.addEventListener('click',event=>{
+    if(event.target.closest('#bio-demo-refresh'))void refreshPilot();
+    if(event.target.closest('#bio-ted-refresh'))void refreshTED();
+  });
+  filterPilot();
+  const refreshTimer=setInterval(()=>{
+    if(!page.isConnected){clearInterval(refreshTimer);return;}
+    if(!document.hidden){
+      const active=page.querySelector('[data-bio-panel="pilot"]');
+      if(active&&!active.hidden)void refreshPilot();
+    }
+  },30000);
+  const tedTimer=setInterval(()=>{
+    if(!page.isConnected){clearInterval(tedTimer);return;}
+    if(!document.hidden)void refreshTED();
+  },900000);
 }

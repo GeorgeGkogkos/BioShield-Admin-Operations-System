@@ -4,7 +4,6 @@ from fastapi.testclient import TestClient
 from app import app
 from bioshield.audience import classify_audience
 from bioshield.engine import classify
-from bioshield.real_pilot import pilot_report
 
 @pytest.mark.parametrize("description,source,role,issuer,segment,reason", [
     ("Ζητεί ο Δήμος απεντόμωση σχολείων", "procurement_notice", "public_sector", True, "public_sector", "named_in_procurement_notice"),
@@ -45,34 +44,10 @@ def test_service_intent_stays_separate_from_customer_segment():
     assert out.segment == "public_sector"
     assert out.contact_eligible is False
 
-def test_real_snapshot_has_three_exclusive_segments_and_unresolved_case():
-    data=pilot_report()
-    assert data["version"] == "bio11_segmented_public_evidence_v1"
-    assert data["segment_counts"] == {"individual":4,"public_sector":7,"business":0,"needs_review":1}
-    assert data["public_sources_reviewed"] == 12
-    assert data["business_requests"] == []
-    assert data["business_requests_count"] == 0
-    for rec in data["tenders"]:
-        assert rec["audience_segment"] == "public_sector"
-        assert rec["contact_eligible"] is False
-    assert sum(rec["audience_segment"]=="individual" for rec in data["community_cases"]) == 4
-    assert sum(rec["audience_segment"] is None for rec in data["community_cases"]) == 1
-    for rec in data["community_cases"]:
-        assert rec["audience_needs_review"] and not rec["contact_eligible"]
-        assert "phone" not in rec and "email" not in rec and "username" not in rec
-
-def test_live_api_contract_and_403_gates():
+def test_no_legacy_snapshot_and_private_gates():
     with TestClient(app) as client:
-        r=client.get("/api/bioshield/pilot/evidence")
-        assert r.status_code == 200
-        payload=r.json()
-        assert payload["segment_counts"]["business"] == 0
-        assert payload["segment_counts"]["public_sector"] == 7
-        assert payload["segment_counts"]["individual"] == 4
-        assert payload["segment_counts"]["needs_review"] == 1
-        assert payload["external_supabase_connected"] is False
-        assert payload["contact_eligible"] == 0
-        assert r.headers["cache-control"] == "no-store"
+        assert client.get("/api/bioshield/pilot/evidence").status_code == 404
+        assert client.get("/api/bioshield/lab/cases").status_code == 404
         assert client.get("/api/bioshield/candidates").status_code == 403
         assert client.post("/api/bioshield/discover").status_code == 403
         assert client.post("/api/bioshield/handoff").status_code == 403
