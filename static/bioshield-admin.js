@@ -3,6 +3,7 @@ import {coverageMarkup,setupCoverageMap} from './geographic-map.js';
 import {installNavigation} from './typed/navigation.js';
 import {researchMarkup,setupResearchPlaybook} from './typed/research-view.js';
 import {LOCATION_CHOICES,installLocationFocus} from './typed/location-focus.js';
+import {pageSkeleton,showLoadingOverlay} from './typed/skeleton.js';
 
 /* BIO-14: REAL public-source evidence only; the synthetic request lab is removed. */
 const fmt = x => Number(x || 0).toLocaleString('el-GR');
@@ -66,15 +67,10 @@ function tenderRows(state,esc,policy) {
   if (state?.status !== 'ok') return '<p class="bio-note">Δεν υπάρχει διαθέσιμη επιβεβαιωμένη απάντηση από το επίσημο TED API. Δεν εμφανίζονται κατασκευασμένα ή παλιά αποτελέσματα ως νέα.</p>';
   const source=state.notices||[];
   const allowed=new Set(policy?.combined_nuts||['EL301','EL302','EL303','EL304','EL305','EL306','EL307','EL642','EL652']);
-  const minRemote=policy?.remote_min_value_eur||100000;
-  const found=source.filter(x=>{
-    const nuts=x.place_of_performance_nuts||[];
-    if(nuts.some(n=>allowed.has(n)))return true;
-    return nuts.length>0&&Number.isFinite(x.official_total_value_eur)&&
-      x.official_total_value_eur>=minRemote;
-  });
-  if(!found.length)return '<p class="bio-note">Δεν βρέθηκαν προκηρύξεις με τεκμηριωμένη γεωγραφική συνάφεια ή επιβεβαιωμένο μεγάλο ποσό εκτός περιοχής. '+
-    'Από '+esc(source.length)+' εθνικά αποτελέσματα, όσα έχουν άγνωστη περιοχή ή ανεπαρκή οικονομικά στοιχεία παραμένουν προς έλεγχο.</p>';
+  const found=source.filter(x=>(x.place_of_performance_nuts||[]).some(n=>allowed.has(n)));
+  if(!found.length)return '<p class="bio-note">Δεν βρέθηκαν ακόμη επαληθευμένα κοντινές προκηρύξεις στο εθνικό δείγμα TED. '+
+    'Από '+esc(source.length)+' δημοσιεύσεις, οι μακρινές προκηρύξεις Δημοσίου/επιχειρήσεων εμφανίζονται σε ξεχωριστή ενότητα. '+
+    'Η άγνωστη τοποθεσία παραμένει προς επαλήθευση.</p>';
   return '<div class="bio-scroll"><table class="bio-table bio-real-table"><thead><tr>'+
     '<th>Αριθμός TED</th><th>Ημ/νία δημοσίευσης</th><th>Υπηρεσία</th><th>Δημόσιος αγοραστής</th><th>Αντικείμενο</th><th>NUTS / αξία</th><th>Πρωτογενής πηγή</th>'+
     '</tr></thead><tbody>'+found.map(x=>
@@ -85,6 +81,52 @@ function tenderRows(state,esc,policy) {
       '<td><a href="'+esc(x.source_url)+'" target="_blank" rel="noopener noreferrer">Επίσημο TED</a>'+
       '<small class="bio-evidence-note">Ελέγχονται η διακήρυξη και η δυνατότητα υποβολής</small></td></tr>'
     ).join('')+'</tbody></table></div>';
+}
+
+/** Separate faraway government and verified business requests. */
+function remoteOpportunityRows(items,esc){
+  if(!items?.length)return '<p class="bio-note">Δεν υπάρχουν αυτή τη στιγμή επαληθευμένα μακρινά ευρήματα αυτής της κατηγορίας.</p>';
+  return '<div class="bio-scroll"><table class="bio-table bio-real-table">'+
+    '<thead><tr><th>Ημερομηνία</th><th>Τίτλος / εργασία</th><th>Αγοραστής</th>'+
+    '<th>Περιοχή (NUTS)</th><th>Πρωτογενής πηγή</th></tr></thead><tbody>'+
+    items.map(x=>
+    '<tr data-remote-row data-services="'+esc((x.service_codes||[]).join(','))+
+    '" data-search="'+esc([x.title,x.buyer,x.notice_number].join(' ').toLocaleLowerCase('el-GR'))+'">'+
+    '<td>'+esc(x.published_on||'—')+'</td>'+
+    '<td>'+esc(x.title||'Χωρίς τίτλο')+'</td>'+
+    '<td>'+esc(x.buyer||'—')+'</td>'+
+    '<td>'+esc((x.place_of_performance_nuts||[]).join(', '))+'</td>'+
+    '<td><a href="'+esc(x.source_url)+'" target="_blank" rel="noopener noreferrer">Επίσημο τεκμήριο</a></td></tr>'
+    ).join('')+'</tbody></table></div>';
+}
+function remoteOpportunities(segmented,esc){
+  if(segmented?.status!=='ok'){
+    return '<div role="status" class="bio-note">Οι μακρινές προκηρύξεις δεν μπορούν να επαληθευτούν τώρα. '+
+      'Δεν προβάλλονται παλιές ή ανεπιβεβαίωτες ευκαιρίες ως ενεργές.</div>';
+  }
+  const publicItems=segmented.remote_public||[];
+  const businessItems=segmented.remote_business||[];
+  const counts=segmented.counts||{};
+  return '<div class="bio-remote-container">'+
+    '<h3>Ξεχωριστή λίστα μακρινών έργων — Δημόσιο και επιχειρήσεις</h3>'+
+    '<p class="bio-note">Εμφανίζονται μακρινές επίσημες προκηρύξεις Δημοσίου ανεξαρτήτως ποσού και '+
+    'επαληθευμένα αιτήματα επιχειρήσεων, εφόσον υπάρχουν εγκεκριμένες πηγές. '+
+    '<strong>Δεν προστίθενται μακρινά αιτήματα ιδιωτών.</strong> '+
+    'Οι ημερομηνίες, η περιοχή εκτέλεσης και η δυνατότητα συμμετοχής απαιτούν έλεγχο.</p>'+
+    '<div class="bio-remote-split">'+
+    '<section class="bio-remote-panel" aria-labelledby="bio-remote-public-title"><h4 id="bio-remote-public-title">Δημόσιες προκηρύξεις εκτός περιοχής</h4>'+
+    '<span class="bio-remote-count"><strong>'+esc(publicItems.length)+'</strong> τεκμηριωμένες δημοσιεύσεις</span>'+
+    remoteOpportunityRows(publicItems,esc)+'</section>'+
+    '<section class="bio-remote-panel" aria-labelledby="bio-remote-business-title"><h4 id="bio-remote-business-title">Επιχειρηματικά έργα εκτός περιοχής</h4>'+
+    '<span class="bio-remote-count"><strong>'+esc(businessItems.length)+'</strong> πρωτογενώς επαληθευμένες αναφορές</span>'+
+    remoteOpportunityRows(businessItems,esc)+
+    '<p class="bio-remote-unknown">Δεν υποθέτουμε αιτήματα ξενοδοχείων ή εταιρειών από γενικές διαφημίσεις. '+
+    'Ο τρέχων ζωντανός αυτοματοποιημένος πάροχος είναι το TED, το οποίο δημοσιεύει δημόσιες συμβάσεις.</p>'+
+    '</section></div>'+
+    '<p class="bio-remote-unknown">Προς έλεγχο: '+esc(counts.needs_location_review||0)+
+    ' χωρίς επαληθευμένη περιοχή εκτέλεσης, '+esc(counts.needs_audience_review||0)+
+    ' με μη επαληθευμένη κατηγορία. Αποκλείστηκαν '+esc(counts.excluded_remote_individual||0)+
+    ' μακρινά αιτήματα ιδιωτών.</p></div>';
 }
 
 function brandedLoader(){
