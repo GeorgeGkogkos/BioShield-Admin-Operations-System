@@ -9,7 +9,7 @@ import math
 import re
 import time
 import unicodedata
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from threading import Lock
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -241,7 +241,7 @@ def request_official_kimdis(*, today=None, now=None):
         "license": "CC BY 4.0 (Greek open government procurement data)",
         "status": status,
         "source_is_live": True,
-        "searched_at_utc": datetime.utcnow().isoformat() + "Z",
+        "searched_at_utc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "freshness_days": WINDOW_DAYS,
         "source_last_update_frequency": "daily",
         "requests_completed": executed,
@@ -279,7 +279,7 @@ def live_kimdis_report(*, force=False):
                 "source_is_live": False,
                 "notices": [],
                 "count": 0,
-                "checked_at_utc": datetime.utcnow().isoformat() + "Z",
+                "checked_at_utc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
                 "confirmed_contactable_private_leads": 0,
                 "contact_handoff_enabled": False,
                 "message": "Official KΗΜΔΗΣ unavailable; not serving stale search data as live.",
