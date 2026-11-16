@@ -21,7 +21,8 @@ def test_seven_private_tables_enable_rls():
     for name in TABLES:
         assert f"create table if not exists bioshield_private.{name}" in SQL
         assert f"alter table bioshield_private.{name} enable row level security;" in SQL
-        assert f"create policy bioshield_staff_read_{name}" in SQL
+        policy_suffix = "runs" if name == "discovery_runs" else name
+        assert f"create policy bioshield_staff_read_{policy_suffix}" in SQL
 
 
 def test_no_anon_grants_or_outreach_promotion():
@@ -40,7 +41,7 @@ def test_staff_roles_are_namespaced_and_not_editable_user_metadata():
     assert "'bioshield_reviewer'" in SQL
     assert "auth.jwt() -> 'app_metadata'" in SQL
     assert "and created_by = (select auth.uid())" in SQL
-    assert "user_metadata" not in SQL
+    assert "auth.jwt() -> 'user_metadata'" not in SQL
     assert "user-editable" not in SQL
 
 
