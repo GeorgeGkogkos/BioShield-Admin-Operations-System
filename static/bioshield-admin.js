@@ -2,7 +2,10 @@ import {renderPublicPilot} from './real-pilot.js';
 
 /* BIO-14: REAL public-source evidence only; the synthetic request lab is removed. */
 const fmt = x => Number(x || 0).toLocaleString('el-GR');
-const serviceLabels={pest_control:'Απεντόμωση / Απολύμανση',plumbing:'Υδραυλικός',drain_unblocking:'Αποφράξεις'};
+const serviceLabels={
+  pest_control:'Απεντόμωση', rodent_control:'Μυοκτονία',disinfection:'Απολύμανση',
+  plumbing:'Υδραυλικός', drain_unblocking:'Αποφράξεις'
+};
 const sourceStateName={
   enabled_official_api:'Ενεργή επίσημη αναζήτηση',
   blocked_pending_written_commercial_approval:'Αναμονή γραπτής εμπορικής άδειας',
@@ -58,8 +61,10 @@ function discoveries(state,esc) {
     '</div>',
     '<div class="bio-lab-filter bio-service-filter"><label for="bio-ted-service">Φίλτρο υπηρεσίας</label>'+
     '<select id="bio-ted-service" aria-label="Φίλτρο υπηρεσίας">'+
-    '<option value="all">Όλες οι υπηρεσίες</option><option value="pest_control">Απεντόμωση / Απολύμανση</option>'+
-    '<option value="plumbing">Υδραυλικός</option><option value="drain_unblocking">Αποφράξεις</option></select>'+
+    '<option value="all">Όλες οι υπηρεσίες</option>'+
+    '<option value="pest_control">Απεντόμωση</option><option value="rodent_control">Μυοκτονία</option>'+
+    '<option value="disinfection">Απολύμανση</option><option value="plumbing">Υδραυλικός</option>'+
+    '<option value="drain_unblocking">Αποφράξεις</option></select>'+
     '<span id="bio-ted-count"></span></div>',
     tenderRows(state,esc),
     '<p class="bio-note">Η ανακάλυψη ενεργοποιείται αυτόματα με το άνοιγμα της σελίδας (έως 15 λεπτά cache ανά instance) και προγραμματίστηκε ξεχωριστός έλεγχος GitHub Actions ανά 6 ώρες. Εάν ο πάροχος δεν απαντά, η κατάσταση φαίνεται ως μη διαθέσιμη.</p>',
