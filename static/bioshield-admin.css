@@ -646,3 +646,44 @@
 @media(max-width:375px){
   .bio-discovery-menu .bio-home-category{padding:7px 9px}
 }
+
+/* BIO-34: search is the only primary data workspace. */
+#bio-location-config[hidden],#bio-inline-map[hidden],#bio-unified-archive[hidden],
+.bio-search-archive-row[hidden],#bio-search-archive-empty[hidden]{display:none!important}
+.bio-ted-filter-mark{display:inline-grid;place-items:center;min-width:21px;min-height:19px;
+  padding:2px 4px;background:var(--accent-soft);color:var(--accent);border-radius:5px;
+  font-size:.65rem;font-weight:800;letter-spacing:.01em}
+.bio-discovery-menu .bio-ted-filter-mark{width:auto;height:19px;flex:none}
+.bio-discovery-menu .bio-search-view-row{margin-top:9px;border-top:1px solid var(--line);padding-top:10px}
+.bio-discovery-menu [data-bio-search-view]:disabled{opacity:.48;cursor:not-allowed}
+.bio-location-config{margin:-3px 0 17px;padding:0 1px}
+.bio-location-config .bio-focus-panel{margin:0;padding:15px 18px}
+.bio-location-config .bio-focus-panel h3{font-size:.98rem}
+.bio-location-config .bio-focus-panel>.bio-note{font-size:.79rem}
+.bio-location-config[data-mode="home"] #bio-focus-travel,
+.bio-location-config[data-mode="home"] label[for="bio-focus-travel"],
+.bio-location-config[data-mode="custom"] #bio-focus-home,
+.bio-location-config[data-mode="custom"] label[for="bio-focus-home"],
+.bio-location-config[data-mode="current"] .bio-focus-controls,
+.bio-location-config:not([data-mode="current"]) .bio-focus-gps-actions{display:none}
+.bio-search-archive{padding:17px;margin:18px 0;border:1px solid var(--line);border-radius:15px;background:var(--soft-surface)}
+.bio-search-archive details>summary{padding:8px 3px;cursor:pointer;font-size:.94rem;font-weight:700;color:var(--ink)}
+.bio-search-archive details>summary:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+.bio-search-archive-items{display:grid;gap:9px;margin-top:10px}
+.bio-search-archive-row{padding:12px 14px;border:1px solid var(--line);border-radius:11px;background:var(--paper);min-width:0}
+.bio-search-archive-row strong{display:block;font-size:.94rem}
+.bio-search-archive-row p{margin:5px 0;overflow-wrap:anywhere;font-size:.86rem}
+.bio-search-archive-row small{display:block;color:var(--muted);font-size:.77rem;margin-top:5px}
+.bio-search-archive-row a{display:inline-flex;margin-top:9px;color:var(--accent);font-weight:650;font-size:.83rem}
+.bio-search-archive-note{padding:12px 14px;border:1px dashed var(--line);border-radius:12px;color:var(--muted)}
+.bio-inline-map{margin-top:14px}
+@media(max-width:660px){
+  .bio-discovery-menu .bio-location-filter-row .bio-home-categories{gap:6px}
+  .bio-discovery-menu .bio-location-filter-row .bio-home-category{min-height:40px;flex:1;padding:8px}
+  .bio-discovery-menu [data-bio-search-view]{min-height:40px}
+  .bio-location-config .bio-focus-panel{padding:12px}
+  .bio-location-config .bio-focus-controls select{min-width:0;width:100%}
+  #bio-inline-map{min-width:0}
+  #bio-inline-map .bio-coverage-layout{grid-template-columns:minmax(0,1fr)}
+  #bio-inline-map .bio-map-canvas{height:350px;width:100%;min-width:0}
+}
