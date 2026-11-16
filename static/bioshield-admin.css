@@ -680,3 +680,48 @@
   .bio-location-config .bio-focus-panel{padding:12px}
   .bio-location-config .bio-focus-controls select{min-width:0;width:100%}
 }
+
+/* BIO-37: one unobtrusive manual refresh control beside the primary search bar. */
+.bio-discovery-toolbar{
+  display:flex;
+  align-items:stretch;
+  gap:9px;
+  min-width:0;
+}
+.bio-discovery-menu .bio-discovery-toolbar #bio-discovery-search-form{
+  flex:1 1 auto;
+  min-width:0;
+}
+.bio-discovery-refresh{
+  flex:0 0 52px;
+  display:grid;
+  place-items:center;
+  width:52px;
+  min-height:52px;
+  border:1px solid var(--line-strong);
+  border-radius:12px;
+  background:var(--soft-surface);
+  color:var(--ink);
+  cursor:pointer;
+}
+.bio-discovery-refresh:hover:not(:disabled){
+  border-color:var(--accent);
+  background:var(--accent-soft);
+}
+.bio-discovery-refresh:focus-visible{
+  outline:2px solid var(--accent);
+  outline-offset:3px;
+}
+.bio-discovery-refresh:disabled{cursor:progress;opacity:.7}
+.bio-discovery-refresh.is-refreshing svg{animation:bio-refresh-spin 1s linear infinite}
+@keyframes bio-refresh-spin{to{transform:rotate(360deg)}}
+@media(max-width:660px){
+  .bio-discovery-toolbar{gap:7px}
+  .bio-discovery-refresh{
+    flex-basis:48px;width:48px;min-height:48px;
+    border-radius:11px;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .bio-discovery-refresh.is-refreshing svg{animation:none}
+}
