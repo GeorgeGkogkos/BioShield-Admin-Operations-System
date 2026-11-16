@@ -40,7 +40,7 @@ def test_stats_and_changed_rows_are_updated_in_place():
         "segment-business", "segment-review", "private-recent",
         "reddit-summary", "sources-summary", "public-heading", "reddit-heading",
     ):
-        assert f'data-live-stat=\\"{marker}\\"' in pilot
+        assert f'data-live-stat="{marker}"' in pilot
 
     assert "data-pilot-section" in pilot
     assert "data-pilot-row" in pilot
