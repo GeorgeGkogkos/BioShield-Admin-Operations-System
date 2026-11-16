@@ -24,7 +24,7 @@ export function renderPublicPilot(data,esc) {
   const lastFetch = data.fetched_at_utc ?
     new Intl.DateTimeFormat('el-GR',{timeZone:'Europe/Athens',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(new Date(data.fetched_at_utc)) :
     '—';
-  const freshness=data.reddit_freshness||{recent_posts_30d:0,recent_posts_7d:0,historical_or_unopened:(data.community_cases||[]).length};
+  const freshness=data.reddit_freshness||{recent_posts_14d:0,recent_posts_7d:0,historical_or_unopened:(data.community_cases||[]).length};
   const businessRows=(data.business_requests||[]).map(item =>
     '<tr data-pilot-row data-kind="business" data-segment="business" data-search="'+
       esc([item.id,item.authority,item.region,item.service,item.summary].join(' ').toLocaleLowerCase('el-GR'))+'">'+
@@ -42,10 +42,10 @@ export function renderPublicPilot(data,esc) {
     '<small class="bio-evidence-note">'+esc(item.evidence_note)+"</small></td>"+
     "<td>"+sourceLink(item.source_url,esc)+(item.additional_url?" · "+sourceLink(item.additional_url,esc):"")+"</td></tr>"
   ).join("");
-  const discussions=data.community_cases.map(item =>
-    '<tr data-pilot-row data-kind="forum" data-reddit-recent="'+(item.within_30d?'true':'false')+'" data-reddit-week="'+(item.within_7d?'true':'false')+'" data-segment="'+esc(item.audience_segment||"needs_review")+'" data-search="'+
+  const discussions=data.community_cases.filter(item=>item.within_14d===true).map(item =>
+    '<tr data-pilot-row data-kind="forum" data-reddit-fortnight="'+(item.within_14d?'true':'false')+'" data-reddit-week="'+(item.within_7d?'true':'false')+'" data-segment="'+esc(item.audience_segment||"needs_review")+'" data-search="'+
     esc([item.id,item.publisher,item.service,item.summary].join(" ").toLocaleLowerCase("el-GR"))+'">'+
-    "<td>"+esc(item.id)+"</td><td>"+esc(item.posted_on)+(item.within_30d?'<small class="bio-evidence-note">Πρόσφατη · '+esc(item.post_age_days)+' ημέρες</small>':'<small class="bio-evidence-note">Ιστορική / εκτός 30ημέρου</small>')+"</td>"+
+    "<td>"+esc(item.id)+"</td><td>"+esc(item.posted_on)+'<small class="bio-evidence-note">Πρόσφατη · '+esc(item.post_age_days)+' ημέρες</small>'+"</td>"+
     "<td>"+esc(item.service)+"</td><td>"+esc(item.summary)+"</td>"+
     "<td>"+esc({historical_not_confirmed_active:"Ιστορική ζήτηση — όχι επιβεβαιωμένη ενεργή",
       not_hiring:"Συζήτηση — όχι ρητή ανάθεση",stale_archived:"Παλαιό και αρχειοθετημένο",
@@ -63,31 +63,34 @@ export function renderPublicPilot(data,esc) {
     '</div><span class="bio-test-badge">SUPABASE DEMO · LIVE READ</span></div>',
     '<div class="bio-alert"><strong>Διαγωνισμοί ≠ ιδιωτικοί πελάτες</strong><p>',
     'Οι προκηρύξεις αφορούν φορείς. Οι πρόσφατες δημόσιες συζητήσεις δεν ισοδυναμούν με αίτημα συνεργείου, ενεργό πελάτη ή δικαίωμα επικοινωνίας.',
-    ' Οι παλαιότερες αναρτήσεις παραμένουν στο ιστορικό. Για κάθε διαγωνισμό απαιτείται έλεγχος της διακήρυξης.</p></div>',
+    ' Οι παλαιότερες αναρτήσεις αποκλείονται από την προβολή ιδιωτών. Για κάθε διαγωνισμό απαιτείται έλεγχος της διακήρυξης.</p></div>',
     '<div class="bio-metrics bio-lab-metrics">',
-    '<article class="bio-metric bio-segment-private"><span>Ιδιώτες</span><strong data-live-stat="segment-individual">',esc(data.segment_counts.individual),'</strong><small data-live-stat="private-recent">',esc(freshness.recent_posts_30d),' πρόσφατες αναρτήσεις (30 ημέρες) · όχι ενεργοί πελάτες</small></article>',
+    '<article class="bio-metric bio-segment-private"><span>Ιδιώτες (14 ημέρες)</span><strong data-live-stat="segment-individual">',esc(freshness.recent_posts_14d),'</strong><small data-live-stat="private-recent">Δημόσιες αναρτήσεις · όχι ενεργοί πελάτες</small></article>',
     '<article class="bio-metric bio-segment-public"><span>Έργα Δημοσίου</span><strong data-live-stat="segment-public">',esc(data.segment_counts.public_sector),'</strong><small>Προκηρύξεις φορέων · έλεγχος επίσημων όρων</small></article>',
     '<article class="bio-metric bio-segment-business"><span>Επιχειρήσεις</span><strong data-live-stat="segment-business">',esc(data.segment_counts.business),'</strong><small>Επιβεβαιωμένες περιπτώσεις B2B στο δείγμα</small></article>',
     '<article class="bio-metric bio-segment-unknown"><span>Αδιευκρίνιστα</span><strong data-live-stat="segment-review">',esc(data.segment_counts.needs_review),'</strong><small>Χωρίς επαρκή τεκμηρίωση τύπου πελάτη</small></article></div>',
-    '<p class="bio-note" data-live-stat="reddit-summary"><strong>Reddit — πρόσφατα:</strong> ',esc(freshness.recent_posts_30d),' δημοσιεύσεις τελευταίων 30 ημερών (',esc(freshness.recent_posts_7d),' στις 7 ημέρες) · ',esc(freshness.historical_or_unopened),' παλαιότερες/μη επαληθευμένες στο ιστορικό. Προτεραιότητα στη <strong>δημοσίευση της αρχικής ανάρτησης</strong>, όχι στην ημερομηνία σχολίου ή ανάγνωσης.</p>',
+    '<p class="bio-note" data-live-stat="reddit-summary"><strong>Ιδιώτες — πρόσφατα:</strong> ',esc(freshness.recent_posts_14d),' επαληθευμένες αρχικές δημοσιεύσεις έως 14 ημερών (',esc(freshness.recent_posts_7d),' στις 7 ημέρες). Παλαιότερες και μη επαληθευμένες δεν εμφανίζονται. Η ημερομηνία σχολίου ή ανάγνωσης δεν ανανεώνει την αρχική ανάρτηση.</p>',
     '<p class="bio-note" data-live-stat="sources-summary">',esc(data.public_sources_reviewed),' συνολικές πραγματικές πηγές · 0 εγκεκριμένες επαφές. Η κατηγορία αφορά τον <strong>αιτούντα</strong>, όχι την ανάγκη ή άδεια εμπορικής επικοινωνίας.</p>',
     '<div class="bio-lab-filter bio-pilot-filter"><input id="bio-pilot-search" type="search" placeholder="Περιοχή, φορέας, είδος…" aria-label="Αναζήτηση πραγματικών πηγών">',
     '<select id="bio-pilot-type" aria-label="Κατηγορία αιτούντος"><option value="all">Όλες οι κατηγορίες</option><option value="individual">Ιδιώτες</option>',
     '<option value="public_sector">Έργα Δημοσίου</option><option value="business">Επιχειρήσεις</option>',
     '<option value="needs_review">Αδιευκρίνιστα</option></select>',
-    '<select id="bio-pilot-recency" aria-label="Παλαιότητα αναρτήσεων Reddit"><option value="7d">Reddit · έως 7 ημέρες</option>',
-    '<option value="30d">Reddit · έως 30 ημέρες</option><option value="all">Reddit · μαζί με ιστορικά</option></select></div>',
+    '<select id="bio-pilot-recency" aria-label="Παλαιότητα αναρτήσεων Reddit"><option value="14d">Reddit · έως 14 ημέρες</option>',
+    '<option value="7d">Reddit · έως 7 ημέρες</option></select></div>',
     '<div data-pilot-section="public_sector" class="bio-segment-section">',
     '<h3 data-live-stat="public-heading">Έργα Δημοσίου · δημόσιες προκηρύξεις (',esc(data.tenders.length),')</h3><div class="bio-scroll">',
     '<table class="bio-table bio-real-table"><thead><tr><th>Κωδικός</th><th>Φορέας</th><th>Αντικείμενο</th>',
     '<th>Ποσό χωρίς ΦΠΑ</th><th>Δηλωμένη προθεσμία</th><th>Βαθμός τεκμηρίωσης</th><th>Πηγές</th></tr></thead><tbody>',
     rows,'</tbody></table></div></div>',
     '<div data-pilot-section="individual" class="bio-segment-section">',
-    '<h3 class="bio-real-subheading" data-live-stat="reddit-heading">Reddit · ',esc(freshness.recent_posts_30d),' πρόσφατες / ',esc(freshness.historical_or_unopened),' ιστορικές αναρτήσεις</h3>',
-    '<p class="bio-note">Αρχικά εμφανίζονται μόνο δημοσιεύσεις τελευταίων 30 ημερών, πρώτα οι νεότερες. Για παλιές συζητήσεις επέλεξε «Reddit · μαζί με ιστορικά». Οι αναρτήσεις δεν αποτελούν ενεργούς ή εγκεκριμένους πελάτες.</p>',
+    '<h3 class="bio-real-subheading" data-live-stat="reddit-heading">Reddit · ',esc(freshness.recent_posts_14d),' πρόσφατες δημοσιεύσεις (14 ημέρες)</h3>',
+    '<p class="bio-note">Εμφανίζονται μόνο επαληθευμένες αρχικές δημοσιεύσεις έως 14 ημερών, πρώτα οι νεότερες. Μπορείς να περιορίσεις περαιτέρω στις 7 ημέρες. Οι συζητήσεις δεν αποτελούν ενεργούς ή εγκεκριμένους πελάτες.</p>',
     '<div class="bio-scroll">',
     '<table class="bio-table bio-real-table"><thead><tr><th>ID</th><th>Ημερομηνία</th><th>Υπηρεσία</th><th>Επιγραμματική σύνοψη</th><th>Αξιολόγηση</th><th>Πηγή</th></tr></thead><tbody>',
-    discussions,'</tbody></table></div></div>',
+    discussions,'</tbody></table></div>',
+    (data.community_cases||[]).filter(x=>x.within_14d===true).length?'':
+      '<p role="status" class="bio-note">Δεν υπάρχουν επαληθευμένες αρχικές δημοσιεύσεις εντός 14 ημερών.</p>',
+    '</div>',
     '<div data-pilot-section="business" class="bio-segment-section bio-business-empty">',
     '<h3 class="bio-real-subheading">Επιχειρήσεις · αιτήματα ιδιωτικού τομέα (',esc(data.business_requests_count),')</h3>',
     data.business_requests_count===0 ?

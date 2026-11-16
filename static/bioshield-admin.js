@@ -306,7 +306,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     '<article class="bio-card"><h2>Ανακάλυψη νέων δεδομένων</h2><p>Το TED ερευνά αυτόματα ελληνικά δημόσια έργα στις υπηρεσίες απεντόμωσης, μυοκτονίας, απολύμανσης, <strong>υδραυλικού</strong> και <strong>αποφράξεων</strong>. Επανέλεγχος κάθε ώρα στο :17 μέσω GitHub Actions.</p>',
     '<button class="bio-open-lab" type="button" data-bio-tab="discovery">Προβολή πραγματικών αποτελεσμάτων</button></article>',
     '<article class="bio-card"><h2>Διαχωρισμός αιτούντων</h2>',
-    '<p id="bio-overview-segments">Ιδιώτες: <strong>',fmt(seg.individual),'</strong> · Έργα Δημοσίου: <strong>',fmt(seg.public_sector),'</strong> · Επιχειρήσεις: <strong>',fmt(seg.business),'</strong> · Αδιευκρίνιστα: <strong>',fmt(seg.needs_review),'</strong>.</p>',
+    '<p id="bio-overview-segments">Ιδιώτες (14 ημερών): <strong>',fmt(pilot.reddit_freshness?.recent_posts_14d||0),'</strong> · Έργα Δημοσίου: <strong>',fmt(seg.public_sector),'</strong> · Επιχειρήσεις: <strong>',fmt(seg.business),'</strong> · Αδιευκρίνιστα: <strong>',fmt(seg.needs_review),'</strong>.</p>',
     '<p>Οι μετρήσεις αφορούν το αποθηκευμένο δημόσιο δείγμα, όχι επαληθευμένη ενεργή ζήτηση.</p>',
     '<button class="bio-open-lab" type="button" data-bio-tab="pilot">Προβολή πηγών</button></article>',
     '</div><p class="bio-status-source-link"><a href="/admin/operations/sources" data-bio-tab="sources">Αναλυτικές πηγές, δικαιώματα πρόσβασης &amp; Google Alerts ›</a></p></section>',
@@ -395,8 +395,8 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     const term=query.value.trim().toLocaleLowerCase('el-GR');
     let visible=0;
     pilotPanel.querySelectorAll('[data-pilot-row]').forEach(row=>{
-      const allowedAge=row.dataset.kind!=='forum'||age.value==='all'||
-        (age.value==='30d'&&row.dataset.redditRecent==='true')||
+      const allowedAge=row.dataset.kind!=='forum'||
+        (age.value==='14d'&&row.dataset.redditFortnight==='true')||
         (age.value==='7d'&&row.dataset.redditWeek==='true');
       const show=allowedAge&&(type.value==='all'||type.value===row.dataset.segment)&&
         (!term||row.dataset.search.includes(term));
@@ -452,7 +452,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     updateLiveText(page.querySelector('#bio-sources-overview'),fmt(next.public_sources_reviewed));
     const counts=next.segment_counts;
     const summary=page.querySelectorAll('#bio-overview-segments strong');
-    [counts.individual,counts.public_sector,counts.business,counts.needs_review]
+    [next.reddit_freshness?.recent_posts_14d||0,counts.public_sector,counts.business,counts.needs_review]
       .forEach((count,index)=>updateLiveText(summary[index],fmt(count)));
   }
   let pilotBusy=false;

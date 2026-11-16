@@ -67,7 +67,7 @@ def report_from_rows(rows: list[dict]) -> dict:
     community_cases = []
     business_requests = []
     today_utc = datetime.now(timezone.utc).date()
-    recent_window_days = 30
+    recent_window_days = 14
     for rec in rows:
         if not isinstance(rec, dict):
             raise DemoDatabaseUnavailable("Unexpected demo row")
@@ -147,7 +147,7 @@ def report_from_rows(rows: list[dict]) -> dict:
                 "source_opened": rec.get("original_opened") is True,
                 "post_age_days": age_days,
                 "within_7d": bool(is_recent and age_days <= 7),
-                "within_30d": bool(is_recent),
+                "within_14d": bool(is_recent),
                 "audience_segment": segment,
                 "contact_eligible": False,
             })
@@ -164,7 +164,7 @@ def report_from_rows(rows: list[dict]) -> dict:
     # Public discussions are always sorted by the ORIGINAL post date, never
     # by the date of the latest comment or when the item was observed.
     community_cases.sort(key=lambda item: (item["posted_on"], item["id"]), reverse=True)
-    reddit_recent_count = sum(item["within_30d"] for item in community_cases)
+    reddit_recent_count = sum(item["within_14d"] for item in community_cases)
     counts = {
         segment: sum(rec.get("audience_segment") == segment for rec in rows)
         for segment in ("individual", "public_sector", "business")
@@ -189,7 +189,7 @@ def report_from_rows(rows: list[dict]) -> dict:
         "public_discussions_reviewed": len(community_cases),
         "reddit_freshness": {
             "window_days": recent_window_days,
-            "recent_posts_30d": reddit_recent_count,
+            "recent_posts_14d": reddit_recent_count,
             "recent_posts_7d": sum(x["within_7d"] for x in community_cases),
             "historical_or_unopened": len(community_cases) - reddit_recent_count,
             "recent_confirmed_service_requests": 0,

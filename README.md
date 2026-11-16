@@ -133,3 +133,8 @@ The public preview automatically runs its bounded cached official TED searches w
 ## BIO-25 — seamless 30-second Supabase evidence revalidation
 
 The separate read-only Supabase evidence page retains its mounted tables, active filters, keyboard focus and scroll position while a 30-second poll or manual refresh is running. New numbers (including the last real source fetch time, audience counts and relevant summaries) are reconciled into existing DOM nodes; table rows are changed only when source-backed records differ. Unlike first-page loads, periodic polling never shows skeleton overlays or replaces the entire evidence panel. Failure preserves the last successful snapshot with an explicit stale-data warning rather than zeroing counts or implying a successful new fetch. No changes to Supabase RLS, private CRM isolation, source permissions or contact eligibility. See [DST-288](https://linear.app/gkg/issue/DST-288/bio-25-in-place-supabase-polling-live-metrics-without-skeleton-or-full).
+
+
+## BIO-36 — Only recent individual requests in search (2026-11-16)
+
+The search result category **Ιδιώτες** now uses a strict rolling **14-day maximum** based on the verified **original post date** (optional 7-day filter in the secondary evidence viewer). Old original posts, unverified sources, problem-only discussions and already-arranged services cannot appear as private service-request matches. If no case qualifies, search reports zero without substituting stale posts. Historical metadata remains in the isolated Supabase audit dataset, not the customer-facing individual search. This changes no permissions, automated social crawling or outreach. See [BIO-36 policy and tests](docs/BIO36_INDIVIDUAL_14_DAY_RESULTS.md).

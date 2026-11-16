@@ -16,12 +16,14 @@ export function renderSearchArchive(data,esc,category) {
   let items=[];
   let description='';
   if(category==='individual'){
-    description='Δημόσιες συζητήσεις, όχι επιβεβαιωμένες νέες εργασίες ή στοιχεία επικοινωνίας.';
-    items=(data.community_cases||[]).filter(x=>x.audience_segment==='individual').map(x=>({
+    description='Μόνο πρωτογενείς δημοσιεύσεις έως 14 ημερών που ζητούν ρητά επαγγελματία. Η σημερινή διαθεσιμότητα παραμένει προς επιβεβαίωση.';
+    items=(data.community_cases||[]).filter(x=>x.audience_segment==='individual' &&
+      x.within_14d===true && x.source_opened===true &&
+      x.gate==='historical_not_confirmed_active').map(x=>({
       title:x.service||'Αναφορά υπηρεσίας',
       meta:[x.publisher,x.posted_on].filter(Boolean).join(' · '),
       description:x.summary||'',
-      status:x.within_30d?'Δημοσίευση εντός 30 ημερών — απαιτείται έλεγχος ενεργής ανάγκης':'Ιστορική ανάρτηση — δεν τεκμηριώνει ενεργό αίτημα',
+      status:'Δημοσίευση εντός 14 ημερών — απαιτείται επιβεβαίωση ενεργής ανάγκης',
       url:x.source_url,search:[x.id,x.publisher,x.service,x.summary,x.posted_on].filter(Boolean).join(' ')
     }));
   }else if(category==='business'){
@@ -44,10 +46,17 @@ export function renderSearchArchive(data,esc,category) {
       url:x.source_url,search:[x.id,x.notice_id,x.authority,x.region,x.service].filter(Boolean).join(' ')
     }));
   }
+  if(category==='individual' && items.length===0){
+    return '<div class="bio-search-archive" role="status"><p class="bio-note">'+
+      'Δεν βρέθηκαν επαληθευμένα πρόσφατα αιτήματα ιδιωτών τις τελευταίες 14 ημέρες. '+
+      'Παλαιότερες αναρτήσεις και απλές συζητήσεις αποκλείονται από τα αποτελέσματα. '+
+      'Δεν πρόκειται για ενεργό αυτοματοποιημένο crawler.</p></div>';
+  }
   return '<div class="bio-search-archive">'+
     '<p class="bio-note">'+esc(description)+'</p>'+
     '<details id="bio-search-archive-details" '+(category==='individual'?'open':'')+'>'+
-    '<summary>Δημόσια τεκμήρια αρχείου ('+esc(items.length)+') · όχι νέοι πελάτες</summary>'+
+    '<summary>'+(category==='individual'?'Πρόσφατες αναρτήσεις με αίτημα υπηρεσίας':'Δημόσια τεκμήρια αρχείου')+
+    ' ('+esc(items.length)+') · μη επιβεβαιωμένες αναθέσεις</summary>'+
     '<div class="bio-search-archive-items">'+(items.length?
       items.map(x=>itemCard(x,esc)).join(''):
       '<p class="bio-note">Δεν υπάρχουν τεκμηριωμένα ευρήματα αρχείου για την επιλεγμένη κατηγορία.</p>')+
