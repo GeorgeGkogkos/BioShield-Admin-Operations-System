@@ -74,7 +74,9 @@ def focused_report(*,home="ilion",temporary="",force=False):
     now=time.monotonic()
     key=home+":"+(temporary or "_home")
     with _lock:
-        if force and now-_last_force<MIN_FORCE_INTERVAL:
+        # A fresh process has never made a forced request. monotonic() may be
+        # below 180 seconds after boot; do not block its first manual search.
+        if force and _last_force>0 and now-_last_force<MIN_FORCE_INTERVAL:
             return {"status":"rate_limited","retry_after_seconds":int(MIN_FORCE_INTERVAL-(now-_last_force))+1,
                     "checked_at_utc":datetime.now(timezone.utc).isoformat(),
                     "policy":policy,"manual_executed":False}
