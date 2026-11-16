@@ -21,3 +21,15 @@ Linear project: https://linear.app/gkg/project/bioshield-admin-operations-system
 ## Repository and security
 
 This repository is currently PUBLIC. Never commit Supabase secrets, Firecrawl/TinyFish API keys, contacts, discovered personal information or customer data. All integrations will use server-side environment secrets and reviewed access controls. Production data endpoints remain disabled by default until proper administrator authentication and data policies are implemented.
+
+## Verified initial deployment — 2026-11-16
+
+- Admin setup preview: https://bioshield-admin-operations.onrender.com/admin/operations
+- Health check: https://bioshield-admin-operations.onrender.com/health
+- Render service: https://dashboard.render.com/web/srv-dbt4minf3r2c73bu08e0
+- Workspace: My Workspace; region: Frankfurt; plan: free; auto-deploy: disabled.
+- First live deployment: dep-dbt4mjff3r2c73bu0b40, commit aeaeef10a18447a681f1ccd228c50c98bf176be1 (GitHub PR #1), status LIVE.
+- GitHub Actions checks passed; actual health, page and read-only overview were fetched from the deployed service.
+- Render DST project assignment is still unverified because the connected service-creation tool has no project/environment argument. Track as Linear DST-271; use the Render Dashboard's Move control to group this service under the existing DST project without modifying dst-web.
+
+The page is a PUBLIC setup preview and MUST NOT contain any personal/contact data until proper admin authentication and the external business database are verified.
