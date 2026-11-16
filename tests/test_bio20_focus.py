@@ -191,7 +191,8 @@ def test_brand_loader_genuine_black_home_only_header_and_opt_in_gps():
     assert "bio-start-loader" in html
     assert "/static/bioshield-company-logo.png" in html
     assert "brandedLoader()" in ui
-    assert ui.index("'<nav class=\"bio-tabs\"") < ui.index("'<header class=\"bio-heading\"")
+    assert html.index('id="bio-shell-nav"') < html.index('id="app"')
+    assert '<nav class="bio-tabs"' not in ui
     assert ui.index("'<section data-bio-panel=\"overview\"") < ui.index("'<header class=\"bio-heading\"")
     assert "id=\"bio-ted-refresh\"" in ui
     assert "api('/bioshield/discovery/manual?" in ui
