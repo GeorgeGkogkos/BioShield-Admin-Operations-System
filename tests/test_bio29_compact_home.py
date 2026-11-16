@@ -37,7 +37,10 @@ def test_discovery_categories_are_filtered_in_place_not_navigational_links():
     script = (ROOT / "static/bioshield-admin.js").read_text(encoding="utf-8")
     layout = (ROOT / "static/discovery-layout.js").read_text(encoding="utf-8")
     assert "setDiscoveryCategory(category)" in script
-    assert "input.disabled=!publicOnly" in script
+    assert "input.disabled=false" in script
+    assert "if(submit)submit.disabled=false" in script
+    assert "matchingBusinesses" in script
+    assert "bio-discovery-private-no-matches" in script
     assert "archive.dataset.bioDiscoveryArchive=category" in script
     assert "businessDiscoveryMarkup({segmented" in script
     assert "Οι επιχειρηματικές εργασίες ανήκουν στο φίλτρο" in script
@@ -56,3 +59,18 @@ def test_status_is_not_a_sixth_mobile_bottom_tab():
     ts = (ROOT / "src/navigation.ts").read_text(encoding="utf-8")
     js = (ROOT / "static/typed/navigation.js").read_text(encoding="utf-8")
     assert "'/admin/operations/status'" in ts and "'/admin/operations/status'" in js
+
+def test_search_precedes_compact_category_filter_chips():
+    layout=(ROOT / "static/discovery-layout.js").read_text(encoding="utf-8")
+    css=(ROOT / "static/bioshield-admin.css").read_text(encoding="utf-8")
+    menu=layout[layout.index("export function discoveryFilterMenu"):layout.index("export function businessDiscoveryMarkup")]
+    # Search is the first interactive element, with small in-place chips below it.
+    assert menu.index('id="bio-discovery-search-form"') < menu.index('bio-discovery-filter-row')
+    assert menu.index('bio-discovery-filter-row') < menu.index('id="bio-home-ted-summary"')
+    assert "bio-discovery-filter-label" in menu
+    assert menu.count('class="bio-home-category"')==3
+    assert ".bio-discovery-menu .bio-home-category" in css
+    assert "border-radius:999px" in css
+    assert "min-height:36px" in css
+    assert "display:flex;" in css
+    assert "bio-discovery-menu .bio-home-category[aria-pressed=" in css
