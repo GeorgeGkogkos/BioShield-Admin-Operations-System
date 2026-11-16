@@ -498,9 +498,10 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     }
   }
   let discoveryCategory='public_sector';
+  let discoveryService='all';
   function filterTED(){
     const host=page.querySelector('[data-bio-panel="discovery"]');
-    const selection=host?.querySelector('#bio-ted-service')?.value||'all';
+    const selection=discoveryService;
     const term=(host?.querySelector('#bio-ted-term')?.value||'').trim().toLocaleLowerCase('el-GR');
     let count=0;
     host?.querySelectorAll('[data-ted-row],[data-focus-row],[data-remote-row]').forEach(row=>{
@@ -534,9 +535,6 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     if(archiveEmpty)archiveEmpty.hidden=!(archiveRows.length>0&&matchingArchive===0);
     if(term&&matchingArchive>0)host?.querySelector('#bio-search-archive-details')?.setAttribute('open','');
   }
-  page.addEventListener('change',event=>{
-    if(event.target.id==='bio-ted-service')filterTED();
-  });
   page.addEventListener('input',event=>{
     if(event.target.id==='bio-ted-term')filterTED();
   });
@@ -726,6 +724,14 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
   page.querySelector('#bio-discovery-search-form').addEventListener('submit',event=>{
     event.preventDefault();filterTED();
   });
+  function setDiscoveryService(service){
+    if(!['all','pest_control','rodent_control','disinfection','plumbing','drain_unblocking'].includes(service))return;
+    discoveryService=service;
+    discoveryPanel.querySelectorAll('[data-bio-discovery-service]').forEach(button=>{
+      button.setAttribute('aria-pressed',String(button.dataset.bioDiscoveryService===service));
+    });
+    filterTED();
+  }
   function setDiscoveryCategory(category){
     if(!['individual','public_sector','ted','business'].includes(category))return;
     discoveryCategory=category;
@@ -771,6 +777,8 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
   page.addEventListener('click',event=>{
     const selected=event.target.closest('[data-bio-discovery-category]');
     if(selected)setDiscoveryCategory(selected.dataset.bioDiscoveryCategory);
+    const service=event.target.closest('[data-bio-discovery-service]');
+    if(service)setDiscoveryService(service.dataset.bioDiscoveryService);
     const location=event.target.closest('[data-bio-location-mode]');
     if(location)setLocationMode(location.dataset.bioLocationMode);
     const archive=event.target.closest('[data-bio-discovery-archive]');
