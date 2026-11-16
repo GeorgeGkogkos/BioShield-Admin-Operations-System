@@ -725,3 +725,37 @@
 @media(prefers-reduced-motion:reduce){
   .bio-discovery-refresh.is-refreshing svg{animation:none}
 }
+
+/* The service selector shares the discovery search facets instead of creating
+   another toolbar above the results. */
+.bio-discovery-menu .bio-discovery-service-select{
+  min-height:38px;
+  max-width:100%;
+  min-width:190px;
+  padding:8px 14px;
+  border:1px solid var(--line-strong);
+  border-radius:999px;
+  background:var(--paper);
+  color:var(--ink);
+  font:inherit;
+  font-size:.84rem;
+  cursor:pointer;
+}
+.bio-discovery-menu .bio-discovery-service-select:focus-visible{
+  outline:2px solid var(--accent);
+  outline-offset:3px;
+}
+.bio-ted-results-summary{
+  margin:4px 0 14px;
+  color:var(--muted);
+  font-size:.82rem;
+  font-variant-numeric:tabular-nums;
+}
+@media(max-width:660px){
+  .bio-discovery-menu .bio-discovery-service-select{
+    width:100%;
+    min-width:0;
+    border-radius:11px;
+    min-height:42px;
+  }
+}
