@@ -150,6 +150,11 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     const tab=event.target.closest('[data-bio-tab]');
     if(tab)selectTab(tab.dataset.bioTab);
   });
+  // Stable shareable deep-link for geographic inspection and map acceptance.
+  const requestedTab=new URLSearchParams(window.location.search).get('tab');
+  if(['overview','discovery','pilot','map','sources'].includes(requestedTab)){
+    selectTab(requestedTab);
+  }
   const pilotPanel=page.querySelector('[data-bio-panel="pilot"]');
   function filterPilot(){
     const query=pilotPanel.querySelector('#bio-pilot-search');
