@@ -1,0 +1,13 @@
+{
+  "name": "bioshield-admin-operations",
+  "private": true,
+  "version": "0.19.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "typecheck": "tsc --project tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "5.8.3"
+  }
+}
