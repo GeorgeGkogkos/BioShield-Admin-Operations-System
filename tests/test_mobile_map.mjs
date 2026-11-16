@@ -41,6 +41,20 @@ test('mobile source sheet is bound to markers and cleaned up on tab exit',()=>{
   assert.match(css,/\.bio-page section\[data-bio-panel="map"\]/);
 });
 
+
+test('short landscape orientation uses a compact scrollable source card, not offscreen Leaflet popup',()=>{
+  const code=readFileSync(new URL('../static/geographic-map.js',import.meta.url),'utf8');
+  const css=readFileSync(new URL('../static/bioshield-admin.css',import.meta.url),'utf8');
+  assert.match(code,/const shortViewport=window\.matchMedia\('\(max-height: 500px\)'\)/);
+  assert.match(code,/if\(mobileViewport\.matches\|\|shortViewport\.matches\)/);
+  assert.match(code,/shortViewport\.addEventListener\('change',onViewportChange\)/);
+  assert.match(code,/shortViewport\.removeEventListener\('change',onViewportChange\)/);
+  assert.match(css,/@media\(min-width:641px\) and \(max-height:500px\)/);
+  assert.match(css,/width:min\(410px,calc\(100% - 24px\)\)/);
+  assert.match(css,/max-height:min\(48%,220px\)/);
+  assert.match(css,/overflow-y:auto;overscroll-behavior:contain/);
+});
+
 test('public demo archival tenders map to issuer areas, never worksite pins or private prospects',()=>{
   const input={
     demo_supabase_connected:true,

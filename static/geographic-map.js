@@ -120,6 +120,8 @@ export function setupCoverageMap(panel,report,esc,pilot){
   // Load only tiles viewed by the user. No offline download, bulk prefetch or
   // proxy. Browser manages HTTP cache and automatically sends Referer.
   const mobileViewport=window.matchMedia('(max-width: 640px)');
+  // A phone rotated to landscape can exceed 640px yet be too short for Leaflet popups.
+  const shortViewport=window.matchMedia('(max-height: 500px)');
   const map=lib.map(container,{
     zoomControl:false,scrollWheelZoom:false,zoomSnap:0.5,zoomDelta:0.5,
     minZoom:5,maxZoom:17,worldCopyJump:false,preferCanvas:true
@@ -221,7 +223,7 @@ export function setupCoverageMap(panel,report,esc,pilot){
         fillOpacity:issuer?0.40:0.85,weight:issuer?3:2,
         dashArray:issuer?'5 4':null,interactive:true,bubblingMouseEvents:false
       });
-      if(mobileViewport.matches){
+      if(mobileViewport.matches||shortViewport.matches){
         marker.on('click',()=>{
           detailBody.replaceChildren(popupContent(p));
           mobileDetail.hidden=false;
@@ -258,6 +260,8 @@ export function setupCoverageMap(panel,report,esc,pilot){
   };
   if(mobileViewport.addEventListener)mobileViewport.addEventListener('change',onViewportChange);
   else mobileViewport.addListener(onViewportChange);
+  if(shortViewport.addEventListener)shortViewport.addEventListener('change',onViewportChange);
+  else shortViewport.addListener(onViewportChange);
   // Leaflet otherwise keeps the previous tile layout after orientation changes.
   const resizeObserver=typeof ResizeObserver==='function'?
     new ResizeObserver(()=>map.invalidateSize({pan:false})):null;
@@ -271,6 +275,8 @@ export function setupCoverageMap(panel,report,esc,pilot){
     panel.removeEventListener('change',onChange);
     if(mobileViewport.removeEventListener)mobileViewport.removeEventListener('change',onViewportChange);
     else mobileViewport.removeListener(onViewportChange);
+    if(shortViewport.removeEventListener)shortViewport.removeEventListener('change',onViewportChange);
+    else shortViewport.removeListener(onViewportChange);
     resizeObserver?.disconnect();
     container.removeEventListener('keydown',onDetailKeydown);
     closeDetailButton.removeEventListener('click',hideDetail);
