@@ -5,7 +5,7 @@ classes. Real third-party source content is paraphrased, never bulk-copied.
 The application makes NO automatic source requests and stores NO personal contact
 fields. All records remain blocked from outbound contact and CRM publication.
 """
-from urllib.parse import urlsplit
+from .audience import classify_audience
 
 OBSERVED_ON = "2026-11-16"
 TENDERS = (
@@ -138,10 +138,50 @@ COMMUNITY_CASES = (
 )
 
 def pilot_report() -> dict:
-    """Static, review-only desk-research ledger: no provider or database reads."""
-    source_count = len(TENDERS) + len(COMMUNITY_CASES)
+    """A fixed, review-only ledger; segment who requests, not contact permission.
+
+    Public forum examples are NOT active private leads; one originally
+    unopened post remains unclassified instead of inventing a verified buyer.
+    """
+    tenders = []
+    for item in TENDERS:
+        decision = classify_audience(
+            item["service"], source_type="procurement_notice",
+            buyer_role="public_sector",
+            public_issuer_identified=bool(item.get("authority") and item.get("notice_id")),
+        )
+        tenders.append({
+            **item, "source_type": "public_procurement",
+            "audience_segment": decision.segment,
+            "audience_reason": decision.reason,
+            "audience_needs_review": decision.needs_review,
+            "contact_eligible": False,
+        })
+    discussions = []
+    for item in COMMUNITY_CASES:
+        decision = classify_audience(
+            item["summary"], source_type="community_post",
+            buyer_role="individual" if item["source_opened"] else None,
+        )
+        discussions.append({
+            **item, "source_type": "community_discussion",
+            "audience_segment": decision.segment,
+            "audience_reason": decision.reason,
+            "audience_needs_review": True,
+            "contact_eligible": False,
+        })
+    business_requests = []  # No independently evidenced B2B buyer yet.
+    classified = tenders + discussions + business_requests
+    segment_counts = {
+        segment: sum(row["audience_segment"] == segment for row in classified)
+        for segment in ("individual", "public_sector", "business")
+    }
+    segment_counts["needs_review"] = sum(
+        row["audience_segment"] is None for row in classified
+    )
+    source_count = len(classified)
     return {
-        "version": "bio10_manual_public_evidence_v1",
+        "version": "bio11_segmented_public_evidence_v1",
         "as_of_date": OBSERVED_ON,
         "real_public_sources": True,
         "synthetic": False,
@@ -152,6 +192,14 @@ def pilot_report() -> dict:
         "confirmed_contactable_private_leads": 0,
         "contact_eligible": 0,
         "public_sources_reviewed": source_count,
+        "segment_counts": segment_counts,
+        "segment_definitions": {
+            "individual": "Private household or resident; not necessarily hiring",
+            "public_sector": "Public authority named in a procurement notice",
+            "business": "Private commercial organization explicitly requesting services",
+            "needs_review": "Insufficient buyer evidence; do not assign a category",
+        },
+        "business_requests_count": len(business_requests),
         "public_procurement_notices": len(TENDERS),
         "public_discussions_reviewed": len(COMMUNITY_CASES),
         "historical_explicit_requests": sum(
@@ -163,6 +211,7 @@ def pilot_report() -> dict:
             "unopened_primaries": "Some KIMDIS and TED origin pages blocked automated inspection; do not mark these offers as verified open.",
             "eligible_for_outreach": "None. Public posting or tender listings do not authorize unsolicited personal marketing.",
         },
-        "tenders": list(TENDERS),
-        "community_cases": list(COMMUNITY_CASES),
+        "tenders": tenders,
+        "community_cases": discussions,
+        "business_requests": business_requests,
     }
