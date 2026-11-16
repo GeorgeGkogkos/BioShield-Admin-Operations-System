@@ -1,6 +1,7 @@
 {
   "confirmed_contactable_private_leads": 0,
   "count": 5,
+  "discovery_clock_semantics": "first_seen_at_utc tracks initial observation in hourly snapshot since this feature; publication-date is a separate official field",
   "freshness_days": 30,
   "notes": "Official TED publication metadata only. No claim of tender eligibility, open bidding status, private customer demand or comprehensive Greek coverage.",
   "notices": [
@@ -14,15 +15,23 @@
       ],
       "current_eligibility_verified": false,
       "evidence_level": "official_ted_metadata",
+      "first_seen_at_utc": "2026-11-16T13:55:23.745988+00:00",
+      "geography_evidence": "official_ted_performance_nuts",
       "id": "TED-791336-2026",
+      "last_seen_at_utc": "2026-11-16T13:55:23.745988+00:00",
       "notice_number": "791336-2026",
+      "official_total_value_eur": null,
+      "place_of_performance_nuts": [
+        "EL651"
+      ],
       "published_on": "2026-11-13",
       "qualification": "official_notice_review_required",
       "service_codes": [
         "pest_control"
       ],
       "source_url": "https://ted.europa.eu/en/notice/-/detail/791336-2026",
-      "title": "Ελλάδα – Υπηρεσίες καταπολέμησης επιβλαβών εντόμων – Ολοκληρωμένο Πρόγραμμα Καταπολέμησης Κουνουπιών στη Περιφέρεια Πελοποννήσου, για τα έτη 2027-2028"
+      "title": "Ελλάδα – Υπηρεσίες καταπολέμησης επιβλαβών εντόμων – Ολοκληρωμένο Πρόγραμμα Καταπολέμησης Κουνουπιών στη Περιφέρεια Πελοποννήσου, για τα έτη 2027-2028",
+      "worksite_exact_address_verified": false
     },
     {
       "audience_segment": "public_sector",
@@ -34,15 +43,28 @@
       ],
       "current_eligibility_verified": false,
       "evidence_level": "official_ted_metadata",
+      "first_seen_at_utc": "2026-11-16T13:55:23.745988+00:00",
+      "geography_evidence": "official_ted_performance_nuts",
       "id": "TED-774976-2026",
+      "last_seen_at_utc": "2026-11-16T13:55:23.745988+00:00",
       "notice_number": "774976-2026",
+      "official_total_value_eur": null,
+      "place_of_performance_nuts": [
+        "EL301",
+        "EL302",
+        "EL303",
+        "EL304",
+        "EL306",
+        "EL307"
+      ],
       "published_on": "2026-11-06",
       "qualification": "official_notice_review_required",
       "service_codes": [
         "pest_control"
       ],
       "source_url": "https://ted.europa.eu/en/notice/-/detail/774976-2026",
-      "title": "Ελλάδα – Υπηρεσίες καταπολέμησης επιβλαβών εντόμων – Διακήρυξη 10/2026"
+      "title": "Ελλάδα – Υπηρεσίες καταπολέμησης επιβλαβών εντόμων – Διακήρυξη 10/2026",
+      "worksite_exact_address_verified": false
     },
     {
       "audience_segment": "public_sector",
@@ -54,15 +76,23 @@
       ],
       "current_eligibility_verified": false,
       "evidence_level": "official_ted_metadata",
+      "first_seen_at_utc": "2026-11-16T13:55:23.745988+00:00",
+      "geography_evidence": "official_ted_performance_nuts",
       "id": "TED-765459-2026",
+      "last_seen_at_utc": "2026-11-16T13:55:23.745988+00:00",
       "notice_number": "765459-2026",
+      "official_total_value_eur": null,
+      "place_of_performance_nuts": [
+        "EL421"
+      ],
       "published_on": "2026-11-04",
       "qualification": "official_notice_review_required",
       "service_codes": [
         "drain_unblocking"
       ],
       "source_url": "https://ted.europa.eu/en/notice/-/detail/765459-2026",
-      "title": "Ελλάδα – Λειτουργία σταθμού επεξεργασίας λυμάτων – Λειτουργία & Συντήρηση Περιφερειακών Εγκαταστάσεων Επεξεργασίας Λυμάτων & Εφαρμογή της Μεθόδου της Βιοεξυγίανσης"
+      "title": "Ελλάδα – Λειτουργία σταθμού επεξεργασίας λυμάτων – Λειτουργία & Συντήρηση Περιφερειακών Εγκαταστάσεων Επεξεργασίας Λυμάτων & Εφαρμογή της Μεθόδου της Βιοεξυγίανσης",
+      "worksite_exact_address_verified": false
     },
     {
       "audience_segment": "public_sector",
@@ -75,8 +105,15 @@
       ],
       "current_eligibility_verified": false,
       "evidence_level": "official_ted_metadata",
+      "first_seen_at_utc": "2026-11-16T13:55:23.745988+00:00",
+      "geography_evidence": "official_ted_performance_nuts",
       "id": "TED-758868-2026",
+      "last_seen_at_utc": "2026-11-16T13:55:23.745988+00:00",
       "notice_number": "758868-2026",
+      "official_total_value_eur": null,
+      "place_of_performance_nuts": [
+        "EL307"
+      ],
       "published_on": "2026-11-02",
       "qualification": "official_notice_review_required",
       "service_codes": [
@@ -84,7 +121,8 @@
         "rodent_control"
       ],
       "source_url": "https://ted.europa.eu/en/notice/-/detail/758868-2026",
-      "title": "Ελλάδα – Υπηρεσίες καταπολέμησης επιβλαβών εντόμων – Παροχή υπηρεσιών κουνουποκτονιών- απεντομώσεων – μυοκτονιών καθώς και άλλων ειδικών εργασιών σε χώρους εμβέλειας Δήμου Πειραιά, οικονομικών ετών 2027, 2028"
+      "title": "Ελλάδα – Υπηρεσίες καταπολέμησης επιβλαβών εντόμων – Παροχή υπηρεσιών κουνουποκτονιών- απεντομώσεων – μυοκτονιών καθώς και άλλων ειδικών εργασιών σε χώρους εμβέλειας Δήμου Πειραιά, οικονομικών ετών 2027, 2028",
+      "worksite_exact_address_verified": false
     },
     {
       "audience_segment": "public_sector",
@@ -96,15 +134,28 @@
       ],
       "current_eligibility_verified": false,
       "evidence_level": "official_ted_metadata",
+      "first_seen_at_utc": "2026-11-16T13:55:23.745988+00:00",
+      "geography_evidence": "official_ted_performance_nuts",
       "id": "TED-758124-2026",
+      "last_seen_at_utc": "2026-11-16T13:55:23.745988+00:00",
       "notice_number": "758124-2026",
+      "official_total_value_eur": null,
+      "place_of_performance_nuts": [
+        "EL301",
+        "EL302",
+        "EL303",
+        "EL304",
+        "EL306",
+        "EL307"
+      ],
       "published_on": "2026-11-02",
       "qualification": "official_notice_review_required",
       "service_codes": [
         "pest_control"
       ],
       "source_url": "https://ted.europa.eu/en/notice/-/detail/758124-2026",
-      "title": "Ελλάδα – Υπηρεσίες καταπολέμησης επιβλαβών εντόμων – Διακήρυξη 10/2026"
+      "title": "Ελλάδα – Υπηρεσίες καταπολέμησης επιβλαβών εντόμων – Διακήρυξη 10/2026",
+      "worksite_exact_address_verified": false
     }
   ],
   "provider": "EU TED official search API",
@@ -112,7 +163,7 @@
   "query": "buyer-country=GRC AND classification-cpv IN (45330000 45332000 45332200 45332300 45332400 90460000 90470000 90921000 90922000 90923000 90924000) AND publication-date>=20261017 SORT BY publication-date DESC",
   "raw_count": 5,
   "review_required": true,
-  "searched_at_utc": "2026-11-16T12:03:34.743130+00:00",
+  "searched_at_utc": "2026-11-16T13:55:23.745988+00:00",
   "service_counts": {
     "disinfection": 0,
     "drain_unblocking": 1,
