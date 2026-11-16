@@ -104,7 +104,12 @@ def test_hourly_action_schedule_and_map_assets():
     assert "buyer_only_not_work_site" in js
     assert "GREECE_OUTLINE" not in js
     assert "cdn.jsdelivr.net" not in js
-    assert (root/"static/vendor/leaflet.js").stat().st_size > 100_000
+    leaflet_js=(root/"static/vendor/leaflet.js").read_text()
+    assert "Leaflet 1.9.4" in leaflet_js[:220]
+    assert len(leaflet_js)>140_000
     assert (root/"static/vendor/leaflet.css").stat().st_size > 10_000
+    assert "crossOrigin:true" not in js
+    assert "tileWaitTimeout=setTimeout" in js
+    assert "new URLSearchParams(window.location.search).get('tab')" in ui
     license=(root/"static/vendor/LEAFLET_LICENSE.txt").read_text()
     assert "BSD 2-Clause" in license
