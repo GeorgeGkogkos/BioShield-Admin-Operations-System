@@ -12,8 +12,8 @@ def test_compact_home_and_status_are_distinct_and_bookmarkable():
             assert response.status_code == 200
             assert 'data-bio-tab="status"' in response.text
     script = (ROOT / "static/bioshield-admin.js").read_text(encoding="utf-8")
-    home = script.split("'<section data-bio-panel=\"overview\"'", 1)[1].split("'<section data-bio-panel=\"status\"'", 1)[0]
-    status = script.split("'<section data-bio-panel=\"status\"'", 1)[1].split("'<section data-bio-panel=\"discovery\"'", 1)[0]
+    home = script[script.index('data-bio-panel="overview"'):script.index('data-bio-panel="status"')]
+    status = script[script.index('data-bio-panel="status"'):script.index('data-bio-panel="discovery"')]
     assert "Ανακάλυψη ευκαιριών" in home
     assert 'bio-home-search-form' in home
     assert home.count('class="bio-home-category"') == 3
