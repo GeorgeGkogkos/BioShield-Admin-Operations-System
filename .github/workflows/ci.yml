@@ -14,11 +14,21 @@ jobs:
           python-version: "3.13"
       - run: python -m pip install -r requirements-dev.txt
       - run: python -m compileall -q app.py
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Build and typecheck TypeScript page navigation and research UI
+        run: |
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run typecheck
+          npm run build
       - name: Validate browser JavaScript syntax
         run: |
           node --input-type=module --check < static/bioshield-admin.js
           node --input-type=module --check < static/real-pilot.js
           node --input-type=module --check < static/app.js
+          node --input-type=module --check < static/typed/navigation.js
+          node --input-type=module --check < static/typed/research-view.js
       - run: python -m pytest -q
       - name: Run TED source-validation regression
         run: python -m pytest -q tests/test_ted_discovery.py
