@@ -156,20 +156,22 @@ def test_reddit_freshness_from_original_post_date_never_observed_date():
         )
 
     records = [forum("FORUM-010", 31), forum("FORUM-011", 7),
-               forum("FORUM-012", 30), forum("FORUM-013", 1, False)]
+               forum("FORUM-012", 14), forum("FORUM-013", 1, False),
+               forum("FORUM-015", 15)]
     report = report_from_rows(records)
-    assert report["reddit_freshness"]["window_days"] == 30
-    assert report["reddit_freshness"]["recent_posts_30d"] == 2
+    assert report["reddit_freshness"]["window_days"] == 14
+    assert report["reddit_freshness"]["recent_posts_14d"] == 2
     assert report["reddit_freshness"]["recent_posts_7d"] == 1
-    assert report["reddit_freshness"]["historical_or_unopened"] == 2
+    assert report["reddit_freshness"]["historical_or_unopened"] == 3
     assert report["reddit_freshness"]["recent_confirmed_service_requests"] == 0
     assert [r["id"] for r in report["community_cases"]] == [
-        "FORUM-013", "FORUM-011", "FORUM-012", "FORUM-010",
+        "FORUM-013", "FORUM-011", "FORUM-012", "FORUM-015", "FORUM-010",
     ]
-    assert report["community_cases"][0]["within_30d"] is False
+    assert report["community_cases"][0]["within_14d"] is False
     assert report["community_cases"][1]["within_7d"] is True
-    assert report["community_cases"][2]["within_30d"] is True
-    assert report["community_cases"][3]["within_30d"] is False
+    assert report["community_cases"][2]["within_14d"] is True
+    assert report["community_cases"][3]["within_14d"] is False
+    assert report["community_cases"][4]["within_14d"] is False
     assert all(row["contact_eligible"] is False for row in report["community_cases"])
 
 
