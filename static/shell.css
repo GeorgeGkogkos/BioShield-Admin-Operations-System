@@ -5,6 +5,34 @@
 /* Avoid Android/WebKit tap halos on touch while preserving focus-visible for keyboard users. */
 a,button,[role="button"]{-webkit-tap-highlight-color:transparent}
 a:focus:not(:focus-visible),button:focus:not(:focus-visible),[role="button"]:focus:not(:focus-visible){outline:none}.site{min-height:100vh;display:flex;flex-direction:column}.skip{position:absolute;transform:translateY(-200%)}.skip:focus{transform:none;background:var(--paper);padding:12px;z-index:3}
+/* BIO-30: Full-page startup logo only for the first open in a tab session or a refresh.
+   This overlay is never part of route panels or the persistent header transitions. */
+.bio-launch-splash{display:none;position:fixed;inset:0;z-index:1000;
+  align-items:center;justify-content:center;padding:24px;
+  background:var(--canvas);color:var(--ink);text-align:center}
+:root[data-bio-splash="show"] .bio-launch-splash{display:flex}
+.bio-launch-splash.is-leaving{opacity:0;pointer-events:none;transition:opacity .18s ease-out}
+.bio-launch-content{display:flex;align-items:center;flex-direction:column;gap:9px;max-width:90vw}
+.bio-launch-mark{display:grid;place-items:center;width:160px;height:160px;
+  margin-bottom:8px;border-radius:50%;background:radial-gradient(circle,var(--accent-soft) 0%,transparent 72%)}
+.bio-launch-logo{display:block;width:132px;height:132px;object-fit:contain;
+  filter:drop-shadow(0 0 12px rgba(75,122,190,.24));animation:bio-launch-breathe 2.1s ease-in-out infinite}
+.bio-launch-content>strong{font-size:1.75rem;letter-spacing:.005em;line-height:1.2}
+.bio-launch-content>span{font-size:.7rem;letter-spacing:.2em;color:var(--muted);font-weight:650}
+.bio-launch-progress{display:flex;align-items:center;justify-content:center;
+  gap:10px;margin-top:20px;font-size:.86rem;color:var(--muted);line-height:1.4}
+.bio-launch-spinner{width:17px;height:17px;flex-shrink:0;border:2px solid var(--line-strong);
+  border-top-color:var(--accent);border-radius:50%;animation:bio-launch-spin .9s linear infinite}
+@keyframes bio-launch-breathe{50%{transform:scale(.96);opacity:.8}}
+@keyframes bio-launch-spin{to{transform:rotate(360deg)}}
+@media(max-width:550px){.bio-launch-mark{width:134px;height:134px}
+  .bio-launch-logo{width:112px;height:112px}
+  .bio-launch-content>strong{font-size:1.45rem}
+  .bio-launch-progress{font-size:.78rem}}
+@media(prefers-reduced-motion:reduce){
+  .bio-launch-logo,.bio-launch-spinner{animation:none}
+  .bio-launch-splash.is-leaving{transition:none}
+}
 /* The application chrome stays mounted and visible while page panels change. */
 .topbar{position:sticky;top:0;z-index:50;height:var(--bio-shell-header-height);border-bottom:1px solid var(--line);background:var(--paper)}.topbar-inner{max-width:1560px;height:100%;margin:auto;padding:17px 30px;display:flex;justify-content:space-between;align-items:center;gap:16px}
 .brand{display:flex;align-items:center;gap:12px}.brand-logo{display:block;width:56px;height:56px;object-fit:contain;flex-shrink:0;background:transparent;filter:drop-shadow(0 1px 1px rgba(0,0,0,.12))}
