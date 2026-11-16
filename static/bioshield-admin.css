@@ -179,3 +179,67 @@
 .bio-service-filter{display:grid;grid-template-columns:90px 1fr;gap:7px}
 .bio-service-filter select{width:100%;max-width:100%}
 .bio-service-filter #bio-map-count{grid-column:1 / -1;padding-top:4px}}
+
+/* BIO-19 — independent, deep-linkable TS pages with accessible transitions. */
+.bio-tabs a{display:inline-flex;align-items:center;justify-content:center;
+  border:1px solid transparent;border-radius:12px;padding:11px 16px;
+  background:transparent;color:var(--muted-strong);cursor:pointer;
+  font:inherit;text-decoration:none;white-space:nowrap;min-height:46px}
+.bio-tabs a:hover{background:var(--soft-surface);color:var(--ink)}
+.bio-tabs a.active,.bio-tabs a[aria-current="page"]{
+  color:var(--ink);background:var(--accent-soft);
+  border-color:var(--line);font-weight:650}
+.bio-tabs a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@keyframes bio-fade-out{to{opacity:0;transform:translateY(-6px)}}
+@keyframes bio-fade-in{from{opacity:0;transform:translateY(8px)}}
+::view-transition-old(root){animation:160ms ease-in both bio-fade-out}
+::view-transition-new(root){animation:250ms ease-out both bio-fade-in}
+@media(prefers-reduced-motion:reduce){
+  ::view-transition-old(root),::view-transition-new(root){animation:none!important}
+}
+.bio-research-section{margin-top:24px;padding:20px;border-radius:16px;
+  border:1px solid var(--line);background:var(--paper)}
+.bio-research-rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:12px;margin:14px 0 22px}
+.bio-research-rules article{padding:13px 16px;border:1px solid var(--line);border-radius:12px;
+  background:var(--soft-surface);display:flex;flex-direction:column;gap:6px}
+.bio-research-rules strong{font-size:1rem;color:var(--ink)}
+.bio-research-rules span{font-size:.83rem;color:var(--muted-strong);line-height:1.45}
+.bio-search-controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+  padding:10px 0 20px}
+.bio-search-controls input,.bio-search-controls select{padding:10px 12px;border-radius:10px;
+  border:1px solid var(--line-strong);background:var(--paper);color:var(--ink);
+  font:inherit;min-height:43px}
+.bio-search-controls input{flex:1;min-width:160px}
+.bio-search-controls label{font-weight:600}
+.bio-keyword-groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));
+  gap:14px;margin-bottom:22px}
+.bio-keyword-group{padding:14px;border:1px solid var(--line);border-radius:14px;
+  background:var(--soft-surface)}
+.bio-keyword-group[hidden],.bio-keyword-tag[hidden]{display:none!important}
+.bio-keyword-group h3{font-size:1rem;margin:0 0 12px}
+.bio-keyword-group h3 small{font-size:.75rem;color:var(--muted);font-weight:400}
+.bio-keyword-tags{display:flex;gap:7px;flex-wrap:wrap}
+.bio-keyword-tag{font-size:.8rem;padding:5px 9px;border:1px solid var(--line);
+  border-radius:20px;background:var(--paper);color:var(--ink);line-height:1.25}
+.bio-query-list{display:grid;gap:9px;margin:12px 0 22px}
+.bio-query-row{display:grid;grid-template-columns:minmax(75px,100px) minmax(0,1fr) auto;
+  gap:12px;align-items:center;padding:11px 13px;background:var(--soft-surface);
+  border:1px solid var(--line);border-radius:11px}
+.bio-query-row code{white-space:normal;overflow-wrap:anywhere;font-size:.82rem;color:var(--ink)}
+.bio-query-row button{border:1px solid var(--line-strong);background:var(--paper);
+  padding:8px 12px;color:var(--ink);border-radius:8px;cursor:pointer}
+.bio-query-row button:hover{background:var(--accent-soft)}
+.bio-source-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));
+  gap:12px;margin:14px 0 24px}
+.bio-source-card{display:flex;flex-direction:column;gap:9px;padding:16px;
+  border:1px solid var(--line);border-radius:12px;background:var(--soft-surface)}
+.bio-source-card p{margin:0;font-size:.88rem;line-height:1.5;color:var(--muted-strong)}
+.bio-source-card small{color:var(--muted);font-size:.75rem;overflow-wrap:anywhere}
+.bio-source-card a{margin-top:auto}
+@media(max-width:650px){.bio-research-section{padding:13px}
+  .bio-query-row{grid-template-columns:1fr;gap:7px}
+  .bio-query-row button{justify-self:start}
+  .bio-search-controls{display:grid;grid-template-columns:1fr}
+  .bio-search-controls input,.bio-search-controls select{width:100%}
+}
