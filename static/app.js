@@ -36,10 +36,12 @@ const menuClose=document.getElementById('bio-mobile-menu-close');
 const menuBackdrop=document.getElementById('bio-sidebar-backdrop');
 const menuSidebar=document.getElementById('bio-sidebar');
 const mobileViewport=window.matchMedia('(max-width: 960px)');
+// A phone already has the full bottom navigation; a drawer is only needed on tablets.
+const drawerViewport=window.matchMedia('(min-width: 701px) and (max-width: 960px)');
 const menuIsOpen=()=>document.body.classList.contains('bio-mobile-nav-open');
 function setMenuOpen(open,restoreFocus=true){
   const wasOpen=menuIsOpen();
-  const visible=Boolean(open && mobileViewport.matches);
+  const visible=Boolean(open && drawerViewport.matches);
   const shouldRestore=wasOpen && !visible && restoreFocus && menuSidebar.contains(document.activeElement);
   document.body.classList.toggle('bio-mobile-nav-open',visible);
   menuToggle.setAttribute('aria-expanded',String(visible));
@@ -82,6 +84,7 @@ document.addEventListener('keydown',event=>{
 });
 window.addEventListener('popstate',()=>setMenuOpen(false));
 mobileViewport.addEventListener('change',()=>setMenuOpen(false));
+drawerViewport.addEventListener('change',()=>setMenuOpen(false));
 // Keep the application shell mounted: only the header's status changes.
 const appMount=document.getElementById('app');
 renderBioShieldAdmin(appMount,{api,esc}).catch(error=>{
