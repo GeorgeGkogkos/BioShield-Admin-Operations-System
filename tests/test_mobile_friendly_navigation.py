@@ -1,5 +1,6 @@
 """BIO mobile navigation: maintain same routes across responsive app shell."""
 from pathlib import Path
+import re
 
 from fastapi.testclient import TestClient
 
@@ -38,10 +39,10 @@ def test_bottom_nav_routes_without_full_page_refresh_and_stays_selected():
     for file in (ROOT / "src" / "navigation.ts",
                  STATIC / "typed" / "navigation.js"):
         code = file.read_text(encoding="utf-8")
-        assert "const bottomNavigation=document.getElementById('bio-bottom-nav')" in code
+        assert re.search(r"const bottomNavigation\s*=\s*document.getElementById\('bio-bottom-nav'\)", code)
         assert "bottomNavigation?.contains(nav)" in code
-        assert "bottomNavigation?.addEventListener('click',onClick)" in code
-        assert "bottomNavigation?.removeEventListener('click',onClick)" in code
+        assert re.search(r"bottomNavigation\?\.addEventListener\('click',\s*onClick\)", code)
+        assert re.search(r"bottomNavigation\?\.removeEventListener\('click',\s*onClick\)", code)
         assert "window.history.pushState" in code
 
     for file in (STATIC / "app.js", STATIC / "bioshield-admin.js"):
