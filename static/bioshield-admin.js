@@ -1,4 +1,5 @@
-/* BioShield setup + synthetic-only benchmark. No real public posts or credentials. */
+import {renderPublicPilot} from './real-pilot.js';
+/* Synthetic lab and real public evidence are separate. */
 function metric(title,value,esc,explain='') {
   const display=value==null?'—':esc(value);
   return '<article class="bio-metric"><span>'+esc(title)+'</span><strong>'+display+'</strong><small>'+esc(explain|| (value==null?'Δεν υπάρχουν πραγματικά δεδομένα':'Επαληθευμένη τιμή'))+'</small></article>';
@@ -15,8 +16,8 @@ const categoryNames={
 export async function renderBioShieldAdmin(page,{api,esc}) {
   page.innerHTML='<p role="status">Φόρτωση BioShield Admin Operations…</p>';
   try {
-    const [data,lab,examples]=await Promise.all([
-      api('/bioshield/overview'),api('/bioshield/lab/report'),api('/bioshield/lab/cases')
+    const [data,lab,examples,pilot]=await Promise.all([
+      api('/bioshield/overview'),api('/bioshield/lab/report'),api('/bioshield/lab/cases'),api('/bioshield/pilot/evidence')
     ]);
     if(!page.isConnected)return;
     const q=lab.quality, speed=lab.throughput, normal=lab.mock_normal, outage=lab.mock_fallback;
@@ -37,10 +38,11 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
       '<h1>BioShield Admin Operations System</h1>',
       '<p>Αναζήτηση αιτημάτων, αξιολόγηση καταλληλότητας και διαχείριση πηγών για το τηλεφωνικό κέντρο.</p>',
       '</div><span class="bio-stage">Pre-Supabase Lab</span></header>',
-      '<div class="bio-alert" role="status"><strong>Σύστημα δοκιμών — χωρίς πραγματικά δεδομένα</strong><p>',
-      esc(data.message),' Ο εργαστηριακός έλεγχος χρησιμοποιεί αποκλειστικά επινοημένα παραδείγματα.</p></div>',
+      '<div class="bio-alert" role="status"><strong>Σύστημα δοκιμών, χωρίς στοιχεία πραγματικών πελατών</strong><p>',
+      esc(data.message),' Οι πραγματικές δημόσιες πηγές εμφανίζονται σε ξεχωριστή καρτέλα και δεν συνδέονται με το CRM.</p></div>',
       '<nav class="bio-tabs" aria-label="Ενότητες BioShield">',
       '<button type="button" data-bio-tab="overview" class="active" aria-pressed="true">Επισκόπηση</button>',
+      '<button type="button" data-bio-tab="pilot" aria-pressed="false">Πραγματικά ευρήματα</button>',
       '<button type="button" data-bio-tab="lab" aria-pressed="false">Εργαστήριο απόδοσης</button>',
       '<button type="button" data-bio-tab="candidates" aria-pressed="false">Υποψήφιοι</button>',
       '<button type="button" data-bio-tab="sources" aria-pressed="false">Πηγές</button>',
@@ -62,6 +64,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
       '<span>Precision <strong>',percentage(q.precision),'</strong></span>',
       '</div><button class="bio-open-lab" type="button" data-bio-tab="lab">Προβολή δοκιμών και παραδειγμάτων</button>',
       '</article></div></section>',
+      '<section data-bio-panel="pilot" hidden>',renderPublicPilot(pilot,esc),'</section>',
       '<section data-bio-panel="lab" hidden>',
       '<div class="bio-lab-top"><div><p class="eyebrow">BIO-08 / BIO-09</p><h2>Performance &amp; Relevance Laboratory</h2>',
       '<p class="bio-muted">Οι παρακάτω τιμές αφορούν μόνο ',number(q.fixture_count),
@@ -102,7 +105,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
       '<div class="bio-policy">Συλλογή τηλεφώνων από δημόσια προφίλ <strong>Απενεργοποιημένη</strong></div>',
       '<div class="bio-policy">Πρόσβαση σε πραγματική Supabase <strong>Απενεργοποιημένη</strong></div>',
       '<div class="bio-policy">Πραγματικά API Firecrawl και TinyFish <strong>Απενεργοποιημένα</strong></div></section>',
-      '<footer class="bio-footer"><span>Offline prototype. Not validated on real-world posts.</span>',
+      '<footer class="bio-footer"><span>Real public-source research snapshot, synthetic benchmarks separate, Supabase disconnected.</span>',
       '<a href="https://linear.app/gkg/project/bioshield-admin-operations-system-79b033ffab9a" rel="noopener noreferrer" target="_blank">Linear project</a></footer>',
       '</div>'
     ].join('');
@@ -130,6 +133,20 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     }
     search.addEventListener('input',filterCases);
     status.addEventListener('change',filterCases);
+    const realSearch=page.querySelector('#bio-pilot-search');
+    const realKind=page.querySelector('#bio-pilot-type');
+    function filterPilot(){
+      const term=realSearch.value.trim().toLocaleLowerCase('el-GR'), kind=realKind.value;
+      let visible=0;
+      page.querySelectorAll('[data-pilot-row]').forEach(row=>{
+        const matches=(kind==='all'||kind===row.dataset.kind)&&(!term||row.dataset.search.includes(term));
+        row.hidden=!matches;
+        if(matches)visible++;
+      });
+      page.querySelector('#bio-pilot-count').textContent=number(visible)+' / '+number(pilot.public_sources_reviewed)+' εγγραφές';
+    }
+    realSearch.addEventListener('input',filterPilot);
+    realKind.addEventListener('change',filterPilot);
   }catch(error){
     if(!page.isConnected)return;
     page.textContent='Το περιβάλλον εργαστηρίου δεν είναι διαθέσιμο. Ελέγξτε την κατάσταση της υπηρεσίας.';

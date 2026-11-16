@@ -17,6 +17,7 @@ jobs:
       - name: Validate browser JavaScript syntax
         run: |
           node --input-type=module --check < static/bioshield-admin.js
+          node --input-type=module --check < static/real-pilot.js
           node --input-type=module --check < static/app.js
       - run: python -m pytest -q
       - name: Synthetic qualification and CPU throughput (offline)
