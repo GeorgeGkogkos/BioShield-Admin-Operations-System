@@ -110,10 +110,11 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     '<section data-bio-panel="pilot" hidden>',renderPublicPilot(pilot,esc),'</section>',
     '<section data-bio-panel="sources" hidden>',
     '<h2>Συνδεδεμένες &amp; εκκρεμείς πηγές</h2>',
-    '<div class="bio-policy"><span>TED — Ευρωπαϊκή Υπηρεσία Δημοσίων Συμβάσεων</span><strong>Ενεργή επίσημη αναζήτηση</strong></div>',
+    '<p class="bio-muted">Έγινε έρευνα σε Facebook, Instagram, TikTok και ανεξάρτητα ελληνικά forums. Εμφανίζονται μόνο πραγματικές καταστάσεις πρόσβασης· καμία κοινωνική πλατφόρμα δεν θεωρείται ενεργός crawler.</p>',
+    sourceList(policy,esc),
+    '<div class="bio-policy"><span>Firecrawl · τρεις λογαριασμοί (έλεγχος 16/11/2026)</span><strong>0 credits · απαιτείται ανανέωση</strong></div>',
+    '<div class="bio-policy"><span>TinyFish — εξουσιοδοτημένες πηγές</span><strong>Αναμονή ελέγχου δικαιωμάτων</strong></div>',
     '<div class="bio-policy"><span>Supabase Demo (δεύτερος λογαριασμός)</span><strong>Μόνο ανάγνωση</strong></div>',
-    '<div class="bio-policy"><span>Reddit — εμπορική αυτοματοποιημένη χρήση</span><strong>Απαιτεί έγκριση παρόχου</strong></div>',
-    '<div class="bio-policy"><span>Firecrawl / TinyFish — server-side ingestion</span><strong>Δεν έχει ενεργοποιηθεί</strong></div>',
     '<div class="bio-policy"><span>Εταιρικό CRM / Supabase</span><strong>Ασύνδετο</strong></div>',
     '<div class="bio-policy"><span>Στοιχεία επαφών &amp; τηλεφωνικό κέντρο</span><strong>Απενεργοποιημένα</strong></div>',
     '<p class="bio-note">Για να ενεργοποιηθεί διαχείριση πραγματικών ιδιωτικών υποψηφίων χρειάζονται admin authentication, επιτρεπόμενοι πάροχοι, έλεγχος νόμιμης βάσης, δικαιώματα και εξωτερική ολοκλήρωση CRM.</p></section>',
@@ -172,16 +173,36 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     if(age)age.value=oldAge;
     filterPilot();
   }
+  function filterTED(){
+    const host=page.querySelector('[data-bio-panel="discovery"]');
+    const selection=host?.querySelector('#bio-ted-service')?.value||'all';
+    let count=0;
+    host?.querySelectorAll('[data-ted-row]').forEach(row=>{
+      const show=selection==='all'||(row.dataset.services||'').split(',').includes(selection);
+      row.hidden=!show;if(show)count++;
+    });
+    const label=host?.querySelector('#bio-ted-count');
+    if(label)label.textContent=fmt(count)+' εμφανιζόμενες προκηρύξεις';
+  }
+  page.addEventListener('change',event=>{
+    if(event.target.id==='bio-ted-service')filterTED();
+  });
   async function refreshTED(){
     try{ted=await api('/bioshield/discovery/tenders');}catch{ted={status:'unavailable'};}
     if(!page.isConnected)return;
-    page.querySelector('[data-bio-panel="discovery"]').innerHTML=discoveries(ted,esc);
+    const host=page.querySelector('[data-bio-panel="discovery"]');
+    const oldService=host.querySelector('#bio-ted-service')?.value||'all';
+    host.innerHTML=discoveries(ted,esc);
+    const filter=host.querySelector('#bio-ted-service');
+    if(filter)filter.value=oldService;
+    filterTED();
   }
   page.addEventListener('click',event=>{
     if(event.target.closest('#bio-demo-refresh'))void refreshPilot();
     if(event.target.closest('#bio-ted-refresh'))void refreshTED();
   });
   filterPilot();
+  filterTED();
   const refreshTimer=setInterval(()=>{
     if(!page.isConnected){clearInterval(refreshTimer);return;}
     if(!document.hidden){
