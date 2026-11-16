@@ -8,9 +8,10 @@ export const ROUTES = {
   pilot: '/admin/operations/evidence',
   map: '/admin/operations/map',
   sources: '/admin/operations/sources',
+  status: '/admin/operations/status',
 };
 
-const SCREENS = ['overview','discovery','pilot','map','sources'];
+const SCREENS = ['overview','discovery','pilot','map','sources','status'];
 
 export function currentScreen(location = window.location) {
   const path=location.pathname.replace(/\/+$/,'') || '/';
@@ -41,7 +42,7 @@ export function installNavigation(page, onChange) {
       document.title='BioShield — '+({
         overview:'Επισκόπηση',discovery:'Νέες ανακαλύψεις',
         pilot:'Αποθηκευμένα ευρήματα',map:'Χάρτης / Κάλυψη',
-        sources:'Πηγές & έλεγχοι',
+        sources:'Πηγές & έλεγχοι',status:'Κατάσταση & διαφάνεια',
       })[next];
       if(push)window.history.pushState({bioScreen:next},'',ROUTES[next]);
       page.querySelector('[data-bio-panel="'+next+'"] h2, [data-bio-panel="'+next+'"] h1')
