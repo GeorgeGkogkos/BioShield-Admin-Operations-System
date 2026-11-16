@@ -55,3 +55,26 @@ without collecting personal details. Measure independently:
 - database upsert, indexing, RLS, retention and APK/EXE contract integrity
   only after the business-owned Supabase is available.
 Do not attach this lab to a VELAUNE or unrelated DST database.
+
+
+## Baseline B1 — GitHub Actions / PR #2 (2026-11-16)
+Reproducible command: python -m bioshield.benchmark --iterations 10000 --output benchmark-results.json --check
+
+GitHub CI: https://github.com/GeorgeGkogkos/BioShield-Admin-Operations-System/actions/runs/43781833543
+
+Measured on one GitHub-hosted Ubuntu 26.04 / Python 3.13 runner:
+- 30 fictional posts: 15 TP, 0 FP, 15 TN, 0 FN.
+- Precision, recall and F1 = 1.0000 on ONLY these authored fixtures.
+- 10,000 in-process normalize/classify/canonicalize operations: 823.36 ms.
+- Approximate throughput: 12,145.4 synthetic records per second.
+- Per-record CPU P50: 0.0877 ms; P95: 0.1301 ms.
+- Mocked provider result overlap: 38 raw hits, 30 unique posts, 8 duplicates discarded.
+- Provider API calls: 0. Supabase writes: 0. Contact eligible: 0.
+
+Do not extrapolate synthetic 100% precision to real online text. The fixture
+selection and rule design are not independent; there is no real-world labelled
+holdout set. Timings were measured on CI hardware, not a loaded Render server;
+there is no crawler or database latency in the benchmark.
+
+Later validation must use an independent human-reviewed sample from legally
+accessible public sources and a separate, rate-limited HTTP staging benchmark.
