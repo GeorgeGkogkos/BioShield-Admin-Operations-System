@@ -29,3 +29,8 @@ This release is hourly **official public-sector notice discovery** plus a geogra
 ### BIO-17 browser fix — local vector map
 
 An actual browser E2E test of PR #10 found that the external Leaflet CDN did not load; the fallback list displayed all points regardless of filters. The follow-up fix replaces external CDN tiles/scripts with a self-hosted interactive SVG Greece map using a simplified Natural Earth public-domain boundary. The map is now independent of external tile providers, and filters redraw both the vector pins and source list from the same verified source rows. This correction makes precise source date, service and area filtering testable, without inventing addresses. Source boundary: https://www.naturalearthdata.com/ .
+
+
+## BIO-18 superseding UI update — real map
+
+The earlier Natural Earth inline SVG was a temporary reliability workaround, not suitable as a geographic analysis interface. It has been removed. The actively deployed map is now a self-hosted Leaflet client rendering real OpenStreetMap raster tiles, interactive panning/zoom, towns/roads/coastlines, pinpoint sources and the existing dynamic service/time/region filters. Attribution stays visible and no OpenStreetMap bulk/offline tile collection is performed. For current behavior and operational constraints, see [BIO-18 real OSM basemap](BIO18_REAL_OPENSTREETMAP.md).

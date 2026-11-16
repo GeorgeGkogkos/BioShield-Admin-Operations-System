@@ -90,13 +90,21 @@ def test_hourly_action_schedule_and_map_assets():
     ui=(root/"static/bioshield-admin.js").read_text()
     js=(root/"static/geographic-map.js").read_text()
     assert "cdn.jsdelivr.net/npm/leaflet" not in html
+    assert "/static/vendor/leaflet.js" in html
+    assert "/static/vendor/leaflet.css" in html
     assert "Χάρτης / Κάλυψη" in ui
     assert "discovery/map" in ui
     assert "export function setupCoverageMap" in js
-    assert "GREECE_OUTLINE" in js
+    assert "lib.map(container" in js
+    assert "lib.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png'" in js
+    assert "OpenStreetMap contributors" in js
+    assert "fitBounds(" in js
+    assert "updateWhenIdle:true" in js
     assert "bio-map-service" in js and "bio-map-region" in js
     assert "buyer_only_not_work_site" in js
-    assert "Natural Earth" in js
-    outline=(root/"static/greece-outline.js").read_text()
-    assert 'MultiPolygon' in outline
-    assert "Natural Earth" in outline
+    assert "GREECE_OUTLINE" not in js
+    assert "cdn.jsdelivr.net" not in js
+    assert (root/"static/vendor/leaflet.js").stat().st_size > 100_000
+    assert (root/"static/vendor/leaflet.css").stat().st_size > 10_000
+    license=(root/"static/vendor/LEAFLET_LICENSE.txt").read_text()
+    assert "BSD 2-Clause" in license
