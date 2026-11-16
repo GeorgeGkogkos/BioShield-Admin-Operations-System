@@ -1,7 +1,7 @@
 name: BioShield official public-source discovery
 on:
   schedule:
-    - cron: '20 */6 * * *'
+    - cron: '17 * * * *'
   workflow_dispatch:
   push:
     branches: [main]
