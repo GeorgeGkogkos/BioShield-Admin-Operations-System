@@ -72,8 +72,8 @@ def test_search_precedes_compact_category_filter_chips():
     assert menu.count('data-bio-discovery-category=')==4
     for mode in ('current','home','custom'):
         assert f'data-bio-location-mode="{mode}"' in menu
-    for mode in ('list','map'):
-        assert f'data-bio-search-view="{mode}"' in menu
+    # The standalone Map page replaces the former inline List/Map switch.
+    assert 'data-bio-search-view' not in menu
     assert ".bio-discovery-menu .bio-home-category" in css
     assert "border-radius:999px" in css
     assert "min-height:36px" in css
