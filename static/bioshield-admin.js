@@ -337,9 +337,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     '<p class="bio-note" id="bio-discovery-private-no-matches" role="status" hidden>Δεν βρέθηκαν επιχειρηματικά ευρήματα που να ταιριάζουν στην αναζήτηση.</p>',
     '<p class="bio-note">Εφόσον υπάρχουν, τα ιστορικά τεκμήρια εμφανίζονται παρακάτω μέσα στην ίδια αναζήτηση.</p></div>',
     '<div id="bio-unified-archive">',renderSearchArchive(pilot,esc,'public_sector'),'</div>',
-    '<div id="bio-inline-map" class="bio-inline-map" hidden>',
-    '<p class="bio-note">Ο χάρτης περιέχει μόνο δημόσιες πηγές με γεωγραφική τεκμηρίωση, όχι θέσεις πελατών. Για φιλτράρισμα χωρικής περιοχής χρησιμοποιήστε και το πεδίο «Περιοχή» του χάρτη.</p>',
-    coverageMarkup(coverage,esc,pilot),'</div>',
+    '<div id="bio-inline-map" class="bio-inline-map" hidden></div>',
     '</section>',
     '<section data-bio-panel="pilot" hidden>',renderPublicPilot(pilot,esc),'</section>',
     '<section data-bio-panel="map" hidden>',coverageMarkup(coverage,esc,pilot),'</section>',
@@ -773,6 +771,8 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     const stop=discoveryPanel.querySelector('#bio-focus-gps-stop');
     if(mode==='current'){
       discoveryPanel.querySelector('#bio-focus-gps-start')?.click();
+      // Do not treat the base as a newly verified location before GPS resolves.
+      return;
     }else{
       if(stop&&!stop.disabled)stop.click();
       if(mode==='home'){
