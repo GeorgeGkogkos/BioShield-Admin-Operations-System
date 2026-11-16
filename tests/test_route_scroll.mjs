@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {installNavigation,ROUTES} from '../static/typed/navigation.js';
+import {installNavigation,ROUTES,currentScreen} from '../static/typed/navigation.js';
 
-test('route changes reset scroll without moving shell or restoring stale offsets',()=>{
+test('search-first navigation preserves shell scroll and redirects old data pages',()=>{
   const browserEvents=new Map();
   class FakeElement {
     constructor(screen){this.dataset={bioTab:screen};}
@@ -18,7 +18,7 @@ test('route changes reset scroll without moving shell or restoring stale offsets
   page.querySelector=()=>({setAttribute(){}});
   page.contains=()=>false;
   const scrollCalls=[],screens=[];
-  const location={pathname:ROUTES.overview,search:''};
+  const location={pathname:ROUTES.discovery,search:''};
   const history={
     scrollRestoration:'auto',
     pushState(_state,_title,url){location.pathname=url;},
@@ -36,8 +36,8 @@ test('route changes reset scroll without moving shell or restoring stale offsets
     removeEventListener(type){browserEvents.delete(type);},
   };
   const cleanup=installNavigation(page,screen=>screens.push(screen));
-  assert.deepEqual(screens,['overview']);
-  assert.deepEqual(scrollCalls,[],'initial render must not scroll');
+  assert.deepEqual(screens,['discovery']);
+  assert.deepEqual(scrollCalls,[],'initial search must not scroll');
   assert.equal(history.scrollRestoration,'manual');
 
   function click(host,screen){
@@ -49,18 +49,22 @@ test('route changes reset scroll without moving shell or restoring stale offsets
     host.handlers.get('click')(event);
     assert.equal(event.defaultPrevented,true);
   }
-  click(side,'discovery');
-  assert.equal(location.pathname,ROUTES.discovery);
+  click(side,'sources');
+  assert.equal(location.pathname,ROUTES.sources);
   assert.deepEqual(scrollCalls,[[0,0]]);
-  click(side,'discovery');
-  assert.equal(scrollCalls.length,1,'reselecting active page should not scroll');
-  click(bottom,'map');
-  assert.equal(location.pathname,ROUTES.map);
+  click(side,'sources');
+  assert.equal(scrollCalls.length,1,'reselecting active info page should not scroll');
+  click(side,'status');
+  assert.equal(location.pathname,ROUTES.status);
   assert.deepEqual(scrollCalls,[[0,0],[0,0]]);
   location.pathname=ROUTES.overview;
   browserEvents.get('popstate')();
-  assert.equal(screens.at(-1),'overview');
-  assert.deepEqual(scrollCalls,[[0,0],[0,0],[0,0]],'Back/Forward uses top of page too');
+  assert.equal(screens.at(-1),'discovery','old overview link uses the search');
+  assert.deepEqual(scrollCalls,[[0,0],[0,0],[0,0]]);
+  click(bottom,'map');
+  assert.equal(location.pathname,ROUTES.discovery,'old map tab becomes an in-search view');
+  assert.equal(screens.at(-1),'discovery');
+  assert.equal(currentScreen({pathname:ROUTES.pilot,search:''}),'discovery');
   cleanup();
   assert.equal(browserEvents.has('popstate'),false);
 });

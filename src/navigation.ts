@@ -13,18 +13,19 @@ export const ROUTES = {
 
 export type Screen = keyof typeof ROUTES;
 export type RouteChange = (screen: Screen) => void;
+const canonical = (screen: Screen): Screen => (['overview','pilot','map'] as string[]).includes(screen)?'discovery':screen;
 const SCREENS: Screen[] = ['overview','discovery','pilot','map','sources','status'];
 
 export function currentScreen(location: Pick<Location,'pathname'|'search'> = window.location): Screen {
   const path=location.pathname.replace(/\/+$/,'') || '/';
   const found=SCREENS.find(screen=>ROUTES[screen]===path);
-  if(found)return found;
+  if(found)return canonical(found);
   // Backward compatibility for existing /admin/operations?tab=map links.
   if(path==='/admin/operations'){
     const legacy=new URLSearchParams(location.search).get('tab');
-    if(legacy && SCREENS.includes(legacy as Screen))return legacy as Screen;
+    if(legacy && SCREENS.includes(legacy as Screen))return canonical(legacy as Screen);
   }
-  return 'overview';
+  return 'discovery';
 }
 
 export function installNavigation(page: HTMLElement, onChange: RouteChange): () => void {
@@ -36,8 +37,9 @@ export function installNavigation(page: HTMLElement, onChange: RouteChange): () 
   let leaving: Animation|null=null;
   let pending: Screen|null=null;
   let revision=0;
-  const change=(next: Screen, push: boolean): void=>{
-    if(!SCREENS.includes(next))return;
+  const change=(requested: Screen, push: boolean): void=>{
+    if(!SCREENS.includes(requested))return;
+    const next=canonical(requested);
     if(pending===next)return;
     if(active===next && !leaving && !push){onChange(next);return;}
     if(active===next && !leaving && window.location.pathname===ROUTES[next])return;

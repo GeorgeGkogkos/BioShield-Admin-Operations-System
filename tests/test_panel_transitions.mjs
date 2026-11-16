@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {installNavigation,ROUTES} from '../static/typed/navigation.js';
 
-test('real route transitions animate only the outgoing panel then reveal incoming panel',async()=>{
+test('search and secondary system screens transition only mounted content panels',async()=>{
   const events=new Map();
   const screens=[],scrolls=[],animations=[];
   class FakeElement{
@@ -13,14 +13,14 @@ test('real route transitions animate only the outgoing panel then reveal incomin
     return {
       handlers:new Map(),
       addEventListener(type,fn){this.handlers.set(type,fn);},
-      removeEventListener(type){this.handlers.delete(type);},
+      removeEventListener(type,fn){this.handlers.delete(type);},
       contains(el){return el instanceof FakeElement;}
     };
   }
   const side=navHost(),bottom=navHost(),page=navHost();
   const panels=Object.fromEntries(Object.keys(ROUTES).map(screen=>[
     screen,{
-      hidden:screen!=='overview',
+      hidden:screen!=='discovery',
       animate(frames,options){
         let resolve,reject;
         const finished=new Promise((done,fail)=>{resolve=done;reject=fail;});
@@ -37,7 +37,7 @@ test('real route transitions animate only the outgoing panel then reveal incomin
     const match=selector.match(/^\[data-bio-panel="([^"]+)"\]$/);
     return match?panels[match[1]]:{setAttribute(){}};
   };
-  const location={pathname:ROUTES.overview,search:''};
+  const location={pathname:ROUTES.discovery,search:''};
   const history={
     scrollRestoration:'auto',
     pushState(_state,_title,url){location.pathname=url;}
@@ -68,38 +68,40 @@ test('real route transitions animate only the outgoing panel then reveal incomin
     assert.equal(event.defaultPrevented,true);
   };
 
-  click(side,'discovery');
-  assert.equal(location.pathname,ROUTES.discovery,'History updates immediately');
-  assert.deepEqual(screens,['overview'],'old content remains mounted during fade-out');
+  click(side,'sources');
+  assert.equal(location.pathname,ROUTES.sources);
+  assert.deepEqual(screens,['discovery'],'search remains during fade-out');
   assert.equal(animations.length,1);
-  assert.equal(animations[0].screen,'overview');
+  assert.equal(animations[0].screen,'discovery');
   assert.equal(animations[0].animation.options.duration,145);
   assert.deepEqual(animations[0].animation.frames[1],{opacity:0,transform:'translateY(-6px)'});
   animations[0].animation.complete();
   await Promise.resolve();
-  assert.equal(screens.at(-1),'discovery');
-  assert.equal(panels.overview.hidden,true);
-  assert.equal(panels.discovery.hidden,false);
+  assert.equal(screens.at(-1),'sources');
+  assert.equal(panels.discovery.hidden,true);
+  assert.equal(panels.sources.hidden,false);
   assert.deepEqual(scrolls,[[0,0]]);
-  assert.equal(document.documentElement.dataset.bioScreen,'discovery');
 
-  click(bottom,'map');
+  click(side,'status');
   assert.equal(animations.length,2);
-  click(side,'sources');
+  click(bottom,'discovery');
   assert.equal(animations.length,3);
-  assert.equal(animations[1].animation.cancelled,true,'rapid navigation cancels previous fade');
+  assert.equal(animations[1].animation.cancelled,true);
   animations[1].animation.complete();
   await Promise.resolve();
-  assert.equal(screens.at(-1),'discovery','cancelled transition must never render a stale screen');
+  assert.equal(screens.at(-1),'sources','cancelled transition must not render stale status');
   animations[2].animation.complete();
   await Promise.resolve();
-  assert.equal(screens.at(-1),'sources');
-  assert.equal(location.pathname,ROUTES.sources);
+  assert.equal(screens.at(-1),'discovery');
+  assert.equal(location.pathname,ROUTES.discovery);
 
   window.matchMedia=()=>({matches:true});
+  click(side,'sources');
+  assert.equal(screens.at(-1),'sources','reduced-motion uses immediate update');
+  assert.equal(animations.length,3);
   click(side,'overview');
-  assert.equal(screens.at(-1),'overview','reduced motion switches immediately');
-  assert.equal(animations.length,3,'no animation with reduced motion');
+  assert.equal(screens.at(-1),'discovery','legacy overview falls through to search');
+  assert.equal(animations.length,3);
   cleanup();
   assert.equal(events.has('popstate'),false);
 });

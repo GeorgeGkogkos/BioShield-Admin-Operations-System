@@ -1,4 +1,4 @@
-"""BIO mobile navigation: maintain same routes across responsive app shell."""
+"""BIO-34: one mobile search destination with secondary diagnostic access."""
 from pathlib import Path
 import re
 
@@ -19,18 +19,18 @@ ROUTES = {
 }
 
 
-def test_phone_bottom_navigation_contains_all_five_bookmarkable_routes():
+def test_phone_bottom_navigation_contains_only_the_unified_search(): 
     html = client.get("/admin/operations/overview").text
     assert html.count('id="bio-bottom-nav"') == 1
-    assert 'aria-label="Γρήγορη πλοήγηση"' in html
-    for screen, path in ROUTES.items():
-        assert f'class="bottom-link" data-bio-tab="{screen}" href="{path}"' in html
-        # The desktop/sidebar original links stay unchanged.
-        assert f'href="{path}" data-bio-tab="{screen}"' in html
+    assert 'aria-label="Κεντρική αναζήτηση"' in html
+    assert html.count('class="bottom-link" data-bio-tab=') == 1
+    assert 'class="bottom-link" data-bio-tab="discovery" href="/admin/operations/discovery"' in html
+    for screen in ('overview','pilot','map','sources','status'):
+        assert f'class="bottom-link" data-bio-tab="{screen}"' not in html
     css = (STATIC / "shell.css").read_text(encoding="utf-8")
     assert ".mobile-bottom-nav{display:none}" in css
     assert "@media(max-width:700px)" in css
-    assert "grid-template-columns:repeat(5,minmax(0,1fr))" in css
+    assert "grid-template-columns:minmax(0,1fr);justify-items:center" in css
     assert "env(safe-area-inset-bottom,0px)" in css
     assert '.bottom-link[aria-current="page"]' in css
 
@@ -95,5 +95,7 @@ def test_phone_hides_redundant_drawer_but_keeps_all_destinations_accessible():
     footer_links = html.split('class="mobile-project-links"', 1)[1].split("</nav>", 1)[0]
     for label in ("Linear Tasks", "GitHub", "DST Workspace"):
         assert label in footer_links
-    # All five internal sections remain reachable from the bottom bar.
-    assert html.count('class="bottom-link" data-bio-tab=') == 5
+    # One primary bottom action; system sources and status remain secondary links.
+    assert html.count('class="bottom-link" data-bio-tab=') == 1
+    assert 'href="/admin/operations/status" data-bio-tab="status"' in html
+    assert 'href="/admin/operations/sources" data-bio-tab="sources"' in html

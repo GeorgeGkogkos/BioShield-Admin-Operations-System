@@ -50,6 +50,6 @@ def test_auto_polling_remains_conditional_and_nonblocking():
     script = (ROOT / "static" / "bioshield-admin.js").read_text(encoding="utf-8")
     assert "},30000);" in script
     assert "if(!document.hidden)" in script
-    assert "if(active&&!active.hidden)void refreshPilot()" in script
+    assert "if((archive&&!archive.hidden)||(discovery&&!discovery.hidden))void refreshPilot()" in script
     assert "button.setAttribute('aria-busy','true')" in script
     assert "currentButton.removeAttribute('aria-busy')" in script

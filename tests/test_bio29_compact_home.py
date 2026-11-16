@@ -20,8 +20,8 @@ def test_overview_is_quick_real_evidence_summary_without_search():
     assert "discoveryFilterMenu(" not in overview
     assert "discoveryFilterMenu(" in discovery
     assert 'bio-discovery-search-form' in layout
-    assert layout.count('class="bio-home-category"') == 3
-    for segment in ("individual", "public_sector", "business"):
+    assert layout.count('data-bio-discovery-category=') == 4
+    for segment in ("individual", "public_sector", "ted", "business"):
         assert f'data-bio-discovery-category="{segment}"' in layout
     assert 'id="bio-ted-term"' in layout
     assert 'id="bio-home-ted-summary"' in layout
@@ -55,7 +55,8 @@ def test_status_is_not_a_sixth_mobile_bottom_tab():
     bottom = html.split('id="bio-bottom-nav"', 1)[1].split("</nav>", 1)[0]
     desktop = html.split('id="bio-shell-nav"', 1)[1].split("</nav>", 1)[0]
     assert 'data-bio-tab="status"' not in bottom
-    assert 'data-bio-tab="status"' in desktop
+    assert 'data-bio-tab="status"' not in desktop
+    assert 'href="/admin/operations/status" data-bio-tab="status"' in html
     ts = (ROOT / "src/navigation.ts").read_text(encoding="utf-8")
     js = (ROOT / "static/typed/navigation.js").read_text(encoding="utf-8")
     assert "'/admin/operations/status'" in ts and "'/admin/operations/status'" in js
@@ -68,7 +69,11 @@ def test_search_precedes_compact_category_filter_chips():
     assert menu.index('id="bio-discovery-search-form"') < menu.index('bio-discovery-filter-row')
     assert menu.index('bio-discovery-filter-row') < menu.index('id="bio-home-ted-summary"')
     assert "bio-discovery-filter-label" in menu
-    assert menu.count('class="bio-home-category"')==3
+    assert menu.count('data-bio-discovery-category=')==4
+    for mode in ('current','home','custom'):
+        assert f'data-bio-location-mode="{mode}"' in menu
+    for mode in ('list','map'):
+        assert f'data-bio-search-view="{mode}"' in menu
     assert ".bio-discovery-menu .bio-home-category" in css
     assert "border-radius:999px" in css
     assert "min-height:36px" in css

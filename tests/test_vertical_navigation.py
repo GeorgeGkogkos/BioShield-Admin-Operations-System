@@ -1,4 +1,4 @@
-"""BIO-24/BIO-29: all routes live in the sidebar; the five main tabs stay mobile-compact."""
+"""BIO-34: one search destination, secondary diagnostics and backwards-compatible URLs."""
 import re
 from pathlib import Path
 
@@ -25,9 +25,12 @@ def test_vertical_navigation_is_in_shared_shell_not_screen_workspace():
     assert html.count('id="bio-shell-nav"') == 1
     assert html.index('id="bio-sidebar"') < html.index('id="bio-shell-nav"') < html.index('id="app"')
     assert '<nav id="bio-shell-nav" class="side-pages"' in html
-    for screen, path in ROUTES.items():
-        assert html.count(f'href="{path}" data-bio-tab="{screen}"') == 1
+    assert html.count('href="/admin/operations/discovery" data-bio-tab="discovery"') == 1
+    for path in ROUTES.values():
         assert client.get(path).status_code == 200
+    assert 'data-bio-tab="overview"' not in html
+    assert 'data-bio-tab="pilot"' not in html
+    assert 'data-bio-tab="map"' not in html
 
     admin_js = (STATIC / "bioshield-admin.js").read_text(encoding="utf-8")
     assert '<nav class="bio-tabs"' not in admin_js
@@ -78,16 +81,21 @@ def test_sidebar_visual_polish_is_flat_compact_and_not_duplicated():
     assert 'class="side-info"' not in html
     assert "Privacy first" not in html
     assert '<nav id="bio-shell-nav" class="side-pages"' in html
-    assert html.count('class="side-icon"') == 8
-    assert html.count('class="side-project-link"') == 2
+    assert html.count('class="side-icon"') >= 3
+    assert html.count('class="side-project-link"') == 4
     assert html.index('class="sidebar-primary"') < html.index('class="sidebar-secondary"')
     assert "Operations Dashboard" not in html
-    # Status is reachable from the landing card and mobile drawer, not a sixth bottom tab.
+    # Diagnostic routes are secondary; search is the only primary destination.
     desktop_nav = html.split('id="bio-shell-nav"', 1)[1].split("</nav>", 1)[0]
     phone_nav = html.split('id="bio-bottom-nav"', 1)[1].split("</nav>", 1)[0]
+    assert desktop_nav.count('data-bio-tab="discovery"') == 1
+    assert phone_nav.count('data-bio-tab="discovery"') == 1
     for screen in ROUTES:
-        assert desktop_nav.count(f'data-bio-tab="{screen}"') == 1
-        assert phone_nav.count(f'data-bio-tab="{screen}"') == (0 if screen == "status" else 1)
+        if screen != 'discovery':
+            assert f'data-bio-tab="{screen}"' not in desktop_nav
+            assert f'data-bio-tab="{screen}"' not in phone_nav
+    assert 'href="/admin/operations/status" data-bio-tab="status"' in html
+    assert 'href="/admin/operations/sources" data-bio-tab="sources"' in html
     assert "link.setAttribute('aria-current','page')" in admin
 
     # The navigation remains grouped and scrollable if the viewport is short.

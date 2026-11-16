@@ -197,13 +197,20 @@ export function setupCoverageMap(panel,report,esc,pilot){
     const dateChoice=panel.querySelector('#bio-map-days')?.value||'30';
     const source=panel.querySelector('#bio-map-source')?.value||'all';
     const days=dateChoice==='all'?null:Number(dateChoice);
+    // When the map is used as an in-search result mode, the search term must
+    // remain effective across both list and map without leaking private data.
+    const searchTerm=(panel.closest('[data-bio-panel="discovery"]')
+      ?.querySelector('#bio-ted-term')?.value||'').trim().toLocaleLowerCase('el-GR');
     const cutoff=days===null?null:new Date(Date.now()-days*86400000);
     const selected=rows.filter(p=>{
       const when=new Date(p.published_on+'T00:00:00Z');
       return !Number.isNaN(when.getTime())&&(!cutoff||when>=cutoff)&&
         (service==='all'||(p.service_codes||[]).includes(service))&&
         (source==='all'||p.source_type===source)&&
-        (region==='all'||p.region===region);
+        (region==='all'||p.region===region)&&
+        (!searchTerm||[p.title,p.buyer,p.location_text,p.notice_number,p.region,
+          ...(p.service_codes||[]).map(code=>SERVICE_NAME[code]||code)]
+          .filter(Boolean).join(' ').toLocaleLowerCase('el-GR').includes(searchTerm));
     });
     for(const p of selected){
       if(!Number.isFinite(p.latitude)||!Number.isFinite(p.longitude))continue;

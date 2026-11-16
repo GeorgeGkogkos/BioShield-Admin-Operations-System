@@ -11,18 +11,19 @@ export const ROUTES = {
   status: '/admin/operations/status',
 };
 
+const canonical = screen => ['overview','pilot','map'].includes(screen)?'discovery':screen;
 const SCREENS = ['overview','discovery','pilot','map','sources','status'];
 
 export function currentScreen(location = window.location) {
   const path=location.pathname.replace(/\/+$/,'') || '/';
   const found=SCREENS.find(screen=>ROUTES[screen]===path);
-  if(found)return found;
+  if(found)return canonical(found);
   // Backward compatibility for existing /admin/operations?tab=map links.
   if(path==='/admin/operations'){
     const legacy=new URLSearchParams(location.search).get('tab');
-    if(legacy && SCREENS.includes(legacy))return legacy;
+    if(legacy && SCREENS.includes(legacy))return canonical(legacy);
   }
-  return 'overview';
+  return 'discovery';
 }
 
 export function installNavigation(page, onChange) {
@@ -34,8 +35,9 @@ export function installNavigation(page, onChange) {
   let leaving = null;
   let pending = null;
   let revision=0;
-  const change=(next, push)=>{
-    if(!SCREENS.includes(next))return;
+  const change=(requested, push)=>{
+    if(!SCREENS.includes(requested))return;
+    const next=canonical(requested);
     if(pending===next)return;
     if(active===next && !leaving && !push){onChange(next);return;}
     if(active===next && !leaving && window.location.pathname===ROUTES[next])return;
