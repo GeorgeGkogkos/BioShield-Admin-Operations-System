@@ -11,6 +11,17 @@ def normalize(text: str) -> str:
     return re.sub(r"\s+", " ", "".join(c for c in norm if unicodedata.category(c) != "Mn")).strip()
 
 SERVICE = {
+    # Specific drain blockage first: "φραγμένη σωλήνα" must not be
+    # mislabeled as generic plumbing simply because it says σωλήνα.
+    "drain_unblocking": (
+        "αποφραξ", "αποφρακτ", "βουλωμ", "βουλωσε", "βουλωμεν",
+        "φραγμεν", "ξεβουλω", "αποχετευ", "σιφων", "φρεατι",
+        "drain unblock", "blocked drain", "clogged drain",
+    ),
+    "plumbing": (
+        "υδραυλικ", "βρυση", "διαρρο", "σωλην", "καζανακ",
+        "θερμοσιφων", "σπασε ο σωληνα", "plumber", "plumbing",
+    ),
     "rodent_control": ("μυοκτον", "ποντικ"),
     "disinfection": ("απολυμαν",),
     "pest_control": ("απεντομ", "κατσαριδ", "κορι", "μυρμηγκ", "ψυλλ"),
