@@ -74,3 +74,16 @@
 .bio-evidence-note{display:block;color:var(--muted);font-size:.76rem;line-height:1.4;margin-top:6px}
 .bio-real-subheading{margin-top:34px}
 .bio-pilot-filter{justify-content:flex-end;margin:14px 0}
+
+/* BIO-11: independent buyer types with explicit incomplete-evidence lane. */
+.bio-segment-private{border-top:3px solid #5b83ac}
+.bio-segment-public{border-top:3px solid #9877bf}
+.bio-segment-business{border-top:3px solid #3b906d}
+.bio-segment-unknown{border-top:3px solid #b69b54}
+.bio-segment-section{margin-top:22px}
+.bio-segment-section[hidden]{display:none!important}
+.bio-business-empty{border:1px dashed var(--line-strong);border-radius:14px;padding:18px 20px;background:var(--soft-surface)}
+.bio-business-empty p{color:var(--muted);line-height:1.6}
+.bio-pilot-filter{margin-top:20px;margin-bottom:24px;flex-wrap:wrap}
+.bio-segment-section .bio-real-subheading{margin-top:12px}
+@media(max-width:560px){.bio-pilot-filter input,.bio-pilot-filter select{width:100%;max-width:none}}
