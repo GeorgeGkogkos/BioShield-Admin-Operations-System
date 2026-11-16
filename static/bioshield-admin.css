@@ -64,3 +64,13 @@
 .bio-pill.neutral{color:var(--muted-strong)}
 @media(max-width:950px){.bio-lab-table-heading{flex-direction:column;align-items:stretch}.bio-lab-filter{flex-wrap:wrap}}
 @media(max-width:560px){.bio-lab-top{flex-direction:column}.bio-lab-filter input,.bio-lab-filter select{flex:1;min-width:0}.bio-lab-metrics .bio-metric strong{font-size:1.4rem}}
+
+/* BIO-10: accessible read-only public-source evidence */
+.bio-real-table{min-width:1080px;line-height:1.55}
+.bio-real-table th{white-space:nowrap}
+.bio-real-table td{vertical-align:top;max-width:350px}
+.bio-real-table tr[hidden]{display:none}
+.bio-real-table a{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+.bio-evidence-note{display:block;color:var(--muted);font-size:.76rem;line-height:1.4;margin-top:6px}
+.bio-real-subheading{margin-top:34px}
+.bio-pilot-filter{justify-content:flex-end;margin:14px 0}
