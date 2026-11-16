@@ -139,9 +139,13 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
       const term=realSearch.value.trim().toLocaleLowerCase('el-GR'), kind=realKind.value;
       let visible=0;
       page.querySelectorAll('[data-pilot-row]').forEach(row=>{
-        const matches=(kind==='all'||kind===row.dataset.kind)&&(!term||row.dataset.search.includes(term));
+        const matches=(kind==='all'||kind===row.dataset.segment)&&(!term||row.dataset.search.includes(term));
         row.hidden=!matches;
         if(matches)visible++;
+      });
+      page.querySelectorAll('[data-pilot-section]').forEach(section=>{
+        const target=section.dataset.pilotSection;
+        section.hidden=!(kind==='all'||kind===target||(kind==='needs_review'&&target==='individual'));
       });
       page.querySelector('#bio-pilot-count').textContent=number(visible)+' / '+number(pilot.public_sources_reviewed)+' εγγραφές';
     }
