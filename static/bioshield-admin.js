@@ -382,11 +382,16 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
   }
   pilotPanel.addEventListener('input',filterPilot);
   pilotPanel.addEventListener('change',filterPilot);
+  let pilotBusy=false;
   async function refreshPilot(){
+    if(pilotBusy)return;
+    pilotBusy=true;
+    const release=showLoadingOverlay(pilotPanel,'Ενημέρωση αποθηκευμένων πραγματικών πηγών…','table');
     const oldQuery=pilotPanel.querySelector('#bio-pilot-search')?.value||'';
     const oldType=pilotPanel.querySelector('#bio-pilot-type')?.value||'all';
     const oldAge=pilotPanel.querySelector('#bio-pilot-recency')?.value||'7d';
     try{pilot=await api('/bioshield/demo/evidence');}catch{pilot={demo_unavailable:true};}
+    release();pilotBusy=false;
     if(!page.isConnected)return;
     pilotPanel.innerHTML=renderPublicPilot(pilot,esc);
     const query=pilotPanel.querySelector('#bio-pilot-search'),type=pilotPanel.querySelector('#bio-pilot-type'),
@@ -416,8 +421,14 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
   page.addEventListener('input',event=>{
     if(event.target.id==='bio-ted-term')filterTED();
   });
+  let mapBusy=false;
   async function refreshCoverage(){
+    if(mapBusy)return;
+    mapBusy=true;
+    const mapPanel=page.querySelector('[data-bio-panel="map"]');
+    const release=showLoadingOverlay(mapPanel,'Αυτόματη ενημέρωση πραγματικού χάρτη TED…','map');
     try{coverage=await api('/bioshield/discovery/map');}catch{coverage={status:'source_unavailable'};}
+    release();mapBusy=false;
     if(!page.isConnected)return;
     if(typeof mapCleanup==='function')mapCleanup();
     const panel=page.querySelector('[data-bio-panel="map"]');
