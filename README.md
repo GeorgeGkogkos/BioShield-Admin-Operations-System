@@ -14,9 +14,9 @@ Independent BioShield admin operations application hosted in the DST Render work
 
 ## Environment
 
-The existing Render workspace is **My Workspace**. Target is the DST project; its project/environment assignment must be confirmed on Render because the service-creation connector cannot specify a project ID.
+The existing Render workspace is **My Workspace**. The BioShield and dst-web services have been verified in the same DST Render environment (evm-dattkog93c1s73bvj6rg).
 
-Linear project: https://linear.app/gkg/project/bioshield-admin-operations-system-79b033ffab9a (DST team, issues DST-265 through DST-270).
+Linear project: https://linear.app/gkg/project/bioshield-admin-operations-system-79b033ffab9a (DST team, issues DST-265 through DST-273).
 
 ## Repository and security
 
@@ -30,7 +30,7 @@ This repository is currently PUBLIC. Never commit Supabase secrets, Firecrawl/Ti
 - Workspace: My Workspace; region: Frankfurt; plan: free; auto-deploy: disabled.
 - First live deployment: dep-dbt4mjff3r2c73bu0b40, commit aeaeef10a18447a681f1ccd228c50c98bf176be1 (GitHub PR #1), status LIVE.
 - GitHub Actions checks passed; actual health, page and read-only overview were fetched from the deployed service.
-- Render DST project assignment is still unverified because the connected service-creation tool has no project/environment argument. Track as Linear DST-271; use the Render Dashboard's Move control to group this service under the existing DST project without modifying dst-web.
+- Render project grouping verified by matching the environment IDs of bioshield-admin-operations and dst-web. BIO-07 / DST-271 has been completed without moving or changing either service.
 
 The page is a PUBLIC setup preview and MUST NOT contain any personal/contact data until proper admin authentication and the external business database are verified.
 
