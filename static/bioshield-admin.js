@@ -106,33 +106,19 @@ function remoteOpportunityRows(items,esc,newIds=new Set()){
     ).join('')+'</tbody></table></div>';
 }
 function remoteOpportunities(segmented,esc,newIds=new Set()){
-  if(segmented?.status!=='ok'){
-    return '<div role="status" class="bio-note">Οι μακρινές προκηρύξεις δεν μπορούν να επαληθευτούν τώρα. '+
-      'Δεν προβάλλονται παλιές ή ανεπιβεβαίωτες ευκαιρίες ως ενεργές.</div>';
-  }
+  if(segmented?.status!=='ok')return '<div role="status" class="bio-note">Οι μακρινές επίσημες συμβάσεις δεν μπορούν να επαληθευτούν τώρα.</div>';
   const publicItems=segmented.remote_public||[];
-  const businessItems=segmented.remote_business||[];
   const counts=segmented.counts||{};
   return '<div class="bio-remote-container">'+
-    '<h3>Ξεχωριστή λίστα μακρινών έργων — Δημόσιο και επιχειρήσεις</h3>'+
-    '<p class="bio-note">Εμφανίζονται μακρινές επίσημες προκηρύξεις Δημοσίου ανεξαρτήτως ποσού και '+
-    'επαληθευμένα αιτήματα επιχειρήσεων, εφόσον υπάρχουν εγκεκριμένες πηγές. '+
-    '<strong>Δεν προστίθενται μακρινά αιτήματα ιδιωτών.</strong> '+
-    'Οι ημερομηνίες, η περιοχή εκτέλεσης και η δυνατότητα συμμετοχής απαιτούν έλεγχο.</p>'+
-    '<div class="bio-remote-split">'+
-    '<section class="bio-remote-panel" aria-labelledby="bio-remote-public-title"><h4 id="bio-remote-public-title">Δημόσιες προκηρύξεις εκτός περιοχής</h4>'+
-    '<span class="bio-remote-count"><strong>'+esc(publicItems.length)+'</strong> τεκμηριωμένες δημοσιεύσεις</span>'+
-    remoteOpportunityRows(publicItems,esc,newIds)+'</section>'+
-    '<section class="bio-remote-panel" aria-labelledby="bio-remote-business-title"><h4 id="bio-remote-business-title">Επιχειρηματικά έργα εκτός περιοχής</h4>'+
-    '<span class="bio-remote-count"><strong>'+esc(businessItems.length)+'</strong> πρωτογενώς επαληθευμένες αναφορές</span>'+
-    remoteOpportunityRows(businessItems,esc,newIds)+
-    '<p class="bio-remote-unknown">Δεν υποθέτουμε αιτήματα ξενοδοχείων ή εταιρειών από γενικές διαφημίσεις. '+
-    'Ο τρέχων ζωντανός αυτοματοποιημένος πάροχος είναι το TED, το οποίο δημοσιεύει δημόσιες συμβάσεις.</p>'+
-    '</section></div>'+
-    '<p class="bio-remote-unknown">Προς έλεγχο: '+esc(counts.needs_location_review||0)+
-    ' χωρίς επαληθευμένη περιοχή εκτέλεσης, '+esc(counts.needs_audience_review||0)+
-    ' με μη επαληθευμένη κατηγορία. Αποκλείστηκαν '+esc(counts.excluded_remote_individual||0)+
-    ' μακρινά αιτήματα ιδιωτών.</p></div>';
+    '<h3>Δημόσιες συμβάσεις εκτός βασικής περιοχής</h3>'+
+    '<p class="bio-note">Μακρινές επίσημες προκηρύξεις Δημοσίου ανεξαρτήτως ποσού. '+
+    'Η περιοχή εκτέλεσης και η δυνατότητα συμμετοχής απαιτούν έλεγχο της πρωτογενούς διακήρυξης.</p>'+
+    '<span class="bio-remote-count"><strong>'+esc(publicItems.length)+
+    '</strong> τεκμηριωμένες δημόσιες δημοσιεύσεις</span>'+
+    remoteOpportunityRows(publicItems,esc,newIds)+
+    '<p class="bio-remote-unknown">Προς επαλήθευση: '+esc(counts.needs_location_review||0)+
+    ' χωρίς περιοχή εκτέλεσης, '+esc(counts.needs_audience_review||0)+
+    ' με άγνωστη κατηγορία. Οι επιχειρηματικές εργασίες ανήκουν στο φίλτρο «Επιχειρήσεις».</p></div>';
 }
 
 function entryCheckMarkup(state,ids,esc){
