@@ -35,13 +35,13 @@ export function publicArchivePoints(pilot){
   const seen=new Set();
   const points=[];
   for(const tender of pilot.tenders){
-    if(!/^ORG-\\d{3,}$/.test(tender?.id||'') ||
+    if(!/^ORG-\d{3,}$/.test(tender?.id||'') ||
       tender?.audience_segment!=='public_sector' ||
       tender?.contact_eligible!==false ||
       typeof tender?.source_url!=='string' ||
       !tender.source_url.startsWith('https://'))continue;
     const place=ADMIN_PLACES[tender.region];
-    if(!place || seen.has(tender.id) || !/^\\d{4}-\\d{2}-\\d{2}$/.test(tender.published_on||''))continue;
+    if(!place || seen.has(tender.id) || !/^\d{4}-\d{2}-\d{2}$/.test(tender.published_on||''))continue;
     seen.add(tender.id);
     const words=String(tender.service||'').toLocaleLowerCase('el-GR');
     const service_codes=[];
@@ -49,7 +49,7 @@ export function publicArchivePoints(pilot){
     if(/μυοκτον/.test(words))service_codes.push('rodent_control');
     if(/απολύμαν/.test(words))service_codes.push('disinfection');
     if(/φρεάτ|αποφράξ|εκκένωσ/.test(words))service_codes.push('drain_unblocking');
-    const tedMatch=String(tender.notice_id||'').match(/\\bTED\\s+(\\d{5,7}-20\\d{2})\\b/i);
+    const tedMatch=String(tender.notice_id||'').match(/\bTED\s+(\d{5,7}-20\d{2})\b/i);
     points.push({
       id:tender.id,notice_number:tender.id,
       ted_duplicate_number:tedMatch?.[1]||null,
