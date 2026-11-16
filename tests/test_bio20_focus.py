@@ -198,7 +198,7 @@ def test_brand_loader_genuine_black_home_only_header_and_opt_in_gps():
     assert html.index('id="bio-shell-nav"') < html.index('id="app"')
     assert '<nav class="bio-tabs"' not in ui
     assert ui.index("'<section data-bio-panel=\"overview\"") < ui.index("'<header class=\"bio-heading\"")
-    assert "id=\"bio-ted-refresh\"" in ui
+    assert "id=\"bio-ted-refresh\"" in (root/"static/discovery-layout.js").read_text()  # compact inline refresh
     assert "api('/bioshield/discovery/manual?" in ui
     assert "bio-live-status-status" in ui and "bio-live-status-discovery" not in ui
     assert "bio-home-ted-summary" in ui and "bio-home-source-indicator" in ui

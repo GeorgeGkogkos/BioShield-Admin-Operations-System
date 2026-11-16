@@ -45,6 +45,7 @@ export function discoveryFilterMenu({ted,entry,newIds,esc,indicator,summary}){
   const businessIcon='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V4h12v17M15 10h6v11M7 8h4M7 12h4M7 16h4M2 21h20"/></svg>';
   return [
     '<div class="bio-home-card bio-discovery-menu">',
+    '<div class="bio-discovery-toolbar">',
     '<form role="search" id="bio-discovery-search-form" aria-label="Αναζήτηση ανακαλύψεων">',
     '<label class="bio-visually-hidden" for="bio-ted-term">Αναζήτηση στα φορτωμένα, τεκμηριωμένα ευρήματα</label>',
     '<div class="bio-home-search-box">'+searchIcon,
@@ -52,6 +53,10 @@ export function discoveryFilterMenu({ted,entry,newIds,esc,indicator,summary}){
     '<button type="submit" aria-label="Αναζήτηση ευρημάτων">',
     '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg>',
     '</button></div></form>',
+    '<button id="bio-ted-refresh" class="bio-discovery-refresh" type="button" aria-label="Ανανέωση επίσημων ανακαλύψεων" title="Ανανέωση επίσημων ανακαλύψεων">',
+    '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>',
+    '</button></div>',
+    '<span id="bio-manual-message" class="bio-visually-hidden" role="status" aria-live="polite"></span>',
     '<div class="bio-discovery-subbar">',
     '<span class="bio-home-kicker">BIOSHIELD / DISCOVERY</span>',
     '<span id="bio-home-source-indicator">'+indicator+'</span></div>',
