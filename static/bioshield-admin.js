@@ -777,9 +777,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     }
     const saved=page.querySelector('#bio-unified-archive');
     if(saved)saved.innerHTML=renderSearchArchive(pilot,esc,category);
-    // Discovery uses a single list of evidence; the standalone Map page owns maps.
-    publicPanel.hidden=!publicOnly;
-    privatePanel.hidden=publicOnly;
+    // Discovery uses a single results list; the standalone Map page owns maps.
     const archivePanel=page.querySelector('#bio-unified-archive');
     if(archivePanel)archivePanel.hidden=category==='ted';
     filterTED();
