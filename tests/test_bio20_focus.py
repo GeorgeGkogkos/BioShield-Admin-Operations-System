@@ -200,7 +200,7 @@ def test_brand_loader_genuine_black_home_only_header_and_opt_in_gps():
     assert ui.index("'<section data-bio-panel=\"overview\"") < ui.index("'<header class=\"bio-heading\"")
     assert "id=\"bio-ted-refresh\"" in ui
     assert "api('/bioshield/discovery/manual?" in ui
-    assert "bio-live-status-status" in ui and "bio-live-status-discovery" in ui
+    assert "bio-live-status-status" in ui and "bio-live-status-discovery" not in ui
     assert "bio-home-ted-summary" in ui and "bio-home-source-indicator" in ui
     assert "bio-live-status-overview" not in ui
     assert "watchPosition(" in gps and "onStart" in gps
