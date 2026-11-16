@@ -110,3 +110,21 @@
 .bio-source-row a{font-size:.8rem;color:var(--accent);text-decoration:underline}
 .bio-source-row>span{font-size:.8rem;color:var(--muted-strong);font-weight:650;text-align:right;max-width:230px}
 @media(max-width:720px){.bio-source-row{flex-direction:column;gap:7px}.bio-source-row>span{text-align:left}}
+
+/* BIO-17 geographic research coverage. Points are representative admin centers. */
+.bio-coverage-layout{display:grid;grid-template-columns:minmax(0,2fr) minmax(245px,1fr);gap:18px;margin-top:16px;align-items:start}
+.bio-map-host{min-width:0}
+.bio-map-canvas{height:470px;width:100%;background:#e8eef0;border:1px solid var(--line);border-radius:15px;overflow:hidden}
+.bio-map-canvas .leaflet-control-attribution{font-size:11px}
+.bio-map-canvas .leaflet-popup-content p{margin:5px 0;line-height:1.4}
+.bio-coverage-list{border:1px solid var(--line);border-radius:15px;padding:14px 16px;background:var(--soft-surface);max-height:505px;overflow:auto}
+.bio-coverage-list h3{margin:4px 0 8px}
+.bio-coverage-rows{margin-top:12px;display:grid;gap:4px}
+.bio-coverage-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 4px;border-bottom:1px solid var(--line);font-size:.86rem}
+.bio-coverage-row strong{font-variant-numeric:tabular-nums}
+.bio-real-map-locations{margin:15px 0;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.bio-coverage-source{border:1px solid var(--line);border-radius:12px;padding:12px;font-size:.85rem;line-height:1.5}
+.bio-coverage-source a{display:inline}
+.bio-coverage-source small{display:block;color:var(--muted);margin-top:5px}
+@media(max-width:860px){.bio-coverage-layout{grid-template-columns:1fr}.bio-map-canvas{height:390px}.bio-coverage-list{max-height:260px}}
+@media(max-width:520px){.bio-map-canvas{height:310px}.bio-coverage-list{padding:12px}.bio-real-map-locations{grid-template-columns:1fr}}
