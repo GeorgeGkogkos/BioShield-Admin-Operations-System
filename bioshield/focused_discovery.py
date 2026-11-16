@@ -64,13 +64,15 @@ def query_official_region(codes, *, timeout=10):
             "searched_at_utc":datetime.now(timezone.utc).isoformat(),
             "query":body["query"],"count":len(records),"notices":records}
 
-def focused_report(*,temporary="",force=False):
+def focused_report(*,home="ilion",temporary="",force=False):
     global _last_force
+    if home not in LOCATIONS:
+        raise ValueError("Unsupported permanent region")
     if temporary and temporary not in LOCATIONS:
         raise ValueError("Unsupported travel region")
-    policy=location_policy(temporary=temporary)
+    policy=location_policy(home=home,temporary=temporary)
     now=time.monotonic()
-    key=temporary or "_home"
+    key=home+":"+(temporary or "_home")
     with _lock:
         if force and now-_last_force<MIN_FORCE_INTERVAL:
             return {"status":"rate_limited","retry_after_seconds":int(MIN_FORCE_INTERVAL-(now-_last_force))+1,
