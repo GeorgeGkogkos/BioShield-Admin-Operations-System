@@ -1,4 +1,5 @@
 import {renderPublicPilot} from './real-pilot.js';
+import {coverageMarkup,setupCoverageMap} from './geographic-map.js';
 
 /* BIO-14: REAL public-source evidence only; the synthetic request lab is removed. */
 const fmt = x => Number(x || 0).toLocaleString('el-GR');
@@ -67,20 +68,23 @@ function discoveries(state,esc) {
     '<option value="drain_unblocking">Αποφράξεις</option></select>'+
     '<span id="bio-ted-count"></span></div>',
     tenderRows(state,esc),
-    '<p class="bio-note">Η ανακάλυψη ενεργοποιείται αυτόματα με το άνοιγμα της σελίδας (έως 15 λεπτά cache ανά instance) και προγραμματίστηκε ξεχωριστός έλεγχος GitHub Actions ανά 6 ώρες. Εάν ο πάροχος δεν απαντά, η κατάσταση φαίνεται ως μη διαθέσιμη.</p>',
+    '<p class="bio-note">Η ανακάλυψη ενεργοποιείται αυτόματα με το άνοιγμα της σελίδας (έως 15 λεπτά cache ανά instance) και η προγραμματισμένη αναζήτηση GitHub Actions εκτελείται κάθε ώρα, στο :17 (με πιθανές καθυστερήσεις scheduler). Εάν ο πάροχος δεν απαντά, η κατάσταση φαίνεται ως μη διαθέσιμη.</p>',
     '<p class="bio-note"><strong>Facebook, Instagram, TikTok, Reddit:</strong> η εμπορική αυτοματοποιημένη συλλογή απαιτεί δικαιώματα πλατφόρμας. Οι ανεξάρτητες κοινότητες χρειάζονται έλεγχο robots και όρων πριν από οποιοδήποτε crawl. Οι συζητήσεις δεν αποτελούν επιβεβαιωμένους πελάτες.</p>',
   ].join('');
 }
 
 export async function renderBioShieldAdmin(page,{api,esc}) {
   page.innerHTML='<p role="status">Φόρτωση πραγματικών ευρημάτων BioShield…</p>';
-  const [pilotReply,tedReply,sourceReply]=await Promise.allSettled([
+  const [pilotReply,tedReply,sourceReply,mapReply]=await Promise.allSettled([
     api('/bioshield/demo/evidence'), api('/bioshield/discovery/tenders'),
-    api('/bioshield/discovery/sources')
+    api('/bioshield/discovery/sources'), api('/bioshield/discovery/map')
   ]);
   let pilot=pilotReply.status==='fulfilled'?pilotReply.value:{demo_unavailable:true};
   let ted=tedReply.status==='fulfilled'?tedReply.value:{status:'unavailable'};
   const policy=sourceReply.status==='fulfilled'?sourceReply.value:null;
+  let coverage=mapReply.status==='fulfilled'?mapReply.value:{status:'source_unavailable'};
+  let mapCleanup=null;
+  let mapInitialized=false;
   if(!page.isConnected)return;
   const seg=pilot.demo_supabase_connected?pilot.segment_counts:{individual:0,public_sector:0,business:0,needs_review:0};
   page.innerHTML=[
@@ -95,6 +99,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     '<button type="button" data-bio-tab="overview" class="active" aria-pressed="true">Επισκόπηση</button>',
     '<button type="button" data-bio-tab="discovery" aria-pressed="false">Νέες ανακαλύψεις</button>',
     '<button type="button" data-bio-tab="pilot" aria-pressed="false">Αποθηκευμένα ευρήματα</button>',
+    '<button type="button" data-bio-tab="map" aria-pressed="false">Χάρτης / Κάλυψη</button>',
     '<button type="button" data-bio-tab="sources" aria-pressed="false">Πηγές &amp; έλεγχοι</button>',
     '</nav>',
     '<section data-bio-panel="overview">',
@@ -104,7 +109,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     countCard('Πρόσφατες συζητήσεις 30ημέρου',pilot.reddit_freshness?.recent_posts_30d||0,'Όχι επιβεβαιωμένα αιτήματα εργασίας'),
     countCard('Εγκεκριμένες επαφές',0,'Καμία συλλογή προσωπικών στοιχείων'),
     '</div><div class="bio-grid">',
-    '<article class="bio-card"><h2>Ανακάλυψη νέων δεδομένων</h2><p>Το TED ερευνά αυτόματα ελληνικά δημόσια έργα στις υπηρεσίες απεντόμωσης, μυοκτονίας, απολύμανσης, <strong>υδραυλικού</strong> και <strong>αποφράξεων</strong>. Επανέλεγχος ανά 6 ώρες στο GitHub.</p>',
+    '<article class="bio-card"><h2>Ανακάλυψη νέων δεδομένων</h2><p>Το TED ερευνά αυτόματα ελληνικά δημόσια έργα στις υπηρεσίες απεντόμωσης, μυοκτονίας, απολύμανσης, <strong>υδραυλικού</strong> και <strong>αποφράξεων</strong>. Επανέλεγχος κάθε ώρα στο :17 μέσω GitHub Actions.</p>',
     '<button class="bio-open-lab" type="button" data-bio-tab="discovery">Προβολή πραγματικών αποτελεσμάτων</button></article>',
     '<article class="bio-card"><h2>Διαχωρισμός αιτούντων</h2>',
     '<p>Ιδιώτες: <strong>',fmt(seg.individual),'</strong> · Έργα Δημοσίου: <strong>',fmt(seg.public_sector),'</strong> · Επιχειρήσεις: <strong>',fmt(seg.business),'</strong> · Αδιευκρίνιστα: <strong>',fmt(seg.needs_review),'</strong>.</p>',
@@ -113,11 +118,13 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     '</div></section>',
     '<section data-bio-panel="discovery" hidden>',discoveries(ted,esc),'</section>',
     '<section data-bio-panel="pilot" hidden>',renderPublicPilot(pilot,esc),'</section>',
+    '<section data-bio-panel="map" hidden>',coverageMarkup(coverage,esc),'</section>',
     '<section data-bio-panel="sources" hidden>',
     '<h2>Συνδεδεμένες &amp; εκκρεμείς πηγές</h2>',
     '<p class="bio-muted">Έγινε έρευνα σε Facebook, Instagram, TikTok και ανεξάρτητα ελληνικά forums. Εμφανίζονται μόνο πραγματικές καταστάσεις πρόσβασης· καμία κοινωνική πλατφόρμα δεν θεωρείται ενεργός crawler.</p>',
     sourceList(policy,esc),
-    '<div class="bio-policy"><span>Firecrawl · τρεις λογαριασμοί (έλεγχος 16/11/2026)</span><strong>0 credits · απαιτείται ανανέωση</strong></div>',
+    '<div class="bio-policy"><span>Firecrawl · τέσσερις λογαριασμοί (έλεγχος 16/11/2026)</span><strong>0 + 0 + 0 + 1.400 credits</strong></div>',
+    '<p class="bio-note">Ο τέταρτος λογαριασμός είναι συνδεδεμένος στο ChatGPT. Για server-side rotation απαιτείται ξεχωριστή σύνδεση API key στο Render, που δεν έχει γίνει.</p>',
     '<div class="bio-policy"><span>TinyFish — εξουσιοδοτημένες πηγές</span><strong>Αναμονή ελέγχου δικαιωμάτων</strong></div>',
     '<div class="bio-policy"><span>Supabase Demo (δεύτερος λογαριασμός)</span><strong>Μόνο ανάγνωση</strong></div>',
     '<div class="bio-policy"><span>Εταιρικό CRM / Supabase</span><strong>Ασύνδετο</strong></div>',
@@ -134,6 +141,10 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
       b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));
     });
     panels().forEach(p=>p.hidden=p.dataset.bioPanel!==name);
+    if(name==='map'&&!mapInitialized){
+      mapInitialized=true;
+      mapCleanup=setupCoverageMap(page.querySelector('[data-bio-panel="map"]'),coverage,esc);
+    }
   }
   page.addEventListener('click',event=>{
     const tab=event.target.closest('[data-bio-tab]');
@@ -192,6 +203,15 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
   page.addEventListener('change',event=>{
     if(event.target.id==='bio-ted-service')filterTED();
   });
+  async function refreshCoverage(){
+    try{coverage=await api('/bioshield/discovery/map');}catch{coverage={status:'source_unavailable'};}
+    if(!page.isConnected)return;
+    if(typeof mapCleanup==='function')mapCleanup();
+    const panel=page.querySelector('[data-bio-panel="map"]');
+    panel.innerHTML=coverageMarkup(coverage,esc);
+    mapInitialized=false;
+    if(!panel.hidden){mapInitialized=true;mapCleanup=setupCoverageMap(panel,coverage,esc);}
+  }
   async function refreshTED(){
     try{ted=await api('/bioshield/discovery/tenders');}catch{ted={status:'unavailable'};}
     if(!page.isConnected)return;
@@ -205,6 +225,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
   page.addEventListener('click',event=>{
     if(event.target.closest('#bio-demo-refresh'))void refreshPilot();
     if(event.target.closest('#bio-ted-refresh'))void refreshTED();
+    if(event.target.closest('#bio-map-refresh'))void refreshCoverage();
   });
   filterPilot();
   filterTED();
@@ -217,6 +238,6 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
   },30000);
   const tedTimer=setInterval(()=>{
     if(!page.isConnected){clearInterval(tedTimer);return;}
-    if(!document.hidden)void refreshTED();
+    if(!document.hidden){void refreshTED();void refreshCoverage();}
   },900000);
 }
