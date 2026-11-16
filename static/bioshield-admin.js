@@ -584,6 +584,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     panel.innerHTML=coverageMarkup(coverage,esc,pilot);
     mapInitialized=false;
     if(!panel.hidden){mapInitialized=true;mapCleanup=setupCoverageMap(panel,coverage,esc,pilot);}
+    if(searchView==='map')refreshInlineMap();
   }
   function updateDiscoveryUI(){
     if(!page.isConnected)return;
@@ -813,7 +814,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
       if(heading)heading.textContent=(category==='individual'?'Ιδιώτες':'Επιχειρήσεις')+' — αναζήτηση';
       if(description)description.textContent=category==='individual'?
         'Δεν έχει συνδεθεί εγκεκριμένη ενεργή πηγή νέων ιδιωτικών αιτημάτων. Ιστορικές δημόσιες συζητήσεις δεν αποτελούν νέους πελάτες.':
-        'Οι δημόσιες συμβάσεις TED βρίσκονται μόνο στα «Δημόσια έργα». Εδώ εμφανίζονται αποκλειστικά τεκμηριωμένα επιχειρηματικά αιτήματα, εάν προκύψουν.';
+        'Οι δημόσιες συμβάσεις TED βρίσκονται στις κατηγορίες «Δημόσιο» και «TED». Εδώ εμφανίζονται αποκλειστικά τεκμηριωμένα επιχειρηματικά αιτήματα, εάν προκύψουν.';
       if(body){
         body.hidden=category!=='business';
         if(category==='business')body.innerHTML=businessDiscoveryMarkup({segmented,esc,newIds:newSinceOpen,renderRows:remoteOpportunityRows});
@@ -842,13 +843,15 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     if(event.target.closest('#bio-map-refresh'))void refreshCoverage();
   });
   setDiscoveryCategory('public_sector');
+  if(new URLSearchParams(window.location.search).get('view')==='map')setSearchView('map');
   filterPilot();
   filterTED();
   const refreshTimer=setInterval(()=>{
     if(!page.isConnected){clearInterval(refreshTimer);return;}
     if(!document.hidden){
-      const active=page.querySelector('[data-bio-panel="pilot"]');
-      if(active&&!active.hidden)void refreshPilot();
+      const archive=page.querySelector('[data-bio-panel="pilot"]');
+      const discovery=page.querySelector('[data-bio-panel="discovery"]');
+      if((archive&&!archive.hidden)||(discovery&&!discovery.hidden))void refreshPilot();
     }
   },30000);
   const tedTimer=setInterval(()=>{
