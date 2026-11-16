@@ -2,7 +2,7 @@
 import pytest
 from fastapi.testclient import TestClient
 from app import app
-from bioshield.benchmark import benchmark, quality
+from bioshield.benchmark import throughput as benchmark, quality
 from bioshield.engine import canonical_url, classify, mock_run, source_key
 from bioshield.fixtures import CASES
 
