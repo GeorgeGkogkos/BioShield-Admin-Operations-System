@@ -41,6 +41,11 @@ function googleAlertsCard(report,esc){
     '<p>Διαφορετικές αναφορές: <strong>'+val(report?.entries_unique_unverified)+
     '</strong> · Ενδείξεις πιθανού αιτήματος (μη επαληθευμένες): <strong>'+
     val(report?.potential_request_hints_unverified)+'</strong></p>'+
+    '<p>Ενδείξεις ανά κατηγορία (χωρίς επιβεβαίωση): Ιδιώτες <strong>'+
+    val(report?.buyer_hint_counts_unverified?.individual)+'</strong> · Δημόσιο <strong>'+
+    val(report?.buyer_hint_counts_unverified?.public_sector)+'</strong> · Επιχειρήσεις <strong>'+
+    val(report?.buyer_hint_counts_unverified?.business)+'</strong> · Αδιευκρίνιστα <strong>'+
+    val(report?.buyer_hint_counts_unverified?.unknown)+'</strong></p>'+
     '<p class="bio-note">Καμία αναφορά Google Alerts δεν χαρακτηρίζεται επιβεβαιωμένος πελάτης χωρίς έλεγχο της πρωτογενούς δημοσίευσης. '+
     'Δεν συλλέγονται στοιχεία επικοινωνίας ούτε ενεργοποιείται τηλεφωνικό κέντρο.</p>'+
     '<p class="bio-note">Η σύνδεση απαιτεί RSS Feed στο google.com/alerts και ιδιωτική ρύθμιση στο Render. '+
