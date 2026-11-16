@@ -27,17 +27,11 @@ export function skeletonBlock(kind:SkeletonKind='table'):string{
     '<span class="bio-skeleton bio-sk-w35"></span></div>';
   return '<div class="bio-skeleton-table">'+skeletonRows(5)+'</div>';
 }
-/** Initial shell shows the actual company mark and body skeletons before HTTP. */
+/** The header shows the single company brand/busy indicator; main shows data placeholders only. */
 export function pageSkeleton(path:string='/admin/operations/overview'):string{
   const which=path.endsWith('/map')?'map':
     path.endsWith('/sources')?'cards':path.endsWith('/overview')?'cards':'table';
-  return '<div class="bio-skeleton-page" role="status" aria-live="polite" aria-busy="true">'+
-    '<header class="bio-skeleton-brand"><img src="/static/bioshield-company-logo.png" alt="" width="58" height="58">'+
-    '<div><strong>BioShield</strong><span>Φόρτωση πραγματικών δεδομένων…</span></div>'+
-    '<span class="bio-skeleton-loader" aria-hidden="true"></span></header>'+
-    '<nav class="bio-skeleton-tabs" aria-hidden="true">'+
-    '<span class="bio-skeleton bio-sk-w20"></span><span class="bio-skeleton bio-sk-w20"></span>'+
-    '<span class="bio-skeleton bio-sk-w20"></span><span class="bio-skeleton bio-sk-w20"></span></nav>'+
+  return '<div class="bio-skeleton-page" aria-busy="true" aria-label="Φόρτωση περιεχομένου">'+
     '<div class="bio-skeleton-metrics">'+skeletonCards(4)+'</div>'+
     '<div class="bio-skeleton-content"><div class="bio-skeleton-work">'+
     '<span class="bio-skeleton bio-sk-w50 bio-sk-heading"></span>'+
