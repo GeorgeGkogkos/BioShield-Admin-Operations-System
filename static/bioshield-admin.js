@@ -231,13 +231,7 @@ function officialSourceCards(official,esc){
 
 function discoveries(state,esc,focused,heartbeat,segmented) {
   return [
-    '<div class="bio-lab-filter bio-service-filter"><label for="bio-ted-service">Φίλτρο υπηρεσίας</label>'+
-    '<select id="bio-ted-service" aria-label="Φίλτρο υπηρεσίας">'+
-    '<option value="all">Όλες οι υπηρεσίες</option>'+
-    '<option value="pest_control">Απεντόμωση</option><option value="rodent_control">Μυοκτονία</option>'+
-    '<option value="disinfection">Απολύμανση</option><option value="plumbing">Υδραυλικός</option>'+
-    '<option value="drain_unblocking">Αποφράξεις</option></select>'+
-    '<span id="bio-ted-count"></span></div>',
+    '<div class="bio-ted-results-summary"><span id="bio-ted-count" role="status" aria-live="polite"></span></div>',
     '<div class="bio-focus-title"><h3>Επιπλέον αναζήτηση κοντά στη βάση και στην προσωρινή τοποθεσία</h3>',
     '<p class="bio-note">Ειδικές επίσημες ερωτήσεις γεωγραφίας NUTS στο TED, όχι απλώς ταξινόμηση ήδη γνωστών δημοσιεύσεων.</p></div>',
     '<div id="bio-focus-results">',focusResults(focused,esc),'</div>',
