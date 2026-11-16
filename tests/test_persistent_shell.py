@@ -53,9 +53,10 @@ def test_shell_is_sticky_and_panel_animations_cannot_overlay_header():
     assert "from{opacity:0;transform:translateY(9px)}" in admin
     assert "to{opacity:1;transform:translateY(0)}" in admin
     assert "oldPanel.animate([" in navigation and "oldPanel.animate([" in typed_navigation
-    assert "duration:145" in navigation and "duration:145" in typed_navigation
-    assert "animation.finished.then(finish,finish)" in navigation
-    assert "animation.finished.then(finish,finish)" in typed_navigation
+    for source in (navigation, typed_navigation):
+        compact_source = "".join(source.split())
+        assert "duration:145" in compact_source
+        assert "animation.finished.then(finish,finish)" in compact_source
     # TypeScript build formats whitespace differently from the checked-in JS.
     for source in (navigation, typed_navigation):
         minified = "".join(source.split())
