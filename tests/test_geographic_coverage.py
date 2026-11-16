@@ -94,7 +94,8 @@ def test_hourly_action_schedule_and_map_assets():
     assert "/static/vendor/leaflet.css" in html
     assert 'data-bio-tab="map"' in html
     assert 'data-bio-tab="discovery"' in html
-    assert 'id="bio-inline-map"' in ui
+    assert 'id="bio-inline-map"' not in ui
+    assert "'<section data-bio-panel=\"map\" hidden>'" in ui
     assert "coverageMarkup(coverage,esc,pilot)" in ui
     assert "export function setupCoverageMap" in js
     assert "lib.map(container" in js

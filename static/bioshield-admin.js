@@ -337,7 +337,6 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     '<p class="bio-note" id="bio-discovery-private-no-matches" role="status" hidden>Δεν βρέθηκαν επιχειρηματικά ευρήματα που να ταιριάζουν στην αναζήτηση.</p>',
     '<p class="bio-note">Εφόσον υπάρχουν, τα ιστορικά τεκμήρια εμφανίζονται παρακάτω μέσα στην ίδια αναζήτηση.</p></div>',
     '<div id="bio-unified-archive">',renderSearchArchive(pilot,esc,'public_sector'),'</div>',
-    '<div id="bio-inline-map" class="bio-inline-map" hidden></div>',
     '</section>',
     '<section data-bio-panel="pilot" hidden>',renderPublicPilot(pilot,esc),'</section>',
     '<section data-bio-panel="map" hidden>',coverageMarkup(coverage,esc,pilot),'</section>',
@@ -391,8 +390,6 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
   setupResearchPlaybook(page.querySelector('[data-bio-panel="sources"]'));
   const discoveryPanel=page.querySelector('[data-bio-panel="discovery"]');
   let locationMode='home';
-  let searchView='list';
-  let inlineMapCleanup=null;
   // Only a coarse region code is sent. In current/custom modes it replaces
   // the base search target; exact device coordinates never leave this browser.
   const effectiveFocusChoice=choice=>({
@@ -490,8 +487,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
       pilot=next;
       const archiveSlot=page.querySelector('#bio-unified-archive');
       if(archiveSlot){archiveSlot.innerHTML=renderSearchArchive(pilot,esc,discoveryCategory);filterTED();}
-      if(searchView==='map')refreshInlineMap();
-      // Refresh the public archive layer when the demo evidence changes.
+        // Refresh the public archive layer when the demo evidence changes.
       // Never fetch or expose private business prospect records on the map.
       const activeMap=page.querySelector('[data-bio-panel="map"]');
       if(activeMap && !activeMap.hidden){
@@ -556,14 +552,9 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     const archiveEmpty=host?.querySelector('#bio-search-archive-empty');
     if(archiveEmpty)archiveEmpty.hidden=!(archiveRows.length>0&&matchingArchive===0);
     if(term&&matchingArchive>0)host?.querySelector('#bio-search-archive-details')?.setAttribute('open','');
-    if(searchView==='map'){
-      const selector=host?.querySelector('#bio-inline-map #bio-map-source');
-      selector?.dispatchEvent(new Event('change',{bubbles:true}));
-    }
   }
   page.addEventListener('change',event=>{
     if(event.target.id==='bio-ted-service')filterTED();
-    if(event.target.id==='bio-ted-service'&&searchView==='map')refreshInlineMap();
   });
   page.addEventListener('input',event=>{
     if(event.target.id==='bio-ted-term')filterTED();
@@ -582,7 +573,6 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     panel.innerHTML=coverageMarkup(coverage,esc,pilot);
     mapInitialized=false;
     if(!panel.hidden){mapInitialized=true;mapCleanup=setupCoverageMap(panel,coverage,esc,pilot);}
-    if(searchView==='map')refreshInlineMap();
   }
   function updateDiscoveryUI(){
     if(!page.isConnected)return;
@@ -723,42 +713,6 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     if(page.isConnected)updateDiscoveryUI();
     endOver();
   }
-  function refreshInlineMap(){
-    const target=page.querySelector('#bio-inline-map');
-    if(!target)return;
-    if(typeof inlineMapCleanup==='function')inlineMapCleanup();
-    inlineMapCleanup=null;
-    target.innerHTML='<p class="bio-note">Ο χάρτης προβάλλει μόνο ενδεικτικές διοικητικές περιοχές τεκμηριωμένων δημόσιων πηγών, όχι ακριβείς θέσεις εργασιών. Για χωρικό φιλτράρισμα χρησιμοποιήστε και την «Περιοχή» του χάρτη.</p>'+coverageMarkup(coverage,esc,pilot);
-    if(target.hidden)return;
-    inlineMapCleanup=setupCoverageMap(target,coverage,esc,pilot);
-    const source=target.querySelector('#bio-map-source');
-    if(source)source.value=discoveryCategory==='ted'?'ted':'all';
-    const service=target.querySelector('#bio-map-service');
-    if(service)service.value=discoveryPanel.querySelector('#bio-ted-service')?.value||'all';
-    source?.dispatchEvent(new Event('change',{bubbles:true}));
-  }
-  function setSearchView(view){
-    if(!['list','map'].includes(view))return;
-    const isPublic=discoveryCategory==='public_sector'||discoveryCategory==='ted';
-    searchView=view==='map'&&!isPublic?'list':view;
-    discoveryPanel.querySelectorAll('[data-bio-search-view]').forEach(button=>{
-      button.setAttribute('aria-pressed',String(button.dataset.bioSearchView===searchView));
-      if(button.dataset.bioSearchView==='map'){
-        button.disabled=!isPublic;
-        button.title=isPublic?'Δημόσια τεκμήρια στον χάρτη':'Δεν υπάρχουν επιβεβαιωμένες γεωγραφικές συντεταγμένες για ιδιώτες ή επιχειρήσεις';
-      }
-    });
-    const publicPanel=page.querySelector('#bio-discovery-public-results');
-    const privatePanel=page.querySelector('#bio-discovery-private-results');
-    const archive=page.querySelector('#bio-unified-archive');
-    const map=page.querySelector('#bio-inline-map');
-    publicPanel.hidden=searchView!=='list'||!isPublic;
-    privatePanel.hidden=searchView!=='list'||isPublic;
-    archive.hidden=searchView!=='list'||discoveryCategory==='ted';
-    map.hidden=searchView!=='map';
-    if(searchView==='map')refreshInlineMap();
-    else if(typeof inlineMapCleanup==='function'){inlineMapCleanup();inlineMapCleanup=null;}
-  }
   function setLocationMode(mode){
     if(!['current','home','custom'].includes(mode))return;
     locationMode=mode;
@@ -823,7 +777,9 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     }
     const saved=page.querySelector('#bio-unified-archive');
     if(saved)saved.innerHTML=renderSearchArchive(pilot,esc,category);
-    setSearchView(searchView);
+    // Discovery uses a single results list; the standalone Map page owns maps.
+    const archivePanel=page.querySelector('#bio-unified-archive');
+    if(archivePanel)archivePanel.hidden=category==='ted';
     filterTED();
   }
   page.addEventListener('click',event=>{
@@ -831,8 +787,6 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     if(selected)setDiscoveryCategory(selected.dataset.bioDiscoveryCategory);
     const location=event.target.closest('[data-bio-location-mode]');
     if(location)setLocationMode(location.dataset.bioLocationMode);
-    const view=event.target.closest('[data-bio-search-view]');
-    if(view&&!view.disabled)setSearchView(view.dataset.bioSearchView);
     const archive=event.target.closest('[data-bio-discovery-archive]');
     if(archive){
       const filter=pilotPanel.querySelector('#bio-pilot-type');
@@ -843,7 +797,6 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     if(event.target.closest('#bio-map-refresh'))void refreshCoverage();
   });
   setDiscoveryCategory('public_sector');
-  if(new URLSearchParams(window.location.search).get('view')==='map')setSearchView('map');
   filterPilot();
   filterTED();
   const refreshTimer=setInterval(()=>{
