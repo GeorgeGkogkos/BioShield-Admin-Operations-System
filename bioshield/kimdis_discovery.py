@@ -8,6 +8,7 @@ import json
 import math
 import re
 import time
+import unicodedata
 from datetime import datetime, timedelta
 from threading import Lock
 from urllib.error import HTTPError, URLError
@@ -45,11 +46,11 @@ SEARCHES = (
     {"title": "απεντόμωση"},
 )
 TITLE_TERMS = {
-    "pest_control": ("απεντομ", "εντομοκτον", "κουνουπ", "κοριων", "κοριών"),
+    "pest_control": ("απεντομ", "εντομοκτον", "κουνουπ", "κοριων"),
     "rodent_control": ("μυοκτον", "τρωκτικ", "ποντικ"),
-    "disinfection": ("απολυμαν", "απολύμαν", "εξολόθρευσ"),
-    "plumbing": ("υδραυλικ", "υδραυλικ", "υδραυλικών"),
-    "drain_unblocking": ("αποφραξ", "απόφραξ", "αποχετευ", "αποχέτευ", "φρεατι"),
+    "disinfection": ("απολυμαν", "εξολοθρευσ"),
+    "plumbing": ("υδραυλικ",),
+    "drain_unblocking": ("αποφραξ", "αποχετευ", "φρεατι"),
 }
 _lock = Lock()
 _cache = {"until": 0.0, "value": None}
@@ -99,8 +100,13 @@ def _cpvs(item):
     return result
 
 
+def _fold(value):
+    return "".join(char for char in unicodedata.normalize("NFD", value.casefold())
+                   if not unicodedata.combining(char))
+
+
 def _services(item, codes):
-    lower = _text(item.get("title"), 500).casefold()
+    lower = _fold(_text(item.get("title"), 500))
     return sorted(k for k, cpvs in SERVICE_CPVS.items()
                   if (cpvs & codes) or any(term in lower for term in TITLE_TERMS[k]))
 
