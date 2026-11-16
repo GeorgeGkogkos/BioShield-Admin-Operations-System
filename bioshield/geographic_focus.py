@@ -25,11 +25,11 @@ LOCATIONS = {
     "larisa": {"label":"Λάρισα", "nuts":"EL612", "search_codes":("EL612",)},
     "rodos": {"label":"Ρόδος", "nuts":"EL421", "search_codes":("EL421",)},
 }
-# This is an initial BUSINESS RULE, not a verified company minimum.
-MIN_REMOTE_EUR = 100_000
+# BIO-21: no artificial EUR threshold for faraway public/B2B records.
+# Verified audience + official place of performance control routing instead.
 
 def location_policy(*, home="ilion", temporary=""):
-    """Base and temporarily visited location ADD to each other; never replace."""
+    """Base and temporarily visited region ADD to each other; never replace."""
     if home not in LOCATIONS:
         raise ValueError("Unknown permanent region")
     if temporary and temporary not in LOCATIONS:
@@ -44,25 +44,39 @@ def location_policy(*, home="ilion", temporary=""):
         "home_nuts":list(home_codes),
         "temporary_nuts":list(visit),
         "combined_nuts":list(dict.fromkeys((*home_codes, *visit))),
-        "remote_min_value_eur":MIN_REMOTE_EUR,
+        "remote_included_audiences":["public_sector", "business"],
+        "remote_individuals_allowed":False,
+        "remote_minimum_eur_required":False,
         "consent_required_for_browser_location":True,
         "precision":"coarse_region_only",
         "worksite_location_verified":False,
     }
 
 def classify_notice(notice, policy):
-    """No implied remote large deal when verified value/place is absent."""
+    """No faraway individual jobs or unspecified buyer role.
+    
+    A published tender's official source is not evidence of precise worksite
+    coordinates, bidding eligibility, price or an authorized business lead.
+    """
     nuts = set(notice.get("place_of_performance_nuts") or ())
     allowed = set(policy["combined_nuts"])
-    value=notice.get("official_total_value_eur")
-    if nuts & allowed:
-        return "priority_nearby"
     if not nuts:
         return "unlocated_review"
-    # Remote sources are shown only for an explicit official reported EUR value.
-    if isinstance(value,(float,int)) and not isinstance(value,bool) and value >= MIN_REMOTE_EUR:
-        return "remote_verified_large"
-    return "remote_below_threshold_or_unverified"
+    if nuts & allowed:
+        return "priority_nearby"
+    audience = notice.get("audience_segment")
+    if audience == "public_sector" and notice.get("evidence_level") == "official_ted_metadata":
+        return "remote_public"
+    if (audience == "business" and
+        notice.get("audience_needs_review") is not True and
+        notice.get("evidence_level") in (
+            "verified_primary_source", "verified_primary_business_request",
+            "official_primary_publication"
+        )):
+        return "remote_business"
+    if audience == "individual":
+        return "remote_individual_excluded"
+    return "remote_audience_review_required"
 
 def official_nuts_from_value(value):
     """Accept explicit ELxyz code tokens ONLY; never geocode buyer's HQ as worksite."""
