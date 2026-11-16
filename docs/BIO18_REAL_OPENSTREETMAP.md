@@ -34,3 +34,12 @@ The previous coarse SVG silhouette of Greece was an unacceptable stand-in for an
 ### Leaflet 1.9.4 reliability correction (2026-11-16)
 
 The original BIO-18 live browser test found no OpenStreetMap tile images after the initial self-hosted Leaflet 1.3.1 release, although pins and filters worked. This is not considered a successful map rendering. A follow-up hotfix upgrades the self-hosted assets to **Leaflet 1.9.4**, removes unnecessary cross-origin anonymous image loading, adds a delayed viewport resize pass and a visible tile-loading failure warning even when no `tileerror` event fires. The dashboard also accepts `?tab=map` for a direct, shareable map view and independent screenshot QA. This changes no source evidence or private data. The real basemap must still be visually tested after deployment; mere loading of attribution or markers is not sufficient.
+
+
+## BIO-18 exact root-cause security fix (2026-11-16)
+
+The real-browser and independent Firecrawl screenshot checks found zero successful OSM image tiles even after self-hosting Leaflet 1.9.4. Inspection of BioShield FastAPI security middleware exposed two exact blockers: `Referrer-Policy: no-referrer` and `Content-Security-Policy: img-src 'self' data:`, which prohibit the external tile images and omit the Referer required by OSM's tile policy. This was the **root cause**, not the shape or projection of the source points.
+
+The follow-up changes **only** the map-permission boundary: `Referrer-Policy: strict-origin-when-cross-origin` sends only the site origin to OSM, and `img-src 'self' data: https://tile.openstreetmap.org` permits only the official OSM tile hostname. `script-src 'self'`, `connect-src 'self'`, `frame-ancestors 'none'`, `base-uri 'none'`, the rest of CSP and the no-private-contact policy remain unchanged. GitHub regression checks assert exact headers so this cannot silently regress.
+
+Official guidance: https://operations.osmfoundation.org/policies/tiles/ and https://wiki.openstreetmap.org/wiki/Referer. No proxy, bulk tile download or API key is introduced.

@@ -15,6 +15,15 @@ def test_admin_preview_is_read_only():
     assert response.headers["cache-control"]=="no-store"
     assert "frame-ancestors 'none'" in response.headers["content-security-policy"]
     assert response.headers["x-robots-tag"]=="noindex, nofollow"
+    # Basemap images must work; scripts and API still remain local-only.
+    csp=response.headers["content-security-policy"]
+    assert response.headers["referrer-policy"]=="strict-origin-when-cross-origin"
+    assert "img-src 'self' data: https://tile.openstreetmap.org;" in csp
+    assert "script-src 'self';" in csp
+    assert "connect-src 'self';" in csp
+    assert "frame-ancestors 'none'" in csp
+    assert "unsafe-inline" not in csp
+
 
 def test_overview_unknown_counts_and_no_leads():
     response=client.get("/api/bioshield/overview")
