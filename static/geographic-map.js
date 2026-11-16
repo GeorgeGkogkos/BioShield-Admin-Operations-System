@@ -115,11 +115,11 @@ export function setupCoverageMap(panel,report,esc){
   const tiles=lib.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
     attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>',
     minZoom:5,maxZoom:17,maxNativeZoom:17,detectRetina:false,
-    updateWhenIdle:true,updateWhenZooming:false,keepBuffer:1,
-    crossOrigin:true
+    updateWhenIdle:true,updateWhenZooming:false,keepBuffer:1
   }).addTo(map);
   const sourceLayer=lib.layerGroup().addTo(map);
   let hadTile=false,tileErrors=0;
+  let tileWaitTimeout;
   const failed=document.createElement('div');
   failed.className='bio-map-tiles-error';
   failed.hidden=true;
@@ -132,6 +132,11 @@ export function setupCoverageMap(panel,report,esc){
   failed.append(document.createTextNode(' '),ext);
   container.append(failed);
   tiles.on('tileload',()=>{hadTile=true;failed.hidden=true;});
+  // Fail visibly when images are entirely absent (some browsers block map
+  // images without even reporting tileerror). Never display blank as success.
+  tileWaitTimeout=setTimeout(()=>{
+    if(!hadTile)failed.hidden=false;
+  },4000);
   tiles.on('tileerror',()=>{
     tileErrors++;
     if(!hadTile&&tileErrors>=3)failed.hidden=false;
@@ -181,9 +186,14 @@ export function setupCoverageMap(panel,report,esc){
   };
   panel.addEventListener('change',onChange);
   draw();
-  requestAnimationFrame(()=>map.invalidateSize());
+  requestAnimationFrame(()=>map.invalidateSize({pan:false}));
+  // A second layout pass handles tab visibility/size changes in slower
+  // browsers. No tile prefetching: only the current visible viewport loads.
+  const resizeTimeout=setTimeout(()=>map.invalidateSize({pan:false}),200);
   return ()=>{
     panel.removeEventListener('change',onChange);
+    clearTimeout(tileWaitTimeout);
+    clearTimeout(resizeTimeout);
     tiles.off();
     map.remove();
   };
