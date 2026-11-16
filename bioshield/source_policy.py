@@ -23,6 +23,16 @@ SOURCES = (
         "note": "Μόνο δημοσιευμένες δημόσιες προκηρύξεις· η διακήρυξη απαιτεί έλεγχο.",
     },
     {
+        "id": "google_alerts", "name": "Google Alerts — RSS / Atom",
+        "kind": "indexed_search_discovery_hint",
+        "status": "operator_feed_configuration_required",
+        "method": "readonly_configured_atom_feed",
+        "original_verification": "publisher_page_must_be_independently_opened",
+        "services": list(SERVICE_LABELS),
+        "url": "https://www.google.com/alerts",
+        "note": "Οι ειδοποιήσεις Google είναι ενδείξεις ανακάλυψης, όχι αρχική πηγή ή επαληθευμένοι πελάτες. Ο feed σύνδεσμος διατηρείται μόνο ως μυστική ρύθμιση Render.",
+    },
+    {
         "id": "reddit", "name": "Reddit",
         "kind": "social_forum", "status": "blocked_pending_written_commercial_approval",
         "method": "firecrawl_or_tinyfish_only_after_approval",
