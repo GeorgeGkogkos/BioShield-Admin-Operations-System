@@ -57,7 +57,7 @@ def test_real_db_summary_has_three_independent_buyer_types():
     result = report_from_rows(records())
     assert result["demo_supabase_connected"] is True
     assert result["external_supabase_connected"] is False
-    assert result["version"] == "bio12_live_supabase_demo_v1"
+    assert result["version"] == "bio13_recent_reddit_demo_v1"
     assert result["segment_counts"] == {
         "individual": 1, "public_sector": 1, "business": 1, "needs_review": 1,
     }
@@ -138,3 +138,48 @@ def test_live_rest_uses_only_publishable_key_and_anonymous_select(monkeypatch):
     assert "limit=501" in invoked["url"]
     assert invoked["apikey"] == "sb_publishable_fixture_for_test"
     assert "sb_publishable_fixture_for_test" not in response.text
+
+
+def test_reddit_freshness_from_original_post_date_never_observed_date():
+    from datetime import datetime, timedelta, timezone
+    today = datetime.now(timezone.utc).date()
+
+    def forum(id, days_ago, opened=True):
+        return source(
+            id, "individual", "community_discussion",
+            published_on=(today - timedelta(days=days_ago)).isoformat(),
+            observed_on=today.isoformat(),
+            case_status="not_hiring",
+            original_opened=opened,
+            deadline_at=None, document_ref=None, budget_eur_ex_vat=None,
+            evidence_level="original_post_opened" if opened else "original_post_not_opened",
+        )
+
+    records = [forum("FORUM-010", 31), forum("FORUM-011", 7),
+               forum("FORUM-012", 30), forum("FORUM-013", 1, False)]
+    report = report_from_rows(records)
+    assert report["reddit_freshness"]["window_days"] == 30
+    assert report["reddit_freshness"]["recent_posts_30d"] == 2
+    assert report["reddit_freshness"]["recent_posts_7d"] == 1
+    assert report["reddit_freshness"]["historical_or_unopened"] == 2
+    assert report["reddit_freshness"]["recent_confirmed_service_requests"] == 0
+    assert [r["id"] for r in report["community_cases"]] == [
+        "FORUM-013", "FORUM-011", "FORUM-012", "FORUM-010",
+    ]
+    assert report["community_cases"][0]["within_30d"] is False
+    assert report["community_cases"][1]["within_7d"] is True
+    assert report["community_cases"][2]["within_30d"] is True
+    assert report["community_cases"][3]["within_30d"] is False
+    assert all(row["contact_eligible"] is False for row in report["community_cases"])
+
+
+def test_reddit_missing_or_future_post_date_fails_closed():
+    from datetime import datetime, timedelta, timezone
+    tomorrow = (datetime.now(timezone.utc).date() + timedelta(days=1)).isoformat()
+    for published in (None, "", tomorrow, "fake-date"):
+        row = source("FORUM-014", "individual", "community_discussion",
+                     published_on=published, case_status="not_hiring",
+                     deadline_at=None, document_ref=None,
+                     budget_eur_ex_vat=None)
+        with pytest.raises(DemoDatabaseUnavailable):
+            report_from_rows([row])
