@@ -43,7 +43,7 @@ export function renderPublicPilot(data,esc) {
     "<td>"+sourceLink(item.source_url,esc)+(item.additional_url?" · "+sourceLink(item.additional_url,esc):"")+"</td></tr>"
   ).join("");
   const discussions=data.community_cases.map(item =>
-    '<tr data-pilot-row data-kind="forum" data-reddit-recent="'+(item.within_30d?'true':'false')+'" data-reddit-7d="'+(item.within_7d?'true':'false')+'" data-segment="'+esc(item.audience_segment||"needs_review")+'" data-search="'+
+    '<tr data-pilot-row data-kind="forum" data-reddit-recent="'+(item.within_30d?'true':'false')+'" data-reddit-week="'+(item.within_7d?'true':'false')+'" data-segment="'+esc(item.audience_segment||"needs_review")+'" data-search="'+
     esc([item.id,item.publisher,item.service,item.summary].join(" ").toLocaleLowerCase("el-GR"))+'">'+
     "<td>"+esc(item.id)+"</td><td>"+esc(item.posted_on)+(item.within_30d?'<small class="bio-evidence-note">Πρόσφατη · '+esc(item.post_age_days)+' ημέρες</small>':'<small class="bio-evidence-note">Ιστορική / εκτός 30ημέρου</small>')+"</td>"+
     "<td>"+esc(item.service)+"</td><td>"+esc(item.summary)+"</td>"+
