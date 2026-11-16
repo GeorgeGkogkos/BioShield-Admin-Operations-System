@@ -683,23 +683,55 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     if(page.isConnected)updateDiscoveryUI();
     endOver();
   }
-  page.querySelector('#bio-home-search-form').addEventListener('submit',event=>{
-    event.preventDefault();
-    const term=page.querySelector('#bio-home-search').value.trim();
-    const discoverySearch=discoveryPanel.querySelector('#bio-ted-term');
-    if(discoverySearch){discoverySearch.value=term;filterTED();}
-    page.querySelector('[data-bio-home-public]')?.click();
+  // The menu belongs to New discoveries, not the landing overview.
+  page.querySelector('#bio-discovery-search-form').addEventListener('submit',event=>{
+    event.preventDefault();filterTED();
   });
+  function setDiscoveryCategory(category){
+    if(!['individual','public_sector','business'].includes(category))return;
+    discoveryCategory=category;
+    discoveryPanel.querySelectorAll('[data-bio-discovery-category]').forEach(button=>{
+      button.setAttribute('aria-pressed',String(button.dataset.bioDiscoveryCategory===category));
+    });
+    const publicPanel=page.querySelector('#bio-discovery-public-results');
+    const privatePanel=page.querySelector('#bio-discovery-private-results');
+    const publicOnly=category==='public_sector';
+    publicPanel.hidden=!publicOnly;
+    privatePanel.hidden=publicOnly;
+    const input=page.querySelector('#bio-ted-term');
+    const submit=page.querySelector('#bio-discovery-search-form button[type="submit"]');
+    if(input){input.disabled=!publicOnly;input.placeholder=publicOnly?'Σύμβαση, υπηρεσία, φορέας, αριθμός TED…':'Δεν υπάρχει ενεργή αναζήτηση αυτής της κατηγορίας';}
+    if(submit)submit.disabled=!publicOnly;
+    if(!publicOnly){
+      const heading=page.querySelector('#bio-discovery-private-heading');
+      const description=page.querySelector('#bio-discovery-private-description');
+      const body=page.querySelector('#bio-discovery-business-results');
+      const archive=page.querySelector('#bio-discovery-archive');
+      if(heading)heading.textContent=(category==='individual'?'Ιδιώτες':'Επιχειρήσεις')+' — νέες ανακαλύψεις';
+      if(description)description.textContent=category==='individual'?
+        'Δεν έχει συνδεθεί εγκεκριμένη ενεργή πηγή νέων ιδιωτικών αιτημάτων. Ιστορικές δημόσιες συζητήσεις δεν αποτελούν νέους πελάτες.':
+        'Οι δημόσιες συμβάσεις TED βρίσκονται μόνο στα «Δημόσια έργα». Εδώ εμφανίζονται αποκλειστικά τεκμηριωμένα επιχειρηματικά αιτήματα, εάν προκύψουν.';
+      if(body){
+        body.hidden=category!=='business';
+        if(category==='business')body.innerHTML=businessDiscoveryMarkup({segmented,esc,newIds:newSinceOpen,renderRows:remoteOpportunityRows});
+      }
+      if(archive)archive.dataset.bioDiscoveryArchive=category;
+    }
+    filterTED();
+  }
   page.addEventListener('click',event=>{
-    const category=event.target.closest('[data-bio-home-segment]');
-    if(category){
+    const selected=event.target.closest('[data-bio-discovery-category]');
+    if(selected)setDiscoveryCategory(selected.dataset.bioDiscoveryCategory);
+    const archive=event.target.closest('[data-bio-discovery-archive]');
+    if(archive){
       const filter=pilotPanel.querySelector('#bio-pilot-type');
-      if(filter){filter.value=category.dataset.bioHomeSegment;filterPilot();}
+      if(filter){filter.value=archive.dataset.bioDiscoveryArchive;filterPilot();}
     }
     if(event.target.closest('#bio-demo-refresh'))void refreshPilot();
     if(event.target.closest('#bio-ted-refresh'))void refreshTED(true);
     if(event.target.closest('#bio-map-refresh'))void refreshCoverage();
   });
+  setDiscoveryCategory('public_sector');
   filterPilot();
   filterTED();
   const refreshTimer=setInterval(()=>{
