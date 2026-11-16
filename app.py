@@ -36,7 +36,7 @@ def operations():
 # Distinct deep-linkable pages; the typed client router maintains transitions.
 # These are read-only public-source admin previews, not authenticated CRM pages.
 OPERATIONS_PAGES = frozenset({
-    "overview", "discovery", "evidence", "map", "sources"
+    "overview", "discovery", "evidence", "map", "sources", "status"
 })
 
 @app.get("/admin/operations/{page}", include_in_schema=False)

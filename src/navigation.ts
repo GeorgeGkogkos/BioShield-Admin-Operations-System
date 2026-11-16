@@ -8,11 +8,12 @@ export const ROUTES = {
   pilot: '/admin/operations/evidence',
   map: '/admin/operations/map',
   sources: '/admin/operations/sources',
+  status: '/admin/operations/status',
 } as const;
 
 export type Screen = keyof typeof ROUTES;
 export type RouteChange = (screen: Screen) => void;
-const SCREENS: Screen[] = ['overview','discovery','pilot','map','sources'];
+const SCREENS: Screen[] = ['overview','discovery','pilot','map','sources','status'];
 
 export function currentScreen(location: Pick<Location,'pathname'|'search'> = window.location): Screen {
   const path=location.pathname.replace(/\/+$/,'') || '/';
@@ -43,7 +44,7 @@ export function installNavigation(page: HTMLElement, onChange: RouteChange): () 
       document.title='BioShield — '+({
         overview:'Επισκόπηση',discovery:'Νέες ανακαλύψεις',
         pilot:'Αποθηκευμένα ευρήματα',map:'Χάρτης / Κάλυψη',
-        sources:'Πηγές & έλεγχοι',
+        sources:'Πηγές & έλεγχοι',status:'Κατάσταση & διαφάνεια',
       } as const)[next];
       if(push)window.history.pushState({bioScreen:next},'',ROUTES[next]);
       page.querySelector<HTMLElement>('[data-bio-panel="'+next+'"] h2, [data-bio-panel="'+next+'"] h1')
