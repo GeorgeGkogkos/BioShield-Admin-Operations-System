@@ -42,8 +42,8 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
       esc(data.message),' Οι πραγματικές δημόσιες πηγές εμφανίζονται σε ξεχωριστή καρτέλα και δεν συνδέονται με το CRM.</p></div>',
       '<nav class="bio-tabs" aria-label="Ενότητες BioShield">',
       '<button type="button" data-bio-tab="overview" class="active" aria-pressed="true">Επισκόπηση</button>',
-      '<button type="button" data-bio-tab="pilot" aria-pressed="false">Πραγματικά ευρήματα</button>
-      <button type="button" data-bio-tab="lab" aria-pressed="false">Εργαστήριο απόδοσης</button>',
+      '<button type="button" data-bio-tab="pilot" aria-pressed="false">Πραγματικά ευρήματα</button>',
+      '<button type="button" data-bio-tab="lab" aria-pressed="false">Εργαστήριο απόδοσης</button>',
       '<button type="button" data-bio-tab="candidates" aria-pressed="false">Υποψήφιοι</button>',
       '<button type="button" data-bio-tab="sources" aria-pressed="false">Πηγές</button>',
       '<button type="button" data-bio-tab="runs" aria-pressed="false">Εκτελέσεις</button>',
