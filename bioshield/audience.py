@@ -45,12 +45,12 @@ def classify_audience(
     *,
     source_type: str = "public_post",
     buyer_role: str | None = None,
-    public_issuer_verified: bool = False,
+    public_issuer_identified: bool = False,
 ) -> AudienceDecision:
     """One segment only, or None when identity is uncertain or contradictory.
 
     buyer_role is an explicitly reviewed input, not something scraped from a
-    contact profile. Public procurement requires the issuer to be evidenced.
+    contact profile. Public procurement requires a specifically named public issuer in a notice; this does not imply the original document was verified.
     """
     if not isinstance(text, str) or len(text) > 12_000:
         raise ValueError("Expected at most 12000 characters")
@@ -59,8 +59,8 @@ def classify_audience(
     if source_type not in ("public_post", "community_post", "procurement_notice", "business_request"):
         raise ValueError("Unknown source type")
     if source_type == "procurement_notice":
-        if buyer_role == "public_sector" and public_issuer_verified:
-            return AudienceDecision("public_sector", "evidenced_public_buyer")
+        if buyer_role == "public_sector" and public_issuer_identified:
+            return AudienceDecision("public_sector", "named_in_procurement_notice")
         return AudienceDecision(None, "procurement_issuer_not_verified")
     if buyer_role == "public_sector":
         # A post that just mentions the government is not a public procurement.
