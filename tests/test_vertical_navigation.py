@@ -41,10 +41,10 @@ def test_sidebar_router_handles_shell_links_and_preserves_deep_links():
     for source in (ts, js):
         assert "document.getElementById('bio-shell-nav')" in source
         assert "shellNavigation?.contains(nav)" in source
-        assert re.search(r"shellNavigation\\?\\.addEventListener\\('click',\\s*onClick\\)", source)
-        assert re.search(r"shellNavigation\\?\\.removeEventListener\\('click',\\s*onClick\\)", source)
+        assert re.search(r"shellNavigation\?\.addEventListener\('click',\s*onClick\)", source)
+        assert re.search(r"shellNavigation\?\.removeEventListener\('click',\s*onClick\)", source)
         assert "window.history.pushState" in source
-        assert re.search(r"window\\.addEventListener\\('popstate',\\s*onPop\\)", source)
+        assert re.search(r"window\.addEventListener\('popstate',\s*onPop\)", source)
 
 
 def test_small_screens_have_accessible_app_shell_drawer():
