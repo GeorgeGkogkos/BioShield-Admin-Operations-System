@@ -276,6 +276,8 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
   // Typed TypeScript router supplies distinct URLs, transitions and back/forward.
   installNavigation(page,selectTab);
   setupResearchPlaybook(page.querySelector('[data-bio-panel="sources"]'));
+  const discoveryPanel=page.querySelector('[data-bio-panel="discovery"]');
+  const focusController=installLocationFocus(discoveryPanel,choice=>{void refreshFocused(choice);});
   const pilotPanel=page.querySelector('[data-bio-panel="pilot"]');
   function filterPilot(){
     const query=pilotPanel.querySelector('#bio-pilot-search');
@@ -318,16 +320,22 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
   function filterTED(){
     const host=page.querySelector('[data-bio-panel="discovery"]');
     const selection=host?.querySelector('#bio-ted-service')?.value||'all';
+    const term=(host?.querySelector('#bio-ted-term')?.value||'').trim().toLocaleLowerCase('el-GR');
     let count=0;
-    host?.querySelectorAll('[data-ted-row]').forEach(row=>{
-      const show=selection==='all'||(row.dataset.services||'').split(',').includes(selection);
+    host?.querySelectorAll('[data-ted-row],[data-focus-row]').forEach(row=>{
+      const serviceMatch=selection==='all'||(row.dataset.services||'').split(',').includes(selection);
+      const searchMatch=!term||(row.dataset.search||'').includes(term);
+      const show=serviceMatch&&searchMatch;
       row.hidden=!show;if(show)count++;
     });
     const label=host?.querySelector('#bio-ted-count');
-    if(label)label.textContent=fmt(count)+' εμφανιζόμενες προκηρύξεις';
+    if(label)label.textContent=fmt(count)+' εμφανιζόμενες τεκμηριωμένες προκηρύξεις';
   }
   page.addEventListener('change',event=>{
     if(event.target.id==='bio-ted-service')filterTED();
+  });
+  page.addEventListener('input',event=>{
+    if(event.target.id==='bio-ted-term')filterTED();
   });
   async function refreshCoverage(){
     try{coverage=await api('/bioshield/discovery/map');}catch{coverage={status:'source_unavailable'};}
@@ -338,19 +346,71 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     mapInitialized=false;
     if(!panel.hidden){mapInitialized=true;mapCleanup=setupCoverageMap(panel,coverage,esc);}
   }
-  async function refreshTED(){
-    try{ted=await api('/bioshield/discovery/tenders');}catch{ted={status:'unavailable'};}
+  function updateDiscoveryUI(){
     if(!page.isConnected)return;
-    const host=page.querySelector('[data-bio-panel="discovery"]');
-    const oldService=host.querySelector('#bio-ted-service')?.value||'all';
-    host.innerHTML=discoveries(ted,esc);
-    const filter=host.querySelector('#bio-ted-service');
-    if(filter)filter.value=oldService;
+    const national=page.querySelector('#bio-ted-results');
+    if(national)national.innerHTML=tenderRows(ted,esc,focused?.policy);
+    const regional=page.querySelector('#bio-focus-results');
+    if(regional)regional.innerHTML=focusResults(focused,esc);
+    for(const id of ['bio-live-status-overview','bio-live-status-discovery']){
+      const target=page.querySelector('#'+id);
+      if(target)target.innerHTML=automationStatus(heartbeat,ted,esc);
+    }
+    const stamp=page.querySelector('#bio-ted-substatus');
+    if(stamp)stamp.textContent='Ώρα Αθήνας: '+dateTime(ted?.searched_at_utc||ted?.checked_at_utc)+
+      ' · '+(ted?.status==='ok'?'Τεκμηριωμένη απάντηση TED ('+fmt(ted.count)+' εγγραφές)':'Ανεπιτυχής έλεγχος πηγής')+
+      (ted?.cached?' · cache':'');
+    const badge=page.querySelector('#bio-ted-state');
+    if(badge)badge.textContent=ted?.status==='ok'?'API TED · ΕΠΙΤΥΧΙΑ':'TED · ΜΗ ΔΙΑΘΕΣΙΜΟ';
     filterTED();
+  }
+  async function refreshFocused(choice){
+    if(!page.isConnected)return;
+    const target=page.querySelector('#bio-focus-results');
+    if(target)target.innerHTML='<p role="status">Αναζήτηση επίσημων τοπικών δημοσιεύσεων…</p>';
+    const qp=new URLSearchParams({home:choice.home,temporary:choice.temporary});
+    try{focused=await api('/bioshield/discovery/focused?'+qp.toString());}
+    catch{focused={status:'unavailable'};}
+    updateDiscoveryUI();
+  }
+  async function refreshTED(manual=false){
+    const choice=focusController.selection();
+    const qp=new URLSearchParams({home:choice.home,temporary:choice.temporary});
+    const button=page.querySelector('#bio-ted-refresh');
+    if(button&&manual){button.disabled=true;button.textContent='Εκτελείται πραγματική αναζήτηση TED…';}
+    try{
+      if(manual){
+        const result=await api('/bioshield/discovery/manual?'+qp.toString());
+        ted=result.national;
+        focused=result.focused;
+      }else{
+        const replies=await Promise.allSettled([
+          api('/bioshield/discovery/tenders'),
+          api('/bioshield/discovery/focused?'+qp.toString())
+        ]);
+        ted=replies[0].status==='fulfilled'?replies[0].value:{status:'unavailable'};
+        focused=replies[1].status==='fulfilled'?replies[1].value:{status:'unavailable'};
+      }
+    }catch(error){
+      const status=page.querySelector('#bio-manual-message');
+      if(status)status.textContent=manual?
+        'Ο χειροκίνητος έλεγχος δεν ολοκληρώθηκε. Υπάρχει όριο επανάληψης 3 λεπτών ή ο πάροχος δεν απάντησε.':
+        'Αδυναμία ελέγχου της επίσημης πηγής.';
+      if(!manual){ted={status:'unavailable'};focused={status:'unavailable'};}
+    }finally{
+      if(button){button.disabled=false;button.textContent='Εκτέλεση χειροκίνητης αναζήτησης τώρα';}
+    }
+    updateDiscoveryUI();
+    if(manual)void refreshCoverage();
+  }
+  async function refreshHeartbeat(){
+    try{heartbeat=await api('/bioshield/discovery/heartbeat');}
+    catch{heartbeat={status:'unavailable'};}
+    updateDiscoveryUI();
   }
   page.addEventListener('click',event=>{
     if(event.target.closest('#bio-demo-refresh'))void refreshPilot();
-    if(event.target.closest('#bio-ted-refresh'))void refreshTED();
+    if(event.target.closest('#bio-ted-refresh'))void refreshTED(true);
     if(event.target.closest('#bio-map-refresh'))void refreshCoverage();
   });
   filterPilot();
@@ -363,7 +423,11 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     }
   },30000);
   const tedTimer=setInterval(()=>{
-    if(!page.isConnected){clearInterval(tedTimer);return;}
+    if(!page.isConnected){clearInterval(tedTimer);focusController.stop();return;}
     if(!document.hidden){void refreshTED();void refreshCoverage();}
   },900000);
+  const statusTimer=setInterval(()=>{
+    if(!page.isConnected){clearInterval(statusTimer);return;}
+    if(!document.hidden)void refreshHeartbeat();
+  },300000);
 }
