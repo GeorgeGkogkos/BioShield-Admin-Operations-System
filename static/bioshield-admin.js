@@ -465,6 +465,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     if(business&&updatedBusiness&&business.innerHTML!==updatedBusiness.innerHTML){
       business.innerHTML=updatedBusiness.innerHTML;
     }
+    updateLiveText(page.querySelector('#bio-overview-demo-count'),fmt(next.public_sources_reviewed));
     updateLiveText(page.querySelector('#bio-sources-overview'),fmt(next.public_sources_reviewed));
     const counts=next.segment_counts;
     const summary=page.querySelectorAll('#bio-overview-segments strong');
@@ -551,6 +552,16 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
       const el=page.querySelector('#'+id);
       if(el)el.innerHTML=entryCheckMarkup(entryCheck,newSinceOpen,esc);
     }
+    const overviewTed=page.querySelector('#bio-overview-ted-count');
+    if(overviewTed)overviewTed.textContent=ted?.status==='ok'?fmt(ted.count):'—';
+    const overviewNew=page.querySelector('#bio-overview-new-count');
+    if(overviewNew)overviewNew.textContent=entryCheck?.status==='compared'?fmt(newSinceOpen.size):'—';
+    const overviewRecent=page.querySelector('#bio-overview-recent-list');
+    if(overviewRecent)overviewRecent.innerHTML=overviewRecentNotices(ted,esc);
+    const overviewSummary=page.querySelector('#bio-overview-check-summary');
+    if(overviewSummary)overviewSummary.textContent=homeTedSummary(ted,entryCheck,newSinceOpen);
+    const businessContainer=page.querySelector('#bio-discovery-business-results');
+    if(businessContainer)businessContainer.innerHTML=businessDiscoveryMarkup({segmented,esc,newIds:newSinceOpen,renderRows:remoteOpportunityRows});
     const homeSource=page.querySelector('#bio-home-source-indicator');
     if(homeSource)homeSource.innerHTML=homeSourceIndicator(ted);
     const homeSummary=page.querySelector('#bio-home-ted-summary');
