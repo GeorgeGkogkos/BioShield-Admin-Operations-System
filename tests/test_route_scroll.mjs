@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {installNavigation,ROUTES,currentScreen} from '../static/typed/navigation.js';
 
-test('search-first navigation preserves shell scroll and redirects old data pages',()=>{
+test('original overview and map routes survive while legacy evidence maps to search',()=>{
   const browserEvents=new Map();
   class FakeElement {
     constructor(screen){this.dataset={bioTab:screen};}
@@ -59,12 +59,14 @@ test('search-first navigation preserves shell scroll and redirects old data page
   assert.deepEqual(scrollCalls,[[0,0],[0,0]]);
   location.pathname=ROUTES.overview;
   browserEvents.get('popstate')();
-  assert.equal(screens.at(-1),'discovery','old overview link uses the search');
+  assert.equal(screens.at(-1),'overview','overview remains its own page');
   assert.deepEqual(scrollCalls,[[0,0],[0,0],[0,0]]);
   click(bottom,'map');
-  assert.equal(location.pathname,ROUTES.discovery,'old map tab becomes an in-search view');
-  assert.equal(screens.at(-1),'discovery');
+  assert.equal(location.pathname,ROUTES.map,'map remains its own page');
+  assert.equal(screens.at(-1),'map');
   assert.equal(currentScreen({pathname:ROUTES.pilot,search:''}),'discovery');
+  assert.equal(currentScreen({pathname:ROUTES.overview,search:''}),'overview');
+  assert.equal(currentScreen({pathname:ROUTES.map,search:''}),'map');
   cleanup();
   assert.equal(browserEvents.has('popstate'),false);
 });
