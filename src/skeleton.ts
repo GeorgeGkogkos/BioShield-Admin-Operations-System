@@ -70,8 +70,7 @@ export function showLoadingOverlay(target:HTMLElement|null,label:string='Ανα�
     target.classList.remove('bio-loading-host');
   };
 }
+const ESCAPE_MAP:Record<string,string>={'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'};
 function escapeHtml(value:string):string{
-  return String(value).replace(/[&<>"']/g,ch=>({
-    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-  })[ch]);
+  return String(value).replace(/[&<>"']/g,ch=>ESCAPE_MAP[ch]||ch);
 }
