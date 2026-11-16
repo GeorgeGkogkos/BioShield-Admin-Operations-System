@@ -31,6 +31,10 @@ jobs:
           npm install --ignore-scripts --no-audit --no-fund
           npm run typecheck
           npm run build
+      - name: Verify BIO-23 safe on-entry discovery cursor
+        run: |
+          node --input-type=module --check < static/entry-discovery.js
+          node --test tests/test_entry_discovery.mjs
       - name: Validate browser JavaScript syntax
         run: |
           node --input-type=module --check < static/bioshield-admin.js
