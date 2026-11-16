@@ -29,10 +29,21 @@ def test_official_nuts_home_plus_additive_travel_and_threshold():
     assert geo.classify_notice(
         {"place_of_performance_nuts":["EL522"]}, travel)=="priority_nearby"
     assert geo.classify_notice(
-        {"place_of_performance_nuts":["EL522"]}, home)=="remote_below_threshold_or_unverified"
+        {"place_of_performance_nuts":["EL522"]}, home)=="remote_audience_review_required"
     assert geo.classify_notice(
-        {"place_of_performance_nuts":["EL522"],"official_total_value_eur":100000},home
-    )=="remote_verified_large"
+        {"place_of_performance_nuts":["EL522"],"audience_segment":"public_sector",
+         "evidence_level":"official_ted_metadata","official_total_value_eur":None},home
+    )=="remote_public"
+    assert geo.classify_notice(
+        {"place_of_performance_nuts":["EL522"],"audience_segment":"business",
+         "evidence_level":"verified_primary_business_request"},home
+    )=="remote_business"
+    assert geo.classify_notice(
+        {"place_of_performance_nuts":["EL522"],"audience_segment":"individual",
+         "official_total_value_eur":8000000},home
+    )=="remote_individual_excluded"
+    assert home["remote_minimum_eur_required"] is False
+    assert home["remote_individuals_allowed"] is False
     assert geo.classify_notice(
         {"place_of_performance_nuts":[],"official_total_value_eur":999999},home
     )=="unlocated_review"
