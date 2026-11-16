@@ -87,3 +87,14 @@
 .bio-pilot-filter{margin-top:20px;margin-bottom:24px;flex-wrap:wrap}
 .bio-segment-section .bio-real-subheading{margin-top:12px}
 @media(max-width:560px){.bio-pilot-filter input,.bio-pilot-filter select{width:100%;max-width:none}}
+
+/* BIO-12: isolated read-only Supabase demo heartbeat and manual refresh. */
+.bio-demo-connection{display:flex;align-items:center;justify-content:space-between;gap:18px;
+  background:var(--soft-surface);border:1px solid var(--line-strong);border-radius:16px;padding:17px 19px;margin-bottom:22px}
+.bio-demo-connection strong{display:block;font-weight:720;color:var(--ink)}
+.bio-demo-connection p{color:var(--muted);line-height:1.5;font-size:.84rem;margin:7px 0 0}
+.bio-demo-connection .bio-open-lab{flex-shrink:0}
+.bio-demo-connection button:disabled{cursor:progress;opacity:.55}
+.bio-demo-offline{border-color:var(--danger)}
+.bio-demo-offline strong{color:var(--danger)}
+@media(max-width:680px){.bio-demo-connection{flex-direction:column;align-items:flex-start;width:100%}.bio-demo-connection .bio-open-lab{width:100%}}

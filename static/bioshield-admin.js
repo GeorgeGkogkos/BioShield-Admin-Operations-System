@@ -16,9 +16,13 @@ const categoryNames={
 export async function renderBioShieldAdmin(page,{api,esc}) {
   page.innerHTML='<p role="status">Φόρτωση BioShield Admin Operations…</p>';
   try {
-    const [data,lab,examples,pilot]=await Promise.all([
-      api('/bioshield/overview'),api('/bioshield/lab/report'),api('/bioshield/lab/cases'),api('/bioshield/pilot/evidence')
+    const [data,lab,examples,firstPilot]=await Promise.all([
+      api('/bioshield/overview'),
+      api('/bioshield/lab/report'),
+      api('/bioshield/lab/cases'),
+      api('/bioshield/demo/evidence').catch(()=>({demo_unavailable:true}))
     ]);
+    let pilot=firstPilot;
     if(!page.isConnected)return;
     const q=lab.quality, speed=lab.throughput, normal=lab.mock_normal, outage=lab.mock_fallback;
     const providerRows=data.providers.map(p=>
@@ -37,9 +41,9 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
       '<header class="bio-heading"><div><p class="eyebrow">DST / BIOSHIELD OPERATIONS</p>',
       '<h1>BioShield Admin Operations System</h1>',
       '<p>Αναζήτηση αιτημάτων, αξιολόγηση καταλληλότητας και διαχείριση πηγών για το τηλεφωνικό κέντρο.</p>',
-      '</div><span class="bio-stage">Pre-Supabase Lab</span></header>',
+      '</div><span class="bio-stage">Demo Supabase · Read-only</span></header>',
       '<div class="bio-alert" role="status"><strong>Σύστημα δοκιμών, χωρίς στοιχεία πραγματικών πελατών</strong><p>',
-      esc(data.message),' Οι πραγματικές δημόσιες πηγές εμφανίζονται σε ξεχωριστή καρτέλα και δεν συνδέονται με το CRM.</p></div>',
+      'Η εταιρική Supabase παραμένει ασύνδετη. Μόνο η ξεχωριστή δοκιμαστική βάση του δεύτερου λογαριασμού τροφοδοτεί τα δημόσια ευρήματα, χωρίς στοιχεία επικοινωνίας.</p></div>',
       '<nav class="bio-tabs" aria-label="Ενότητες BioShield">',
       '<button type="button" data-bio-tab="overview" class="active" aria-pressed="true">Επισκόπηση</button>',
       '<button type="button" data-bio-tab="pilot" aria-pressed="false">Πραγματικά ευρήματα</button>',
@@ -55,7 +59,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
       metric('Επιλέξιμα για επικοινωνία',data.metrics.outreach_eligible,esc),
       metric('Πραγματικές εκτελέσεις',data.metrics.completed_runs,esc),
       '</div><div class="bio-grid">',
-      '<article class="bio-card"><h2>Διασυνδέσεις</h2><p>Η πραγματική συλλογή είναι κλειστή. Τα δεδομένα προσομοίωσης δεν μεταφέρονται στη βάση.</p>',
+      '<article class="bio-card"><h2>Διασυνδέσεις</h2><p>Η εταιρική/production Supabase και η συλλογή leads παραμένουν κλειστές. Η χωριστή Supabase Demo είναι μόνο για δημόσια δεδομένα και ανάγνωση.</p>',
       '<div class="bio-scroll"><table class="bio-table"><thead><tr><th>Πάροχος</th><th>Κατάσταση</th><th>Λειτουργία</th></tr></thead><tbody>',providerRows,'</tbody></table></div></article>',
       '<article class="bio-card"><h2>Offline qualification lab</h2>',
       '<p>Το πρώτο δοκιμαστικό σύνολο περιλαμβάνει <strong>',number(q.fixture_count),
@@ -103,9 +107,10 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
       '<p>Η δημόσια ανάρτηση δεν είναι αυτόματα νόμιμη βάση για τηλεφωνική εμπορική επικοινωνία. Απαιτούνται έλεγχος νόμιμης βάσης, αντιρρήσεων και ανθρώπινη αξιολόγηση.</p>',
       '<div class="bio-policy">Αυτόματη διαβίβαση σε τηλεφωνικό κέντρο <strong>Απενεργοποιημένη</strong></div>',
       '<div class="bio-policy">Συλλογή τηλεφώνων από δημόσια προφίλ <strong>Απενεργοποιημένη</strong></div>',
-      '<div class="bio-policy">Πρόσβαση σε πραγματική Supabase <strong>Απενεργοποιημένη</strong></div>',
+      '<div class="bio-policy">Εταιρική Supabase <strong>Απενεργοποιημένη</strong></div>',
+      '<div class="bio-policy">Ξεχωριστή δοκιμαστική Supabase <strong>Μόνο ανάγνωση δημόσιων ευρημάτων</strong></div>',
       '<div class="bio-policy">Πραγματικά API Firecrawl και TinyFish <strong>Απενεργοποιημένα</strong></div></section>',
-      '<footer class="bio-footer"><span>Real public-source research snapshot, synthetic benchmarks separate, Supabase disconnected.</span>',
+      '<footer class="bio-footer"><span>Independent Supabase demo connected for read-only public evidence; company Supabase disconnected.</span>',
       '<a href="https://linear.app/gkg/project/bioshield-admin-operations-system-79b033ffab9a" rel="noopener noreferrer" target="_blank">Linear project</a></footer>',
       '</div>'
     ].join('');
@@ -133,24 +138,66 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     }
     search.addEventListener('input',filterCases);
     status.addEventListener('change',filterCases);
-    const realSearch=page.querySelector('#bio-pilot-search');
-    const realKind=page.querySelector('#bio-pilot-type');
+    const pilotPanel=page.querySelector('[data-bio-panel="pilot"]');
+    let loadingDemo=false;
     function filterPilot(){
-      const term=realSearch.value.trim().toLocaleLowerCase('el-GR'), kind=realKind.value;
+      const search=pilotPanel.querySelector('#bio-pilot-search');
+      const type=pilotPanel.querySelector('#bio-pilot-type');
+      if(!search||!type||!pilot.demo_supabase_connected)return;
+      const term=search.value.trim().toLocaleLowerCase('el-GR'), kind=type.value;
       let visible=0;
-      page.querySelectorAll('[data-pilot-row]').forEach(row=>{
+      pilotPanel.querySelectorAll('[data-pilot-row]').forEach(row=>{
         const matches=(kind==='all'||kind===row.dataset.segment)&&(!term||row.dataset.search.includes(term));
         row.hidden=!matches;
         if(matches)visible++;
       });
-      page.querySelectorAll('[data-pilot-section]').forEach(section=>{
+      pilotPanel.querySelectorAll('[data-pilot-section]').forEach(section=>{
         const target=section.dataset.pilotSection;
         section.hidden=!(kind==='all'||kind===target||(kind==='needs_review'&&target==='individual'));
       });
-      page.querySelector('#bio-pilot-count').textContent=number(visible)+' / '+number(pilot.public_sources_reviewed)+' εγγραφές';
+      const count=pilotPanel.querySelector('#bio-pilot-count');
+      if(count)count.textContent=number(visible)+' / '+number(pilot.public_sources_reviewed)+' εγγραφές';
     }
-    realSearch.addEventListener('input',filterPilot);
-    realKind.addEventListener('change',filterPilot);
+    pilotPanel.addEventListener('input',event=>{
+      if(event.target.id==='bio-pilot-search')filterPilot();
+    });
+    pilotPanel.addEventListener('change',event=>{
+      if(event.target.id==='bio-pilot-type')filterPilot();
+    });
+    async function refreshDemo(){
+      if(loadingDemo||!page.isConnected)return;
+      loadingDemo=true;
+      const oldQuery=pilotPanel.querySelector('#bio-pilot-search')?.value||'';
+      const oldType=pilotPanel.querySelector('#bio-pilot-type')?.value||'all';
+      const button=pilotPanel.querySelector('#bio-demo-refresh');
+      if(button){button.disabled=true;button.textContent='Ανανέωση…';}
+      try{
+        const newData=await api('/bioshield/demo/evidence');
+        if(!page.isConnected)return;
+        pilot=newData;
+      }catch(error){
+        if(!page.isConnected)return;
+        pilot={demo_unavailable:true};
+      }finally{
+        if(page.isConnected){
+          pilotPanel.innerHTML=renderPublicPilot(pilot,esc);
+          const query=pilotPanel.querySelector('#bio-pilot-search');
+          const type=pilotPanel.querySelector('#bio-pilot-type');
+          if(query)query.value=oldQuery;
+          if(type&&Array.from(type.options).some(o=>o.value===oldType))type.value=oldType;
+          filterPilot();
+        }
+        loadingDemo=false;
+      }
+    }
+    pilotPanel.addEventListener('click',event=>{
+      if(event.target.id==='bio-demo-refresh')void refreshDemo();
+    });
+    filterPilot();
+    const interval=setInterval(()=>{
+      if(!page.isConnected){clearInterval(interval);return;}
+      if(!pilotPanel.hidden&&!document.hidden)void refreshDemo();
+    },30000);
   }catch(error){
     if(!page.isConnected)return;
     page.textContent='Το περιβάλλον εργαστηρίου δεν είναι διαθέσιμο. Ελέγξτε την κατάσταση της υπηρεσίας.';

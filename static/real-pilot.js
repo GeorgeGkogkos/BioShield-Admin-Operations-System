@@ -1,4 +1,4 @@
-/* One-time public evidence from independently reviewed sources; NEVER a live lead feed. */
+/* Source-linked, public-only evidence from an isolated Supabase DEMO. No live crawling or contacts. */
 function sourceLink(url, esc) {
   if (typeof url !== "string" || !url.startsWith("https://")) return "—";
   return '<a href="' + esc(url) + '" rel="noopener noreferrer" target="_blank">Πηγή</a>';
@@ -13,6 +13,23 @@ function displayDeadline(item,esc) {
     " · Δεν επιβεβαιώθηκε η τρέχουσα κατάσταση</small>";
 }
 export function renderPublicPilot(data,esc) {
+  const online=data && data.demo_supabase_connected===true;
+  if(!online){
+    return [
+      '<div class="bio-demo-connection bio-demo-offline" role="status"><strong>Η δοκιμαστική Supabase δεν είναι διαθέσιμη</strong>',
+      '<p>Δεν εμφανίζονται παλιές στατικές μετρήσεις ως ζωντανά αποτελέσματα. Η εταιρική βάση παραμένει ασύνδετη.</p>',
+      '<button type="button" id="bio-demo-refresh" class="bio-open-lab">Επανάληψη σύνδεσης</button></div>'
+    ].join('');
+  }
+  const lastFetch = data.fetched_at_utc ?
+    new Intl.DateTimeFormat('el-GR',{timeZone:'Europe/Athens',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(new Date(data.fetched_at_utc)) :
+    '—';
+  const businessRows=(data.business_requests||[]).map(item =>
+    '<tr data-pilot-row data-kind="business" data-segment="business" data-search="'+
+      esc([item.id,item.authority,item.region,item.service,item.summary].join(' ').toLocaleLowerCase('el-GR'))+'">'+
+      '<td>'+esc(item.id)+'</td><td>'+esc(item.authority)+'</td><td>'+esc(item.service)+'</td>'+
+      '<td>'+esc(item.summary)+'</td><td>'+sourceLink(item.source_url,esc)+'</td></tr>'
+  ).join('');
   const rows = data.tenders.map(item =>
     '<tr data-pilot-row data-kind="tender" data-segment="'+esc(item.audience_segment||"needs_review")+'" data-search="' +
       esc([item.id,item.authority,item.region,item.service].join(" ").toLocaleLowerCase("el-GR"))+'">' +
@@ -35,10 +52,14 @@ export function renderPublicPilot(data,esc) {
     "<td>"+sourceLink(item.source_url,esc)+"</td></tr>"
   ).join("");
   return [
-    '<div class="bio-lab-top"><div><p class="eyebrow">BIO-10 / REAL PUBLIC SOURCES</p>',
+    '<div class="bio-demo-connection" id="bio-demo-sync" role="status"><div><strong>Συνδεδεμένη δοκιμαστική Supabase · READ ONLY</strong>',
+    '<p>Ζωντανή ανάγνωση αποθηκευμένων ευρημάτων. Τελευταία ανανέωση: ',esc(lastFetch),
+    ' · αυτόματος έλεγχος ανά 30 δευτερόλεπτα όσο βλέπεις αυτήν την καρτέλα.</p></div>',
+    '<button type="button" id="bio-demo-refresh" class="bio-open-lab">Ανανέωση τώρα</button></div>',
+    '<div class="bio-lab-top"><div><p class="eyebrow">BIO-12 / SECOND ACCOUNT SUPABASE DEMO</p>',
     '<h2>Πραγματικά ευρήματα — ',esc(data.as_of_date),'</h2>',
-    '<p class="bio-muted">Ένα ελεγχόμενο, μη εξαντλητικό δείγμα. Δεν πρόκειται για ζωντανή αναζήτηση ούτε για λίστα επαφών.</p>',
-    '</div><span class="bio-test-badge">REAL · STATIC SNAPSHOT</span></div>',
+    '<p class="bio-muted">Πραγματικά δημόσια ευρήματα αποθηκευμένα στη χωριστή δοκιμαστική βάση. Οι μετρήσεις διαβάζονται από τη Supabase όταν ανοίγεις ή ανανεώνεις τη σελίδα. Δεν πρόκειται για αυτόματο crawler ή λίστα επαφών.</p>',
+    '</div><span class="bio-test-badge">SUPABASE DEMO · LIVE READ</span></div>',
     '<div class="bio-alert"><strong>Διαγωνισμοί ≠ ιδιωτικοί πελάτες</strong><p>',
     'Οι προκηρύξεις αφορούν φορείς. Οι δημόσιες συζητήσεις είναι ιστορικές και δεν τεκμηριώνουν τρέχουσα ανάγκη ή δικαίωμα επικοινωνίας.',
     ' Για κάθε συμμετοχή σε διαγωνισμό απαιτείται έλεγχος της επίσημης διακήρυξης.</p></div>',
@@ -65,12 +86,13 @@ export function renderPublicPilot(data,esc) {
     discussions,'</tbody></table></div></div>',
     '<div data-pilot-section="business" class="bio-segment-section bio-business-empty">',
     '<h3 class="bio-real-subheading">Επιχειρήσεις · αιτήματα ιδιωτικού τομέα (',esc(data.business_requests_count),')</h3>',
-    '<p>Δεν έχει εντοπιστεί και επαληθευτεί ανεξάρτητο αίτημα από επιχείρηση στο συγκεκριμένο δείγμα.</p>',
-    '<p class="bio-note">Μια εταιρεία που <em>διαφημίζει υπηρεσίες</em> δεν είναι υποψήφιος πελάτης. Εστιατόρια, ξενοδοχεία, γραφεία και αποθήκες κατατάσσονται εδώ μόνο όταν τα στοιχεία δείχνουν ότι ζητούν οι ίδιοι υπηρεσία.</p>',
+    data.business_requests_count===0 ?
+      '<p>Δεν υπάρχουν ακόμη επαληθευμένα αιτήματα επιχειρήσεων στη δοκιμαστική βάση. Δεν δημιουργούνται ψεύτικοι πελάτες.</p>' :
+      '<div class="bio-scroll"><table class="bio-table bio-real-table"><thead><tr><th>ID</th><th>Φορέας</th><th>Υπηρεσία</th><th>Σύνοψη</th><th>Πηγή</th></tr></thead><tbody>'+businessRows+'</tbody></table></div>',
+    '<p class="bio-note">Μια εταιρεία που <em>διαφημίζει υπηρεσίες</em> δεν είναι υποψήφιος πελάτης. Καταχωρίζονται μόνο τεκμηριωμένα αιτήματα υπηρεσιών.</p>',
     '</div>',
     '<p class="bio-note" id="bio-pilot-count">',esc(data.public_sources_reviewed),' / ',esc(data.public_sources_reviewed),' εγγραφές</p>',
-    '<p class="bio-note"><strong>Όρια:</strong> 3 λογαριασμοί Firecrawl χωρίς credits. ',
-    'Ορισμένες πρωτογενείς σελίδες δεν επέτρεψαν αυτοματοποιημένη ανάγνωση. ',
-    'Δεν έγιναν εγγραφές σε Supabase, μεταφορά δεδομένων ή συλλογή τηλεφώνων.</p>'
+    '<p class="bio-note"><strong>Όρια:</strong> Η ανεξάρτητη demo Supabase περιέχει μόνο δημόσια, μη προσωπικά δεδομένα από προηγούμενο ερευνητικό στιγμιότυπο. ',
+    'Δεν έγιναν κλήσεις σε πελάτες, συλλογή τηλεφώνων, διασύνδεση με την εταιρική Supabase ή ζωντανές αναζητήσεις Firecrawl/TinyFish.</p>'
   ].join("");
 }

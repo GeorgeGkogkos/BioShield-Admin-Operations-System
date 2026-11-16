@@ -105,4 +105,16 @@ def public_evidence_pilot():
     """Dated, read-only public evidence research, no personal contacts or network calls."""
     return JSONResponse(pilot_report(), headers={"Cache-Control":"no-store"})
 
+# Only public, anonymized, read-only demo metadata from the isolated second account.
+# The business-owned Supabase remains disconnected and private lead endpoints remain 403.
+from bioshield.demo_db import DemoDatabaseUnavailable, fetch_public_demo
+
+@app.get("/api/bioshield/demo/evidence")
+def second_account_demo_evidence():
+    try:
+        payload = fetch_public_demo()
+    except DemoDatabaseUnavailable:
+        raise HTTPException(503, "Independent demo database unavailable; no cached real leads")
+    return JSONResponse(payload, headers={"Cache-Control": "no-store"})
+
 app.mount("/static",StaticFiles(directory=STATIC),name="static")
