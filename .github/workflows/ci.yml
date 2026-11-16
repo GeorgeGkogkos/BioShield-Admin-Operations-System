@@ -50,6 +50,10 @@ jobs:
           node --input-type=module --check < static/app.js
           node --input-type=module --check < static/typed/navigation.js
           node --input-type=module --check < static/typed/research-view.js
+      - name: Verify BIO-36 recent individual request rendering
+        run: |
+          node --input-type=module --check < static/unified-archive.js
+          node --test tests/test_recent_individual_results.mjs
       - name: Verify responsive map popup and mobile layout
         run: |
           node --input-type=module --check < static/geographic-map.js
