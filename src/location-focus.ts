@@ -29,11 +29,11 @@ export function guessRegion(latitude:number,longitude:number):string{
 /** This does not persist exact coordinates; only user-selected home code. */
 export function installLocationFocus(panel:HTMLElement,onFocusChange:(state:{home:string;temporary:string})=>void){
   if(!(panel instanceof HTMLElement))return {selection:()=>({home:'ilion',temporary:''}),stop:()=>{}};
-  const home=panel.querySelector('#bio-focus-home');
-  const temporary=panel.querySelector('#bio-focus-travel');
-  const start=panel.querySelector('#bio-focus-gps-start');
-  const stop=panel.querySelector('#bio-focus-gps-stop');
-  const status=panel.querySelector('#bio-focus-gps-status');
+  const home=panel.querySelector<HTMLSelectElement>('#bio-focus-home');
+  const temporary=panel.querySelector<HTMLSelectElement>('#bio-focus-travel');
+  const start=panel.querySelector<HTMLButtonElement>('#bio-focus-gps-start');
+  const stop=panel.querySelector<HTMLButtonElement>('#bio-focus-gps-stop');
+  const status=panel.querySelector<HTMLElement>('#bio-focus-gps-status');
   if(!home||!temporary||!start||!stop||!status)
     return {selection:()=>({home:'ilion',temporary:''}),stop:()=>{}};
   let stored='ilion';
