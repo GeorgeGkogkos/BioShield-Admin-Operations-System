@@ -46,12 +46,10 @@ export function installNavigation(page: HTMLElement, onChange: RouteChange): () 
       page.querySelector<HTMLElement>('[data-bio-panel="'+next+'"] h2, [data-bio-panel="'+next+'"] h1')
         ?.setAttribute('tabindex','-1');
     };
-    const doc=document as Document & {
-      startViewTransition?: (update: () => void) => {finished: Promise<void>};
-    };
-    const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if(doc.startViewTransition && !reduced)doc.startViewTransition(render);
-    else render();
+    // Document-level snapshots paint in the browser top layer over sticky
+    // app chrome. Switch the real DOM panel instead; its in-flow CSS entrance
+    // animation stays underneath the persistent header and sidebar.
+    render();
   };
   const onClick=(event: MouseEvent): void=>{
     if(event.defaultPrevented || event.button!==0 || event.metaKey || event.ctrlKey ||
