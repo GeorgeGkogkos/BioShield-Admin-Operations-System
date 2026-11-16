@@ -1,0 +1,87 @@
+{
+  "confirmed_contactable_private_leads": 0,
+  "count": 4,
+  "freshness_days": 30,
+  "notes": "Official TED publication metadata only. No claim of tender eligibility, open bidding status, private customer demand or comprehensive Greek coverage.",
+  "notices": [
+    {
+      "audience_segment": "public_sector",
+      "buyer": "ΠΕΡΙΦΕΡΕΙΑ ΠΕΛΟΠΟΝΝΗΣΟΥ",
+      "contact_eligible": false,
+      "country": "Ελλάδα",
+      "cpv_codes": [
+        "90922000"
+      ],
+      "current_eligibility_verified": false,
+      "evidence_level": "official_ted_metadata",
+      "id": "TED-791336-2026",
+      "notice_number": "791336-2026",
+      "published_on": "2026-11-13",
+      "qualification": "official_notice_review_required",
+      "source_url": "https://ted.europa.eu/en/notice/-/detail/791336-2026",
+      "title": "Ελλάδα – Υπηρεσίες καταπολέμησης επιβλαβών εντόμων – Ολοκληρωμένο Πρόγραμμα Καταπολέμησης Κουνουπιών στη Περιφέρεια Πελοποννήσου, για τα έτη 2027-2028"
+    },
+    {
+      "audience_segment": "public_sector",
+      "buyer": "ΠΕΡΙΦΕΡΕΙΑ ΑΤΤΙΚΗΣ -Δ/ΝΣΗ ΟΙΚΟΝΟΜΙΚΩΝ ΔΥΤΙΚΟΥ ΤΟΜΕΑ ΑΘΗΝΩΝ",
+      "contact_eligible": false,
+      "country": "Ελλάδα",
+      "cpv_codes": [
+        "90922000"
+      ],
+      "current_eligibility_verified": false,
+      "evidence_level": "official_ted_metadata",
+      "id": "TED-774976-2026",
+      "notice_number": "774976-2026",
+      "published_on": "2026-11-06",
+      "qualification": "official_notice_review_required",
+      "source_url": "https://ted.europa.eu/en/notice/-/detail/774976-2026",
+      "title": "Ελλάδα – Υπηρεσίες καταπολέμησης επιβλαβών εντόμων – Διακήρυξη 10/2026"
+    },
+    {
+      "audience_segment": "public_sector",
+      "buyer": "ΔΗΜΟΣ ΠΕΙΡΑΙΑ",
+      "contact_eligible": false,
+      "country": "Ελλάδα",
+      "cpv_codes": [
+        "90922000",
+        "90923000"
+      ],
+      "current_eligibility_verified": false,
+      "evidence_level": "official_ted_metadata",
+      "id": "TED-758868-2026",
+      "notice_number": "758868-2026",
+      "published_on": "2026-11-02",
+      "qualification": "official_notice_review_required",
+      "source_url": "https://ted.europa.eu/en/notice/-/detail/758868-2026",
+      "title": "Ελλάδα – Υπηρεσίες καταπολέμησης επιβλαβών εντόμων – Παροχή υπηρεσιών κουνουποκτονιών- απεντομώσεων – μυοκτονιών καθώς και άλλων ειδικών εργασιών σε χώρους εμβέλειας Δήμου Πειραιά, οικονομικών ετών 2027, 2028"
+    },
+    {
+      "audience_segment": "public_sector",
+      "buyer": "ΠΕΡΙΦΕΡΕΙΑ ΑΤΤΙΚΗΣ -Δ/ΝΣΗ ΟΙΚΟΝΟΜΙΚΩΝ ΔΥΤΙΚΟΥ ΤΟΜΕΑ ΑΘΗΝΩΝ",
+      "contact_eligible": false,
+      "country": "Ελλάδα",
+      "cpv_codes": [
+        "90922000"
+      ],
+      "current_eligibility_verified": false,
+      "evidence_level": "official_ted_metadata",
+      "id": "TED-758124-2026",
+      "notice_number": "758124-2026",
+      "published_on": "2026-11-02",
+      "qualification": "official_notice_review_required",
+      "source_url": "https://ted.europa.eu/en/notice/-/detail/758124-2026",
+      "title": "Ελλάδα – Υπηρεσίες καταπολέμησης επιβλαβών εντόμων – Διακήρυξη 10/2026"
+    }
+  ],
+  "provider": "EU TED official search API",
+  "provider_url": "https://docs.ted.europa.eu/api/latest/search.html",
+  "query": "buyer-country=GRC AND classification-cpv IN (90921000 90922000 90923000 90924000) AND publication-date>=20261017 SORT BY publication-date DESC",
+  "raw_count": 4,
+  "review_required": true,
+  "searched_at_utc": "2026-11-16T11:13:23.017971+00:00",
+  "source_is_live": true,
+  "source_type": "official_public_procurement",
+  "status": "ok",
+  "version": "bio14_ted_live_v1"
+}
