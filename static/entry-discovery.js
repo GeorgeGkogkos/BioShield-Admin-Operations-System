@@ -21,7 +21,9 @@ export function reconcileEntryDiscovery(report, storage){
   try{
     const raw=storage.getItem(ENTRY_DISCOVERY_STORAGE_KEY);
     // A missing/corrupt/old cursor is a baseline, NEVER an invented "new" count.
-    const previous=raw&&raw.length<20000?JSON.parse(raw):null;
+    let previous=null;
+    try{previous=raw&&raw.length<20000?JSON.parse(raw):null;}
+    catch{/* Corrupt local cursor: start a safe baseline, never infer new leads. */}
     const hasBaseline=previous?.version===1&&Array.isArray(previous.ids)&&
       previous.ids.every(id=>typeof id==='string'&&TED_ID.test(id))&&
       previous.ids.length<=MAX_IDS;
