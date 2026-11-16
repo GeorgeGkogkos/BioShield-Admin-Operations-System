@@ -1,5 +1,6 @@
 import {overviewSnapshot,overviewRecentNotices,discoveryFilterMenu,businessDiscoveryMarkup} from './discovery-layout.js';
 import {renderSearchArchive} from './unified-archive.js';
+import {renderKimdis} from './kimdis-results.js';
 import {renderPublicPilot} from './real-pilot.js';
 import {reconcileEntryDiscovery} from './entry-discovery.js';
 import {coverageMarkup,setupCoverageMap} from './geographic-map.js';
@@ -226,6 +227,7 @@ function officialSourceCards(official,esc){
     (official?.providers||[]).map(s=>'<article class="bio-source-row"><div><strong>'+esc(s.name)+'</strong>'+
      '<p>'+esc(s.notes)+'</p><a href="'+esc(s.url)+'" target="_blank" rel="noopener noreferrer">Επίσημη πηγή</a></div>'+
      '<span>'+esc(s.status==='partial_search_only_by_ADA_2026_11_16'?'Περιορισμένη αναζήτηση':
+       s.id==='kimdis'&&s.live_readonly_api?'Ενεργή ανάγνωση επίσημου ΚΗΜΔΗΣ':
        'Επίσημη αναζήτηση · αναμονή σύνδεσης')+'</span></article>').join('')+'</div>';
 }
 
@@ -238,6 +240,7 @@ function discoveries(state,esc,focused,heartbeat,segmented) {
     '<h3>Κοντινές δημόσιες προκηρύξεις — Αττική, Εύβοια, Κορινθία ή προσωρινή βάση</h3>',
     '<div id="bio-ted-results">',tenderRows(state,esc,focused?.policy),'</div>',
     '<div id="bio-remote-results">',remoteOpportunities(segmented,esc),'</div>',
+    '<div id="bio-kimdis-results" class="bio-kimdis-results" role="region" aria-label="Επίσημες προσκλήσεις ΚΗΜΔΗΣ"><p class="bio-note" role="status">Γίνεται αναζήτηση στο επίσημο ΚΗΜΔΗΣ χωρίς μεταφόρτωση της σελίδας…</p></div>',
     '<p class="bio-note">Η ανακάλυψη ενεργοποιείται αυτόματα με το άνοιγμα της σελίδας (έως 15 λεπτά cache ανά instance) και η προγραμματισμένη αναζήτηση GitHub Actions εκτελείται κάθε ώρα, στο :17 (με πιθανές καθυστερήσεις scheduler). Εάν ο πάροχος δεν απαντά, η κατάσταση φαίνεται ως μη διαθέσιμη.</p>',
   ].join('');
 }
@@ -499,21 +502,48 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
   }
   let discoveryCategory='public_sector';
   let discoveryService='all';
+  let kimdis={status:'pending'};
+  let kimdisBusy=false;
+  async function refreshKimdis(){
+    if(kimdisBusy||!page.isConnected)return;
+    kimdisBusy=true;
+    try{
+      const next=await api('/bioshield/discovery/kimdis');
+      kimdis=(next?.status==='ok'||next?.status==='partial')?next:{status:'unavailable'};
+    }catch{kimdis={status:'unavailable'};}
+    finally{
+      kimdisBusy=false;
+      if(page.isConnected){
+        const slot=page.querySelector('#bio-kimdis-results');
+        const html=renderKimdis(kimdis,esc);
+        if(slot&&slot.innerHTML!==html)slot.innerHTML=html;
+        filterTED();
+      }
+    }
+  }
   function filterTED(){
     const host=page.querySelector('[data-bio-panel="discovery"]');
     const selection=discoveryService;
     const term=(host?.querySelector('#bio-ted-term')?.value||'').trim().toLocaleLowerCase('el-GR');
     let count=0;
-    host?.querySelectorAll('[data-ted-row],[data-focus-row],[data-remote-row]').forEach(row=>{
+    const kimdisVisible=discoveryCategory==='public_sector';
+    const kimdisSection=host?.querySelector('#bio-kimdis-results');
+    if(kimdisSection)kimdisSection.hidden=!kimdisVisible;
+    host?.querySelectorAll('[data-ted-row],[data-focus-row],[data-remote-row],[data-kimdis-row]').forEach(row=>{
       const serviceMatch=selection==='all'||(row.dataset.services||'').split(',').includes(selection);
       const searchMatch=!term||(row.dataset.search||'').includes(term);
-      const show=serviceMatch&&searchMatch;
+      const show=serviceMatch&&searchMatch&&(!row.matches('[data-kimdis-row]')||kimdisVisible);
       row.hidden=!show;if(show)count++;
     });
+    const kimdisRows=host?.querySelectorAll('#bio-kimdis-results [data-kimdis-row]')||[];
+    const kimdisEmpty=host?.querySelector('#bio-kimdis-filter-empty');
+    if(kimdisEmpty)kimdisEmpty.hidden=!(kimdisVisible&&kimdisRows.length&&
+      ![...kimdisRows].some(row=>!row.hidden));
     const label=host?.querySelector('#bio-ted-count');
     if(label)label.textContent=fmt(count)+' εμφανιζόμενες τεκμηριωμένες προκηρύξεις';
     const noMatches=host?.querySelector('#bio-discovery-no-matches');
-    if(noMatches)noMatches.hidden=!(('public_sector'===discoveryCategory||'ted'===discoveryCategory) && count===0 && ted?.status==='ok');
+    if(noMatches)noMatches.hidden=!(('public_sector'===discoveryCategory||'ted'===discoveryCategory) &&
+      count===0 && (ted?.status==='ok'||(kimdisVisible&&['ok','partial'].includes(kimdis?.status))));
     // The shared search field also filters independently sourced B2B entries.
     // Individuals have no approved live source, so they keep an explicit empty state.
     let matchingBusinesses=0;
@@ -686,7 +716,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
         button.title=manual&&status?.textContent?status.textContent:'Ανανέωση επίσημων ανακαλύψεων';
       }
     }
-    if(manual&&done)void refreshCoverage();
+    if(manual&&done){void refreshCoverage();void refreshKimdis();}
   }
   async function refreshHeartbeat(){
     const endOver=showLoadingOverlay(page.querySelector('#bio-live-status-status'),
@@ -769,6 +799,8 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     }
     const saved=page.querySelector('#bio-unified-archive');
     if(saved)saved.innerHTML=renderSearchArchive(pilot,esc,category);
+    const kimdisSection=page.querySelector('#bio-kimdis-results');
+    if(kimdisSection)kimdisSection.hidden=category!=='public_sector';
     // Discovery uses a single results list; the standalone Map page owns maps.
     const archivePanel=page.querySelector('#bio-unified-archive');
     if(archivePanel)archivePanel.hidden=category==='ted';
@@ -793,6 +825,9 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
   setDiscoveryCategory('public_sector');
   filterPilot();
   filterTED();
+  // KΗΜΔΗΣ runs asynchronously after the page is mounted; it cannot block
+  // the initial TED/dashboard load or replace the user's active search panel.
+  void refreshKimdis();
   const refreshTimer=setInterval(()=>{
     if(!page.isConnected){clearInterval(refreshTimer);return;}
     if(!document.hidden){
@@ -803,7 +838,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
   },30000);
   const tedTimer=setInterval(()=>{
     if(!page.isConnected){clearInterval(tedTimer);focusController.stop();return;}
-    if(!document.hidden){void refreshTED();void refreshCoverage();}
+    if(!document.hidden){void refreshTED();void refreshCoverage();void refreshKimdis();}
   },900000);
   const statusTimer=setInterval(()=>{
     if(!page.isConnected){clearInterval(statusTimer);return;}
