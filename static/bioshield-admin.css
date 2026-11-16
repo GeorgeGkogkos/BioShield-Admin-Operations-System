@@ -180,8 +180,9 @@
    can paint over sticky chrome regardless of z-index. Animate real panels
    in normal document flow, safely below the header and sidebar. */
 @keyframes bio-panel-enter{
-  from{opacity:0;transform:translateY(8px)}
-  to{opacity:1;transform:translateY(0)}
+  /* Opacity-only: the active panel must never shift below its final position. */
+  from{opacity:0}
+  to{opacity:1}
 }
 .bio-page section[data-bio-panel]:not([hidden]){
   animation:bio-panel-enter 220ms ease-out both;

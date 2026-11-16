@@ -35,6 +35,8 @@ jobs:
         run: |
           node --input-type=module --check < static/entry-discovery.js
           node --test tests/test_entry_discovery.mjs
+      - name: Verify page route transitions never retain previous scroll offset
+        run: node --test tests/test_route_scroll.mjs
       - name: Validate browser JavaScript syntax
         run: |
           node --input-type=module --check < static/bioshield-admin.js

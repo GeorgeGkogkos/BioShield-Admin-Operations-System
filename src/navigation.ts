@@ -29,6 +29,8 @@ export function currentScreen(location: Pick<Location,'pathname'|'search'> = win
 export function installNavigation(page: HTMLElement, onChange: RouteChange): () => void {
   const shellNavigation=document.getElementById('bio-shell-nav');
   const bottomNavigation=document.getElementById('bio-bottom-nav');
+  // Native history restoration can reapply a previous page's offset after popstate.
+  if('scrollRestoration' in window.history)window.history.scrollRestoration='manual';
   let active: Screen = currentScreen();
   const change=(next: Screen, push: boolean): void=>{
     if(!SCREENS.includes(next))return;
@@ -51,6 +53,9 @@ export function installNavigation(page: HTMLElement, onChange: RouteChange): () 
     // app chrome. Switch the real DOM panel instead; its in-flow CSS entrance
     // animation stays underneath the persistent header and sidebar.
     render();
+    // The newly selected page always begins at the top of the content area.
+    // Reset synchronously before the next paint; never scroll the persistent shell.
+    window.scrollTo(0,0);
   };
   const onClick=(event: MouseEvent): void=>{
     if(event.defaultPrevented || event.button!==0 || event.metaKey || event.ctrlKey ||
