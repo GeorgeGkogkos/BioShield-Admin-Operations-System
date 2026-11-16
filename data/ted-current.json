@@ -112,7 +112,7 @@
   "query": "buyer-country=GRC AND classification-cpv IN (45330000 45332000 45332200 45332300 45332400 90460000 90470000 90921000 90922000 90923000 90924000) AND publication-date>=20261017 SORT BY publication-date DESC",
   "raw_count": 5,
   "review_required": true,
-  "searched_at_utc": "2026-11-16T11:38:55.575585+00:00",
+  "searched_at_utc": "2026-11-16T12:03:34.743130+00:00",
   "service_counts": {
     "disinfection": 0,
     "drain_unblocking": 1,
