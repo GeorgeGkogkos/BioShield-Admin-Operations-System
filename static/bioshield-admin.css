@@ -176,16 +176,15 @@
 .bio-service-filter select{width:100%;max-width:100%}
 .bio-service-filter #bio-map-count{grid-column:1 / -1;padding-top:4px}}
 
-/* BIO-22 follow-up: document View Transition snapshots are top-layer and
-   can paint over sticky chrome regardless of z-index. Animate real panels
-   in normal document flow, safely below the header and sidebar. */
+/* BIO-22: restore visible fades/slide transitions entirely inside #content.
+   Old panel exits with an in-flow Web Animation, then new panel enters here.
+   Neither header/sidebar nor the BIO-30 launch splash is animated by routing. */
 @keyframes bio-panel-enter{
-  /* Opacity-only: the active panel must never shift below its final position. */
-  from{opacity:0}
-  to{opacity:1}
+  from{opacity:0;transform:translateY(9px)}
+  to{opacity:1;transform:translateY(0)}
 }
 .bio-page section[data-bio-panel]:not([hidden]){
-  animation:bio-panel-enter 220ms ease-out both;
+  animation:bio-panel-enter 250ms cubic-bezier(.2,.7,.25,1) both;
 }
 @media(prefers-reduced-motion:reduce){
   .bio-page section[data-bio-panel]:not([hidden]){animation:none}
