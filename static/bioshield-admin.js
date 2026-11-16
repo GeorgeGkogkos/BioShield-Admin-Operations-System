@@ -250,7 +250,6 @@ function discoveries(state,esc,focused,heartbeat,segmented) {
     '<h2>Αυτόματη ανακάλυψη — δημόσια έργα</h2>',
     '<p class="bio-muted">Πραγματική αναζήτηση δημοσίων συμβάσεων για απεντομώσεις, μυοκτονίες, απολυμάνσεις, <strong>υδραυλικά</strong> και <strong>αποφράξεις</strong> βάσει επίσημων CPV. Δεν τεκμηριώνει από μόνη της ότι ένας διαγωνισμός είναι ανοιχτός.</p></div>',
     '<span id="bio-ted-state" class="bio-test-badge">',state?.status==='ok'?'API TED · ΑΝΑΓΝΩΣΗ':'TED · ΜΗ ΔΙΑΘΕΣΙΜΟ','</span></div>',
-    '<div id="bio-live-status-discovery">',automationStatus(heartbeat,state,esc),'</div>',
     '<div class="bio-demo-connection"><div><strong>',state?.status==='ok'?'Τελευταία επιτυχής αναζήτηση':'Αδυναμία επαλήθευσης TED',
     '</strong><p id="bio-ted-substatus">Ώρα Αθήνας: ',dateTime(state?.searched_at_utc||state?.checked_at_utc),
     ' · ',state?.status==='ok'?'Επιστράφηκαν '+fmt(state.count)+' πραγματικές προκηρύξεις από '+fmt(state.raw_count)+' εγγραφές απάντησης.':'Δεν χρησιμοποιούμε εικονικά αποτελέσματα.', '</p></div>',
@@ -259,9 +258,6 @@ function discoveries(state,esc,focused,heartbeat,segmented) {
     '<div class="bio-metrics bio-lab-metrics">',
     '<article class="bio-metric"><span>Ευρήματα TED</span><strong id="bio-ted-total">'+fmt(state?.status==='ok'?state.count:0)+'</strong>'+
     '<small>Έλεγχος αρχικής διακήρυξης απαιτείται</small></article>',
-    countCard('Επιβεβαιωμένοι ιδιώτες',0,'Δεν συλλέγονται προσωπικά στοιχεία'),
-    countCard('Επιβεβαιωμένες επιχειρήσεις',0,'Δεν δημιουργούνται εικονικά αιτήματα'),
-    countCard('Επιτρεπόμενες επαφές',0,'Επικοινωνία απενεργοποιημένη'),
     '</div>',
     '<div class="bio-lab-filter bio-service-filter"><label for="bio-ted-service">Φίλτρο υπηρεσίας</label>'+
     '<select id="bio-ted-service" aria-label="Φίλτρο υπηρεσίας">'+
@@ -269,7 +265,6 @@ function discoveries(state,esc,focused,heartbeat,segmented) {
     '<option value="pest_control">Απεντόμωση</option><option value="rodent_control">Μυοκτονία</option>'+
     '<option value="disinfection">Απολύμανση</option><option value="plumbing">Υδραυλικός</option>'+
     '<option value="drain_unblocking">Αποφράξεις</option></select>'+
-    '<label for="bio-ted-term">Όρος</label><input id="bio-ted-term" type="search" placeholder="Προκήρυξη, υπηρεσία, φορέας…">',
     '<span id="bio-ted-count"></span></div>',
     locationControls(esc),
     '<div class="bio-focus-title"><h3>Επιπλέον αναζήτηση κοντά στη βάση και στην προσωρινή τοποθεσία</h3>',
@@ -279,7 +274,6 @@ function discoveries(state,esc,focused,heartbeat,segmented) {
     '<div id="bio-ted-results">',tenderRows(state,esc,focused?.policy),'</div>',
     '<div id="bio-remote-results">',remoteOpportunities(segmented,esc),'</div>',
     '<p class="bio-note">Η ανακάλυψη ενεργοποιείται αυτόματα με το άνοιγμα της σελίδας (έως 15 λεπτά cache ανά instance) και η προγραμματισμένη αναζήτηση GitHub Actions εκτελείται κάθε ώρα, στο :17 (με πιθανές καθυστερήσεις scheduler). Εάν ο πάροχος δεν απαντά, η κατάσταση φαίνεται ως μη διαθέσιμη.</p>',
-    '<p class="bio-note"><strong>Facebook, Instagram, TikTok, Reddit:</strong> η εμπορική αυτοματοποιημένη συλλογή απαιτεί δικαιώματα πλατφόρμας. Οι ανεξάρτητες κοινότητες χρειάζονται έλεγχο robots και όρων πριν από οποιοδήποτε crawl. Οι συζητήσεις δεν αποτελούν επιβεβαιωμένους πελάτες.</p>',
   ].join('');
 }
 
