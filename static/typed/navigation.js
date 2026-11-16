@@ -19,7 +19,7 @@ export function currentScreen(location = window.location) {
   // Backward compatibility for existing /admin/operations?tab=map links.
   if(path==='/admin/operations'){
     const legacy=new URLSearchParams(location.search).get('tab');
-    if(legacy && SCREENS.includes(legacy))return legacy as Screen;
+    if(legacy && SCREENS.includes(legacy))return legacy;
   }
   return 'overview';
 }
