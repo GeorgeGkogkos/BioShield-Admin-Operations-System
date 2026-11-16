@@ -7,7 +7,7 @@ The publishable key remains in the Render environment, never Git.
 import json
 import os
 import re
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
@@ -66,6 +66,8 @@ def report_from_rows(rows: list[dict]) -> dict:
     tenders = []
     community_cases = []
     business_requests = []
+    today_utc = datetime.now(timezone.utc).date()
+    recent_window_days = 30
     for rec in rows:
         if not isinstance(rec, dict):
             raise DemoDatabaseUnavailable("Unexpected demo row")
@@ -126,6 +128,14 @@ def report_from_rows(rows: list[dict]) -> dict:
                 "contact_eligible": False,
             })
         elif kind == "community_discussion":
+            try:
+                published = date.fromisoformat(rec.get("published_on") or "")
+            except (TypeError, ValueError) as exc:
+                raise DemoDatabaseUnavailable("Reddit post publication date unverified") from exc
+            age_days = (today_utc - published).days
+            if age_days < 0:
+                raise DemoDatabaseUnavailable("Future-dated Reddit source cannot be verified")
+            is_recent = age_days <= recent_window_days and rec.get("original_opened") is True
             community_cases.append({
                 "id": ident,
                 "publisher": rec["issuer_or_forum"],
@@ -135,6 +145,9 @@ def report_from_rows(rows: list[dict]) -> dict:
                 "gate": rec.get("case_status"),
                 "source_url": url,
                 "source_opened": rec.get("original_opened") is True,
+                "post_age_days": age_days,
+                "within_7d": bool(is_recent and age_days <= 7),
+                "within_30d": bool(is_recent),
                 "audience_segment": segment,
                 "contact_eligible": False,
             })
@@ -148,6 +161,10 @@ def report_from_rows(rows: list[dict]) -> dict:
                 "contact_eligible": False,
             })
 
+    # Public discussions are always sorted by the ORIGINAL post date, never
+    # by the date of the latest comment or when the item was observed.
+    community_cases.sort(key=lambda item: (item["posted_on"], item["id"]), reverse=True)
+    reddit_recent_count = sum(item["within_30d"] for item in community_cases)
     counts = {
         segment: sum(rec.get("audience_segment") == segment for rec in rows)
         for segment in ("individual", "public_sector", "business")
@@ -155,7 +172,7 @@ def report_from_rows(rows: list[dict]) -> dict:
     counts["needs_review"] = sum(rec.get("audience_segment") is None for rec in rows)
     observed = [str(row["observed_on"]) for row in rows if row.get("observed_on")]
     return {
-        "version": "bio12_live_supabase_demo_v1",
+        "version": "bio13_recent_reddit_demo_v1",
         "data_source": "second_account_supabase_demo",
         "demo_supabase_connected": True,
         "external_supabase_connected": False,
@@ -170,6 +187,14 @@ def report_from_rows(rows: list[dict]) -> dict:
         "segment_counts": counts,
         "public_procurement_notices": len(tenders),
         "public_discussions_reviewed": len(community_cases),
+        "reddit_freshness": {
+            "window_days": recent_window_days,
+            "recent_posts_30d": reddit_recent_count,
+            "recent_posts_7d": sum(x["within_7d"] for x in community_cases),
+            "historical_or_unopened": len(community_cases) - reddit_recent_count,
+            "recent_confirmed_service_requests": 0,
+            "basis": "original_post_publication_date_not_comment_or_crawl_date",
+        },
         "business_requests_count": len(business_requests),
         "historical_explicit_requests": sum(
             x.get("gate") in ("historical_not_confirmed_active", "stale_archived")
