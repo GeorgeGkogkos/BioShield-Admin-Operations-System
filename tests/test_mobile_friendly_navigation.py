@@ -75,3 +75,25 @@ def test_touch_press_has_no_webkit_halo_and_keyboard_focus_remains_visible():
     # Keep discoverable focus styling for keyboard and assistive-navigation users.
     assert '.mobile-menu-toggle:focus-visible' in css
     assert '.bottom-link:focus-visible' in css
+
+
+def test_phone_hides_redundant_drawer_but_keeps_all_destinations_accessible():
+    """Phones use the persistent bottom nav; tablets still get a drawer."""
+    html = client.get("/admin/operations/overview").text
+    css = (STATIC / "shell.css").read_text(encoding="utf-8")
+    js = (STATIC / "app.js").read_text(encoding="utf-8")
+    assert "const drawerViewport=window.matchMedia('(min-width: 701px) and (max-width: 960px)')" in js
+    assert "const visible=Boolean(open && drawerViewport.matches)" in js
+    assert "drawerViewport.addEventListener('change',()=>setMenuOpen(false))" in js
+    phone_rules = css.split("/* Phone navigation is entirely handled", 1)[1]
+    assert "@media(max-width:700px)" in phone_rules
+    assert ".tools .mobile-menu-toggle{display:none}" in phone_rules
+    assert ".bio-mobile-nav-open .sidebar,.bio-mobile-nav-open .sidebar-backdrop{display:none}" in phone_rules
+    assert ".mobile-project-links{display:none}" in css
+    assert 'class="mobile-project-links" aria-label="Σύνδεσμοι έργου"' in html
+    # The drawer's external destinations must still be reachable on a phone.
+    footer_links = html.split('class="mobile-project-links"', 1)[1].split("</nav>", 1)[0]
+    for label in ("Linear Tasks", "GitHub", "DST Workspace"):
+        assert label in footer_links
+    # All five internal sections remain reachable from the bottom bar.
+    assert html.count('class="bottom-link" data-bio-tab=') == 5
