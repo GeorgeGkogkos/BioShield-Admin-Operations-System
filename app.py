@@ -98,4 +98,11 @@ def lab_report():
     return JSONResponse(measured_lab_report(), headers={"Cache-Control": "no-store"})
 
 
+from bioshield.real_pilot import pilot_report
+
+@app.get("/api/bioshield/pilot/evidence")
+def public_evidence_pilot():
+    """Dated, read-only public evidence research, no personal contacts or network calls."""
+    return JSONResponse(pilot_report(), headers={"Cache-Control":"no-store"})
+
 app.mount("/static",StaticFiles(directory=STATIC),name="static")
