@@ -47,8 +47,8 @@ test('refused browser storage never asserts new',()=>{
 test('invalid cursor is handled as first visit',()=>{
   const store=memoryStorage();
   store.setItem(ENTRY_DISCOVERY_STORAGE_KEY,'{broken json');
-  assert.equal(reconcileEntryDiscovery(report([a]),store).status,'storage_unavailable');
-  // If storage persists corrupted data, it needs an explicit reset rather than claiming new.
+  assert.equal(reconcileEntryDiscovery(report([a]),store).status,'baseline');
+  assert.deepEqual(JSON.parse(store.raw()).ids,[a.id]);
 });
 test('only bounded official TED IDs are retained, never contacts',()=>{
   const store=memoryStorage();
