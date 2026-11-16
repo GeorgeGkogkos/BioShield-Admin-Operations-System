@@ -26,6 +26,7 @@ export function currentScreen(location = window.location) {
 
 export function installNavigation(page, onChange) {
   const shellNavigation=document.getElementById('bio-shell-nav');
+  const bottomNavigation=document.getElementById('bio-bottom-nav');
   let active = currentScreen();
   const change=(next, push)=>{
     if(!SCREENS.includes(next))return;
@@ -55,7 +56,7 @@ export function installNavigation(page, onChange) {
     const target=event.target;
     if(!(target instanceof Element))return;
     const nav=target.closest('[data-bio-tab]');
-    if(!nav || (!page.contains(nav) && !shellNavigation?.contains(nav)))return;
+    if(!nav || (!page.contains(nav) && !shellNavigation?.contains(nav) && !bottomNavigation?.contains(nav)))return;
     const next=nav.dataset.bioTab;
     if(!SCREENS.includes(next))return;
     event.preventDefault();
@@ -64,6 +65,7 @@ export function installNavigation(page, onChange) {
   const onPop=()=>change(currentScreen(),false);
   page.addEventListener('click',onClick);
   shellNavigation?.addEventListener('click',onClick);
+  bottomNavigation?.addEventListener('click',onClick);
   window.addEventListener('popstate',onPop);
   // Initial request route or bookmark. Do not rewrite address by default.
   document.documentElement.dataset.bioScreen=active;
@@ -71,6 +73,7 @@ export function installNavigation(page, onChange) {
   return ()=>{
     page.removeEventListener('click',onClick);
     shellNavigation?.removeEventListener('click',onClick);
+    bottomNavigation?.removeEventListener('click',onClick);
     window.removeEventListener('popstate',onPop);
   };
 }
