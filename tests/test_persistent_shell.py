@@ -50,6 +50,13 @@ def test_shell_is_sticky_and_panel_animations_cannot_overlay_header():
     # Animate only real, in-flow visible panels; preserve no-motion behavior.
     assert ".bio-page section[data-bio-panel]:not([hidden]){" in admin
     assert "animation:bio-panel-enter 220ms ease-out both" in admin
+    assert "from{opacity:0}" in admin and "to{opacity:1}" in admin
+    assert "transform:translateY(8px)" not in admin
+    assert "window.scrollTo(0,0)" in navigation
+    assert "window.scrollTo(0,0)" in typed_navigation
+    assert "window.history.scrollRestoration='manual'" in navigation
+    app_js = (STATIC / "app.js").read_text(encoding="utf-8")
+    assert "focus({preventScroll:true})" in app_js
     assert "@media(prefers-reduced-motion:reduce)" in admin
     assert ".bio-page section[data-bio-panel]:not([hidden]){animation:none}" in admin
     compact = "".join(navigation.split())
