@@ -33,7 +33,8 @@ def test_only_new_and_findings_merge_into_search_while_other_pages_remain():
         text=router.read_text(encoding="utf-8")
         assert "canonical(" in text
         assert "return 'overview';" in text
-        assert "screen==='pilot'?'discovery':screen" in text
+        assert "pilot" in text and "canonical" in text
+        assert "['overview','pilot','map'].includes" not in text
 
 def test_all_user_specified_facets_live_under_one_search():
     layout=(STATIC/"discovery-layout.js").read_text(encoding="utf-8")
