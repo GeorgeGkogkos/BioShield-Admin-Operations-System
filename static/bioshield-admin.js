@@ -150,7 +150,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
       pilotPanel.querySelectorAll('[data-pilot-row]').forEach(row=>{
         const allowedDate=row.dataset.kind!=='forum'||recency.value==='all'||
           (recency.value==='30d'&&row.dataset.redditRecent==='true')||
-          (recency.value==='7d'&&row.dataset.reddit7d==='true');
+          (recency.value==='7d'&&row.dataset.redditWeek==='true');
         const matches=allowedDate&&(kind==='all'||kind===row.dataset.segment)&&(!term||row.dataset.search.includes(term));
         row.hidden=!matches;
         if(matches)visible++;
