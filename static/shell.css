@@ -10,6 +10,22 @@ a:focus:not(:focus-visible),button:focus:not(:focus-visible),[role="button"]:foc
 .brand{display:flex;align-items:center;gap:12px}.brand-logo{display:block;width:56px;height:56px;object-fit:contain;flex-shrink:0;background:transparent;filter:drop-shadow(0 1px 1px rgba(0,0,0,.12))}
 .brand span:last-child{display:flex;flex-direction:column;gap:3px}.brand small{font-size:.64rem;letter-spacing:.13em;color:var(--muted);font-weight:650}
 .tools{display:flex;align-items:center;gap:13px;font-size:.85rem}.tools button,.tools a{border:1px solid var(--line-strong);border-radius:10px;background:var(--paper);color:var(--ink);padding:9px 14px;cursor:pointer}.status{color:var(--muted)}
+/* BIO-28: The single company header owns the initial real-data loading status. */
+.bio-header-research-slot{display:flex;align-items:center;justify-content:flex-end;min-width:252px;max-width:300px}
+.bio-header-loading{display:none;align-items:center;justify-content:flex-end;gap:10px;
+  color:var(--muted);white-space:nowrap;font-size:.81rem}
+.bio-header-loading-text{min-width:0}
+.bio-header-loading-spinner{display:inline-block;width:19px;height:19px;flex:0 0 19px;
+  border:2px solid var(--line-strong);border-top-color:var(--accent);
+  border-radius:50%;animation:bio-header-spin .85s linear infinite}
+.topbar.bio-is-loading .bio-header-research-slot>.status{display:none}
+.topbar.bio-is-loading .bio-header-loading{display:inline-flex}
+@keyframes bio-header-spin{to{transform:rotate(360deg)}}
+@media(max-width:1170px){.bio-header-research-slot{min-width:0;max-width:none}
+  .topbar.bio-is-loading .bio-header-loading-text{display:none}}
+@media(prefers-reduced-motion:reduce){.bio-header-loading-spinner{animation:none;
+  border-top-color:var(--accent);border-right-color:var(--accent)}}
+
 .layout{max-width:1560px;width:100%;margin:auto;display:grid;grid-template-columns:256px minmax(0,1fr);flex:1}
 .sidebar{position:sticky;top:var(--bio-shell-header-height);align-self:start;height:calc(100vh - var(--bio-shell-header-height));height:calc(100dvh - var(--bio-shell-header-height));overflow-y:auto;overscroll-behavior:contain;z-index:20;border-right:1px solid var(--line);padding:17px 11px 18px;display:flex;flex-direction:column;gap:0;scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent}
 .sidebar::-webkit-scrollbar{width:5px}
