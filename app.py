@@ -49,7 +49,11 @@ def overview():
                    "outreach_eligible":None,"completed_runs":None},
         "providers":[
             {"id":"ted","name":"EU TED","status":"enabled_public_notices"},
-            {"id":"reddit","name":"Reddit","status":"commercial_approval_required"}
+            {"id":"reddit","name":"Reddit","status":"commercial_approval_required"},
+            {"id":"facebook","name":"Facebook","status":"permission_required"},
+            {"id":"instagram","name":"Instagram","status":"permission_required"},
+            {"id":"tiktok","name":"TikTok","status":"approved_access_required"},
+            {"id":"independent_forums","name":"Ελληνικά forums","status":"permission_review_required"}
         ],
         "candidates":[],"sources":[],"runs":[],
         "contact_gate":"review_required",
@@ -92,6 +96,18 @@ def source_provider_status():
         "outreach": "disabled",
         "synthetic_requests": 0,
     }, headers={"Cache-Control": "no-store"})
+
+# Public source provenance and legal/technical readiness (no provider access tokens).
+from bioshield.source_policy import SERVICE_LABELS, source_status
+
+@app.get("/api/bioshield/services")
+def supported_services():
+    return JSONResponse({"version": "bio16_services_v1", "services": SERVICE_LABELS},
+                        headers={"Cache-Control":"no-store"})
+
+@app.get("/api/bioshield/discovery/sources")
+def public_source_policy():
+    return JSONResponse(source_status(), headers={"Cache-Control":"no-store"})
 
 # Only public, anonymized, read-only demo metadata from the isolated second account.
 # The business-owned Supabase remains disconnected and private lead endpoints remain 403.
