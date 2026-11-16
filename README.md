@@ -94,3 +94,8 @@ An actual browser E2E test of PR #10 found that the external Leaflet CDN did not
 ## BIO-18 — Real geographic basemap replaces the schematic outline
 
 After reviewing the screenshot of the oversimplified geographic silhouette, the bespoke pseudo-map was retired. The application now serves Leaflet JS/CSS locally under `static/vendor/` (BSD-2-Clause licensed) and uses a real OpenStreetMap tile layer for **only the map viewport that a visitor actively views**, with visible © OpenStreetMap contributors attribution. Local Leaflet assets avoid the external-CDN failure from BIO-17. No tile downloads in batch, no pre-fetch, no proxy and browser HTTP caching is preserved. If tile loading fails, an explicit warning and external OSM link are shown while the official TED source list remains usable. Existing source filters, click-through, issuer-only location warnings and admin coverage metrics remain intact. See [BIO-18 basemap engineering notes](docs/BIO18_REAL_OPENSTREETMAP.md).
+
+
+### Leaflet 1.9.4 reliability correction (2026-11-16)
+
+The original BIO-18 live browser test found no OpenStreetMap tile images after the initial self-hosted Leaflet 1.3.1 release, although pins and filters worked. This is not considered a successful map rendering. A follow-up hotfix upgrades the self-hosted assets to **Leaflet 1.9.4**, removes unnecessary cross-origin anonymous image loading, adds a delayed viewport resize pass and a visible tile-loading failure warning even when no `tileerror` event fires. The dashboard also accepts `?tab=map` for a direct, shareable map view and independent screenshot QA. This changes no source evidence or private data. The real basemap must still be visually tested after deployment; mere loading of attribution or markers is not sufficient.
