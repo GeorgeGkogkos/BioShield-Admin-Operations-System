@@ -22,7 +22,9 @@ jobs:
           node --input-type=module --check < static/typed/navigation.js
           node --input-type=module --check < static/typed/research-view.js
           node --input-type=module --check < static/typed/location-focus.js
+          node --input-type=module --check < static/typed/skeleton.js
           node --input-type=module --check < static/typed/location-focus.js
+          node --input-type=module --check < static/typed/skeleton.js
           node --input-type=module --check < static/bioshield-admin.js
       - name: Build and typecheck TypeScript page navigation and research UI
         run: |
