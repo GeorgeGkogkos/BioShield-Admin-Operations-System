@@ -282,13 +282,6 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
   const seg=pilot.demo_supabase_connected?pilot.segment_counts:{individual:0,public_sector:0,business:0,needs_review:0};
   page.innerHTML=[
     '<div class="bio-page">',
-    '<nav class="bio-tabs" aria-label="Πλοήγηση BioShield">',
-    '<a href="/admin/operations/overview" data-bio-tab="overview" class="active" aria-current="page">Επισκόπηση</a>',
-    '<a href="/admin/operations/discovery" data-bio-tab="discovery">Νέες ανακαλύψεις</a>',
-    '<a href="/admin/operations/evidence" data-bio-tab="pilot">Αποθηκευμένα ευρήματα</a>',
-    '<a href="/admin/operations/map" data-bio-tab="map">Χάρτης / Κάλυψη</a>',
-    '<a href="/admin/operations/sources" data-bio-tab="sources">Πηγές &amp; έλεγχοι</a>',
-    '</nav>',
     '<section data-bio-panel="overview">',
     '<header class="bio-heading"><div><p class="eyebrow">BIOSHIELD / REAL EVIDENCE</p>',
     '<h1>Κέντρο ανακάλυψης &amp; αξιολόγησης</h1>',
@@ -339,12 +332,12 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
       mapCleanup=null;
       mapInitialized=false;
     }
-    page.querySelectorAll('[data-bio-tab]').forEach(b=>{
-      const active=b.dataset.bioTab===name;
-      b.classList.toggle('active',active);
-      if(b.tagName==='A'){
-        if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');
-      }else b.setAttribute('aria-pressed',String(active));
+    // Update only the persistent sidebar links; page CTAs are not tabs.
+    document.querySelectorAll('#bio-shell-nav [data-bio-tab]').forEach(link=>{
+      const active=link.dataset.bioTab===name;
+      link.classList.toggle('active',active);
+      if(active)link.setAttribute('aria-current','page');
+      else link.removeAttribute('aria-current');
     });
     panels().forEach(p=>p.hidden=p.dataset.bioPanel!==name);
     if(name==='map'&&!mapInitialized){
