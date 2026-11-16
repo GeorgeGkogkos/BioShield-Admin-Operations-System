@@ -49,9 +49,13 @@ def test_shell_is_sticky_and_panel_animations_cannot_overlay_header():
 
     # Animate only real, in-flow visible panels; preserve no-motion behavior.
     assert ".bio-page section[data-bio-panel]:not([hidden]){" in admin
-    assert "animation:bio-panel-enter 220ms ease-out both" in admin
-    assert "from{opacity:0}" in admin and "to{opacity:1}" in admin
-    assert "transform:translateY(8px)" not in admin
+    assert "animation:bio-panel-enter 250ms cubic-bezier(.2,.7,.25,1) both" in admin
+    assert "from{opacity:0;transform:translateY(9px)}" in admin
+    assert "to{opacity:1;transform:translateY(0)}" in admin
+    assert "oldPanel.animate([" in navigation and "oldPanel.animate([" in typed_navigation
+    assert "duration:145" in navigation and "duration:145" in typed_navigation
+    assert "animation.finished.then(finish,finish)" in navigation
+    assert "animation.finished.then(finish,finish)" in typed_navigation
     # TypeScript build formats whitespace differently from the checked-in JS.
     for source in (navigation, typed_navigation):
         minified = "".join(source.split())
