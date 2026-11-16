@@ -74,6 +74,13 @@ def handoff():
 
 # Real public-source discovery, no invented entries and no private contacts.
 from bioshield.ted_discovery import live_ted_report
+from bioshield.geographic_coverage import coverage_report
+
+@app.get("/api/bioshield/discovery/map")
+def public_geographic_coverage():
+    # No arbitrary URLs, no private addresses; same verified TED official metadata.
+    return JSONResponse(coverage_report(live_ted_report()),
+                        headers={"Cache-Control":"no-store"})
 
 @app.get("/api/bioshield/discovery/tenders")
 def public_tender_discovery():
@@ -86,7 +93,7 @@ def source_provider_status():
         "official_ted": {
             "status": "enabled",
             "description": "EU official public procurement notices (query on dashboard load, cached up to 15 min)",
-            "automated_snapshots": "GitHub Actions scheduled every six hours",
+            "automated_snapshots": "GitHub Actions scheduled hourly at minute 17",
         },
         "reddit": {
             "status": "blocked_pending_permission",
