@@ -13,7 +13,9 @@ from urllib.request import Request, urlopen
 
 ENDPOINT = "https://api.ted.europa.eu/v3/notices/search"
 SERVICE_CPVS = {
-    "pest_control": frozenset({"90921000", "90922000", "90923000", "90924000"}),
+    "pest_control": frozenset({"90922000", "90924000"}),
+    "rodent_control": frozenset({"90923000"}),
+    "disinfection": frozenset({"90921000"}),
     "plumbing": frozenset({"45330000", "45332000", "45332200", "45332400"}),
     "drain_unblocking": frozenset({"90470000", "45332300", "90460000"}),
 }
