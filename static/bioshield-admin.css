@@ -32,3 +32,35 @@
 .bio-footer a{color:var(--accent)}
 @media(max-width:850px){.bio-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.bio-grid{grid-template-columns:1fr}}
 @media(max-width:560px){.bio-heading{flex-direction:column}.bio-metrics{gap:8px}.bio-metric{padding:16px 12px}.bio-metric strong{font-size:1.5rem}.bio-page section:not([data-bio-panel="overview"]){padding:18px}.bio-policy{flex-direction:column;gap:6px}}
+
+/* BIO-08/BIO-09: clearly separated synthetic performance lab */
+.bio-lab-top{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin:0 0 20px}
+.bio-lab-top h2{font-size:1.5rem;margin:4px 0 8px}
+.bio-lab-top p{max-width:850px;line-height:1.6}
+.bio-test-badge{border:1px solid var(--line-strong);background:var(--accent-soft);border-radius:9px;padding:9px 13px;font-weight:750;font-size:.75rem;white-space:nowrap;color:var(--ink)}
+.bio-lab-metrics{margin-bottom:20px}
+.bio-lab-metrics .bio-metric strong{font-size:1.75rem;letter-spacing:-.03em}
+.bio-inline-facts{display:flex;justify-content:space-between;gap:14px;margin:12px 0 17px;color:var(--muted);font-size:.9rem}
+.bio-inline-facts strong{color:var(--ink)}
+.bio-open-lab{border:0;background:var(--accent-soft);border-radius:11px;padding:12px 17px;color:var(--ink);font-weight:650;cursor:pointer}
+.bio-open-lab:hover{filter:brightness(.96)}
+.bio-open-lab:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.bio-card h3{font-size:1.08rem}
+.bio-explainer{padding-left:19px;line-height:2}
+.bio-note{font-size:.79rem;color:var(--muted);line-height:1.6;margin-top:18px}
+.bio-scroll{width:100%;overflow-x:auto}
+.bio-nowrap{white-space:nowrap}
+.bio-lab-table-card{margin-top:18px}
+.bio-lab-table-heading{display:flex;justify-content:space-between;align-items:flex-end;gap:16px}
+.bio-lab-table-heading h3{margin-bottom:7px}
+.bio-lab-table-heading p{font-size:.85rem}
+.bio-lab-filter{display:flex;gap:8px}
+.bio-lab-filter input,.bio-lab-filter select{background:var(--paper);color:var(--ink);border:1px solid var(--line-strong);border-radius:9px;padding:10px 12px;font:inherit;font-size:.82rem;max-width:250px}
+.bio-lab-table-card .bio-table{min-width:780px}
+.bio-lab-table-card td{line-height:1.5;vertical-align:top}
+.bio-lab-table-card th{white-space:nowrap}
+.bio-pill{display:inline-flex;border-radius:7px;white-space:nowrap;padding:5px 9px;font-size:.75rem;font-weight:650;background:var(--soft-surface);border:1px solid var(--line)}
+.bio-pill.positive{background:var(--accent-soft);border-color:var(--line-strong)}
+.bio-pill.neutral{color:var(--muted-strong)}
+@media(max-width:950px){.bio-lab-table-heading{flex-direction:column;align-items:stretch}.bio-lab-filter{flex-wrap:wrap}}
+@media(max-width:560px){.bio-lab-top{flex-direction:column}.bio-lab-filter input,.bio-lab-filter select{flex:1;min-width:0}.bio-lab-metrics .bio-metric strong{font-size:1.4rem}}

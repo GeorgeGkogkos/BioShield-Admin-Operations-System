@@ -68,4 +68,34 @@ def discover():
 def handoff():
     raise HTTPException(403,"Call-center handoff is disabled until legal and human review")
 
+# Publicly viewable examples are ALL fabricated and read-only; no live lead data.
+from functools import lru_cache
+from bioshield.fixtures import CASES
+from bioshield.engine import classify
+from bioshield.benchmark import report as synthetic_benchmark
+
+@app.get("/api/bioshield/lab/cases")
+def lab_cases():
+    return JSONResponse({
+        "version": "synthetic_v1", "synthetic_only": True,
+        "count": len(CASES),
+        "cases": [{
+            "id": case.id, "text": case.text, "expected_request": case.expected,
+            "predicted_request": (decision := classify(case.text)).is_request,
+            "category": decision.category, "reason": decision.reason,
+            "confidence_is_calibrated": False, "contact_eligible": False,
+            "source": "synthetic_fixture",
+        } for case in CASES],
+    }, headers={"Cache-Control": "no-store"})
+
+@lru_cache(maxsize=1)
+def measured_lab_report():
+    # One CPU-only bounded measurement per process. Does not perform HTTP calls.
+    return synthetic_benchmark(1200)
+
+@app.get("/api/bioshield/lab/report")
+def lab_report():
+    return JSONResponse(measured_lab_report(), headers={"Cache-Control": "no-store"})
+
+
 app.mount("/static",StaticFiles(directory=STATIC),name="static")
