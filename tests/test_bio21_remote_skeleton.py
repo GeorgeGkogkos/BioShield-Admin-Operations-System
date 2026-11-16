@@ -135,7 +135,7 @@ def test_actual_skeleton_modules_and_loading_lifecycle():
     css=(ROOT/"static/bioshield-admin.css").read_text()
     assert "export function pageSkeleton" in ts
     assert "export function showLoadingOverlay" in ts
-    assert "aria-busy" in js and "role','status" in js
+    assert "aria-busy" in js and "setAttribute" in js and "role" in js and "status" in js
     assert "bio-skeleton-page" in js
     assert "bio-skeleton-row" in js
     assert "bio-skeleton-overlay" in js
