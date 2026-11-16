@@ -141,7 +141,8 @@ def test_compiled_ts_navigation_and_pdf_research_are_connected():
     browser=(root/"static/bioshield-admin.js").read_text()
     real=(root/"static/real-pilot.js").read_text()
     assert "export type Screen" in nav
-    assert "startViewTransition" in nav
+    assert "startViewTransition" not in nav
+    assert "render();" in nav  # route still updates without top-layer snapshots
     assert "history.pushState" in nav
     for path in ("overview","discovery","evidence","map","sources"):
         assert "/admin/operations/"+path in nav
