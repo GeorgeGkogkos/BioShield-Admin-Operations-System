@@ -532,3 +532,118 @@
   .bio-discovery-menu .bio-home-category{min-height:56px}
   .bio-discovery-menu .bio-home-intro{margin:17px 0 15px}
 }
+
+/* BIO-32: search-first toolbar with compact inline category filters. */
+.bio-discovery-menu{
+  padding:18px 20px 14px;
+  margin-bottom:18px;
+  border-radius:18px;
+}
+.bio-discovery-menu #bio-discovery-search-form{margin:0}
+.bio-discovery-menu .bio-home-search-box{
+  min-height:52px;
+  border-radius:12px;
+  gap:11px;
+}
+.bio-discovery-menu .bio-home-search-box input{font-size:.98rem}
+.bio-discovery-subbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:8px 16px;
+  margin-top:14px;
+}
+.bio-discovery-filter-row{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:9px 14px;
+  margin:13px 0 9px;
+}
+.bio-discovery-filter-label{
+  flex:none;
+  color:var(--muted);
+  font-size:.83rem;
+  font-weight:650;
+}
+.bio-discovery-menu .bio-home-categories{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:flex-start;
+  gap:8px;
+  margin:0;
+  min-width:0;
+}
+.bio-discovery-menu .bio-home-category{
+  display:inline-flex;
+  flex-direction:row;
+  align-items:center;
+  justify-content:center;
+  width:auto;
+  min-width:0;
+  min-height:36px;
+  gap:7px;
+  padding:7px 13px;
+  border-radius:999px;
+  background:var(--paper);
+  font:inherit;
+  font-size:.84rem;
+  line-height:1.25;
+  font-weight:550;
+  cursor:pointer;
+}
+.bio-discovery-menu .bio-home-category svg{
+  width:16px;
+  height:16px;
+  flex:0 0 16px;
+}
+.bio-discovery-menu .bio-home-category[aria-pressed="true"]{
+  border-color:var(--accent);
+  background:var(--accent-soft);
+  box-shadow:inset 0 0 0 1px var(--accent);
+}
+.bio-discovery-menu .bio-home-category[aria-pressed="true"] span{font-weight:750}
+.bio-discovery-meta{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:space-between;
+  gap:6px 14px;
+}
+.bio-discovery-meta a{color:var(--accent);font-weight:600;font-size:.8rem}
+.bio-discovery-menu .bio-discovery-search-scope{
+  margin:0;
+  max-width:800px;
+  font-size:.77rem;
+}
+.bio-discovery-statusline{
+  border-top:1px solid var(--line);
+  color:var(--muted);
+  font-size:.78rem;
+  margin-top:13px;
+  padding-top:11px;
+  font-variant-numeric:tabular-nums;
+}
+@media(max-width:660px){
+  .bio-discovery-menu{padding:14px 13px 12px;border-radius:15px}
+  .bio-discovery-menu .bio-home-search-box{min-height:48px;padding:0 8px 0 11px}
+  .bio-discovery-menu .bio-home-search-box input{font-size:.9rem}
+  .bio-discovery-menu .bio-home-category{
+    flex-direction:row;
+    justify-content:center;
+    min-height:36px;
+    gap:6px;
+    padding:7px 10px;
+    font-size:.8rem;
+  }
+  .bio-discovery-menu .bio-home-category svg{width:14px;height:14px;flex-basis:14px}
+  .bio-discovery-menu .bio-home-categories{display:flex;grid-template-columns:none;gap:6px;margin:0}
+  .bio-discovery-filter-row{align-items:flex-start;gap:8px}
+  .bio-discovery-filter-label{width:100%}
+  .bio-discovery-meta{align-items:flex-start}
+}
+@media(max-width:375px){
+  .bio-discovery-menu .bio-home-category{padding:7px 9px}
+}
