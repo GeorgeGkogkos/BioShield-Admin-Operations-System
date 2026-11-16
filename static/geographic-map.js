@@ -1,7 +1,6 @@
-import {GREECE_OUTLINE} from './greece-outline.js';
-/* Interactive administrative coverage map of real published TED metadata only.
- * Marker location is NEVER a precise worksite, customer or incident address.
- * Leaflet / © OpenStreetMap contributors attribution must remain visible.
+/* BIO-18: Real OpenStreetMap basemap via self-hosted Leaflet.
+ * Coordinates are indicative administrative areas or issuing-authority seats,
+ * NEVER verified worksite locations. Only viewport tiles are loaded.
  */
 const SERVICE_NAME={
   pest_control:'Απεντόμωση', rodent_control:'Μυοκτονία',
@@ -42,9 +41,9 @@ export function coverageMarkup(report,esc){
     '<span id="bio-map-count" role="status"></span></div>',
     '<div class="bio-coverage-layout">',
     '<div class="bio-map-host"><div id="bio-coverage-map" class="bio-map-canvas" role="region" aria-label="Χάρτης γεωγραφικής κάλυψης πραγματικών πηγών TED">',
-    '<p>Φόρτωση χάρτη…</p></div>',
-    '<p class="bio-note">Ενδεικτικό γεωγραφικό περίγραμμα από <a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener noreferrer">Natural Earth (public domain)</a>. ',
-    'Διακριτό στίγμα για έδρα φορέα όταν δεν έχει αναφερθεί ο τόπος εκτέλεσης.</p></div>',
+    '<p role="status">Φόρτωση κανονικού διαδραστικού χάρτη…</p></div>',
+    '<p class="bio-note">Χαρτογραφικά δεδομένα: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap contributors</a>. ',
+    'Τα δεδομένα TED τοποθετούνται ενδεικτικά ανά διοικητική περιοχή· η έδρα ενός φορέα δεν ταυτίζεται με την περιοχή εκτέλεσης.</p></div>',
     '<aside class="bio-coverage-list"><h3>Περιοχές για περαιτέρω έρευνα</h3>',
     '<p class="bio-note">Καταμετρούνται μόνο δημοσιεύσεις του TED με αποδεκτή γεωγραφική ένδειξη μέσα στις τελευταίες 30 ημέρες. ',
     '<strong>Το μηδέν δεν σημαίνει μηδενική πραγματική ζήτηση.</strong></p>',
@@ -58,94 +57,89 @@ export function coverageMarkup(report,esc){
   ].join('');
 }
 
-const NS='http://www.w3.org/2000/svg';
-const WIDTH=800, HEIGHT=510;
-function createSvg(tag,attrs={}){
-  const el=document.createElementNS(NS,tag);
-  for(const [name,val] of Object.entries(attrs))el.setAttribute(name,String(val));
-  return el;
+function popupContent(p){
+  const wrapper=document.createElement('div');
+  wrapper.className='bio-map-popup';
+  const title=document.createElement('strong');title.textContent=p.location_text;
+  const caution=document.createElement('p');
+  caution.className='bio-map-popup-warning';
+  caution.textContent=p.location_basis==='buyer_only_not_work_site'?
+    'Έδρα φορέα — δεν έχει επιβεβαιωθεί ο τόπος εκτέλεσης του έργου':
+    'Ενδεικτικό κέντρο διοικητικής περιοχής — όχι πραγματικές συντεταγμένες έργου';
+  const date=document.createElement('p');date.textContent='Δημοσίευση: '+p.published_on;
+  const detail=document.createElement('p');detail.textContent=p.title;
+  const link=document.createElement('a');link.href=p.source_url;
+  link.target='_blank';link.rel='noopener noreferrer';
+  link.textContent='Επίσημη δημοσίευση TED '+p.notice_number;
+  wrapper.append(title,caution,date,detail,link);
+  return wrapper;
 }
-function projected(lon,lat){
-  // Equirectangular projection over a bounded Greece-only viewport.
-  return [Math.round((lon-18.4)/12.5*WIDTH*100)/100,
-          Math.round((42.0-lat)/7.6*HEIGHT*100)/100];
+function renderSourceList(panel,selected,rows,esc){
+  const count=panel.querySelector('#bio-map-count');
+  if(count)count.textContent=selected.length+' από '+rows.length+' στίγματα';
+  const list=panel.querySelector('#bio-map-locations');
+  if(!list)return;
+  list.innerHTML=selected.map(p=>
+    '<div class="bio-coverage-source"><strong>'+esc(p.location_text)+'</strong> · '+
+    esc(p.published_on)+' · '+esc((p.service_codes||[]).map(s=>SERVICE_NAME[s]||s).join(', '))+
+    ' <a href="'+esc(p.source_url)+'" target="_blank" rel="noopener noreferrer">TED '+esc(p.notice_number)+'</a>'+
+    '<small>'+esc(p.location_basis==='buyer_only_not_work_site'?
+      'Έδρα φορέα, όχι θέση έργου':'Διοικητικό σημείο αναφοράς, όχι θέση έργου')+'</small></div>'
+  ).join('')||'<p class="bio-note">Δεν υπάρχουν στίγματα για τα επιλεγμένα κριτήρια.</p>';
 }
-function addOutline(svg){
-  const polygons=GREECE_OUTLINE.type==='MultiPolygon'?
-    GREECE_OUTLINE.coordinates:[GREECE_OUTLINE.coordinates];
-  for(const poly of polygons){
-    for(const ring of poly){
-      if(!Array.isArray(ring)||ring.length<3)continue;
-      const d=ring.map((xy,i)=>{
-        const p=projected(xy[0],xy[1]);
-        return (i?'L':'M')+p[0]+' '+p[1];
-      }).join(' ')+' Z';
-      svg.append(createSvg('path',{d,fill:'#dce9dd',stroke:'#748f87',
-        'stroke-width':1.6,'fill-rule':'evenodd'}));
-    }
-  }
-}
-export function setupCoverageMap(panel, report,esc){
+export function setupCoverageMap(panel,report,esc){
   const container=panel.querySelector('#bio-coverage-map');
   if(!container||report?.status!=='ok')return ()=>{};
+  const rows=Array.isArray(report.points)?report.points:[];
   container.textContent='';
-  container.setAttribute('aria-label','Διαδραστικός διανυσματικός χάρτης Ελλάδας με ενδεικτικά διοικητικά στίγματα TED');
-  const svg=createSvg('svg',{viewBox:'0 0 '+WIDTH+' '+HEIGHT,
-    class:'bio-map-svg',role:'img','aria-label':'Σχηματικός γεωγραφικός χάρτης Ελλάδας με επιλεγόμενα στίγματα'});
-  svg.append(createSvg('rect',{x:0,y:0,width:WIDTH,height:HEIGHT,fill:'#e9f3f7'}));
-  for(let lat=35;lat<=42;lat++){
-    const y=projected(20,lat)[1];
-    svg.append(createSvg('line',{x1:0,y1:y,x2:WIDTH,y2:y,stroke:'#cbdde4',
-      'stroke-width':.6,'stroke-dasharray':'4 5'}));
-  }
-  for(let lon=20;lon<=30;lon+=2){
-    const x=projected(lon,36)[0];
-    svg.append(createSvg('line',{x1:x,y1:0,x2:x,y2:HEIGHT,stroke:'#cbdde4',
-      'stroke-width':.6,'stroke-dasharray':'4 5'}));
-  }
-  addOutline(svg);
-  const label=createSvg('text',{x:260,y:155,'font-size':25,
-    'font-weight':700,fill:'#4e7772',opacity:.5});
-  label.textContent='ΕΛΛΑΔΑ';svg.append(label);
-  const sea=createSvg('text',{x:520,y:160,'font-size':14,fill:'#88a6b0'});
-  sea.textContent='Αιγαίο Πέλαγος';svg.append(sea);
-  const pins=createSvg('g',{'aria-label':'Πηγές TED ανά περιοχή'});svg.append(pins);
-  container.append(svg);
-  const popup=document.createElement('div');popup.className='bio-map-selected';popup.hidden=true;
-  container.append(popup);
-  const controls=document.createElement('div');controls.className='bio-map-zoom';
-  const plus=document.createElement('button');plus.type='button';plus.textContent='+';
-  plus.setAttribute('aria-label','Μεγέθυνση χάρτη');
-  const minus=document.createElement('button');minus.type='button';minus.textContent='−';
-  minus.setAttribute('aria-label','Σμίκρυνση χάρτη');
-  controls.append(plus,minus);container.append(controls);
-  let zoom=1;
-  function applyZoom(){
-    const w=WIDTH/zoom,h=HEIGHT/zoom;
-    svg.setAttribute('viewBox',[(WIDTH-w)/2,(HEIGHT-h)/2,w,h].join(' '));
-  }
-  plus.addEventListener('click',()=>{zoom=Math.min(3,zoom*1.3);applyZoom();});
-  minus.addEventListener('click',()=>{zoom=Math.max(1,zoom/1.3);applyZoom();});
-  const rows=report.points||[];
-  function select(p){
-    popup.textContent='';
-    const title=document.createElement('strong');title.textContent=p.location_text;
+  container.setAttribute('aria-label','Πραγματικός διαδραστικός χάρτης OpenStreetMap της Ελλάδας με ενδεικτικά στίγματα TED');
+  const lib=window.L;
+  if(!lib||typeof lib.map!=='function'){
     const note=document.createElement('p');
-    note.textContent=(p.location_basis==='buyer_only_not_work_site'?
-      'Έδρα φορέα, όχι βεβαιωμένος τόπος εκτέλεσης.':
-      'Ενδεικτικό διοικητικό σημείο, όχι ακριβής θέση έργου.')+
-      ' Δημοσίευση: '+p.published_on;
-    const detail=document.createElement('p');detail.textContent=p.title;
+    note.className='bio-map-error';
+    note.textContent='Η χαρτογραφική βιβλιοθήκη δεν φορτώθηκε. Τα επαληθευμένα ευρήματα εμφανίζονται παρακάτω.';
     const link=document.createElement('a');
-    link.href=p.source_url;link.textContent='TED '+p.notice_number;
+    link.href='https://www.openstreetmap.org/#map=6/38.5/24.5';
     link.target='_blank';link.rel='noopener noreferrer';
-    const close=document.createElement('button');close.type='button';close.textContent='×';
-    close.setAttribute('aria-label','Κλείσιμο πληροφορίας χάρτη');
-    close.addEventListener('click',()=>{popup.hidden=true;});
-    popup.append(close,title,note,detail,link);popup.hidden=false;
+    link.textContent='Άνοιγμα πραγματικού χάρτη OpenStreetMap';
+    container.append(note,link);
+    renderSourceList(panel,rows,rows,esc);
+    return ()=>{};
   }
+  // Load only tiles viewed by the user. No offline download, bulk prefetch or
+  // proxy. Browser manages HTTP cache and automatically sends Referer.
+  const map=lib.map(container,{
+    zoomControl:true,scrollWheelZoom:false,zoomSnap:0.5,zoomDelta:0.5,
+    minZoom:5,maxZoom:17,worldCopyJump:false,preferCanvas:true
+  }).setView([38.35,24.2],6);
+  const tiles=lib.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>',
+    minZoom:5,maxZoom:17,maxNativeZoom:17,detectRetina:false,
+    updateWhenIdle:true,updateWhenZooming:false,keepBuffer:1,
+    crossOrigin:true
+  }).addTo(map);
+  const sourceLayer=lib.layerGroup().addTo(map);
+  let hadTile=false,tileErrors=0;
+  const failed=document.createElement('div');
+  failed.className='bio-map-tiles-error';
+  failed.hidden=true;
+  failed.setAttribute('role','status');
+  failed.textContent='Δεν φορτώνεται προσωρινά το χαρτογραφικό υπόβαθρο. Τα επαληθευμένα στίγματα και οι πηγές παραμένουν διαθέσιμα.';
+  const ext=document.createElement('a');
+  ext.href='https://www.openstreetmap.org/#map=6/38.35/24.2';
+  ext.target='_blank';ext.rel='noopener noreferrer';
+  ext.textContent='Άνοιγμα χάρτη OpenStreetMap';
+  failed.append(document.createTextNode(' '),ext);
+  container.append(failed);
+  tiles.on('tileload',()=>{hadTile=true;failed.hidden=true;});
+  tiles.on('tileerror',()=>{
+    tileErrors++;
+    if(!hadTile&&tileErrors>=3)failed.hidden=false;
+  });
+  const sourceMarkers=[];
   function draw(){
-    pins.replaceChildren();popup.hidden=true;
+    sourceLayer.clearLayers();
+    sourceMarkers.length=0;
     const service=panel.querySelector('#bio-map-service')?.value||'all';
     const region=panel.querySelector('#bio-map-region')?.value||'all';
     const days=Number(panel.querySelector('#bio-map-days')?.value||30);
@@ -158,38 +152,39 @@ export function setupCoverageMap(panel, report,esc){
     });
     for(const p of selected){
       if(!Number.isFinite(p.latitude)||!Number.isFinite(p.longitude))continue;
-      const [x,y]=projected(p.longitude,p.latitude);
-      const shade=COLORS[(p.service_codes||[])[0]]||'#0f766e';
       const issuer=p.location_basis==='buyer_only_not_work_site';
-      const ring=createSvg('circle',{cx:x,cy:y,r:issuer?12:13,fill:shade,
-        'fill-opacity':issuer ? 0.35 : 0.84,stroke:shade,'stroke-width':2,
-        'stroke-dasharray':issuer?'4 3':'none',tabindex:0,role:'button',
-        'aria-label':p.location_text+' — TED '+p.notice_number});
-      ring.style.cursor='pointer';ring.addEventListener('click',()=>select(p));
-      ring.addEventListener('keydown',e=>{
-        if(e.key==='Enter'||e.key===' '){e.preventDefault();select(p);}
+      const shade=COLORS[(p.service_codes||[])[0]]||'#0f766e';
+      const marker=lib.circleMarker([p.latitude,p.longitude],{
+        radius:issuer?9:11,color:shade,fillColor:shade,
+        fillOpacity:issuer?0.40:0.85,weight:issuer?3:2,
+        dashArray:issuer?'5 4':null,interactive:true
       });
-      const tooltip=createSvg('title');tooltip.textContent=p.location_text+' — '+p.notice_number;
-      ring.append(tooltip);pins.append(ring);
-      const text=createSvg('text',{x:x+13,y:y-13,'font-size':13,
-        'font-weight':600,fill:'#184b57'});
-      text.textContent=p.location_text;pins.append(text);
+      marker.bindPopup(popupContent(p),{maxWidth:350});
+      marker.bindTooltip(p.location_text,{direction:'top',offset:[0,-8]});
+      marker.addTo(sourceLayer);
+      sourceMarkers.push(marker);
     }
-    const count=panel.querySelector('#bio-map-count');
-    if(count)count.textContent=selected.length+' από '+rows.length+' στίγματα';
-    const list=panel.querySelector('#bio-map-locations');
-    if(list)list.innerHTML=selected.map(p=>
-      '<div class="bio-coverage-source"><strong>'+esc(p.location_text)+'</strong> · '+
-      esc(p.published_on)+' · '+esc((p.service_codes||[]).map(s=>SERVICE_NAME[s]||s).join(', '))+
-      ' <a href="'+esc(p.source_url)+'" target="_blank" rel="noopener noreferrer">TED '+esc(p.notice_number)+'</a>'+
-      '<small>'+esc(p.location_basis==='buyer_only_not_work_site'?
-        'Έδρα φορέα, όχι θέση έργου':'Διοικητικό σημείο αναφοράς, όχι θέση έργου')+'</small></div>'
-    ).join('')||'<p class="bio-note">Δεν υπάρχουν στίγματα για τα επιλεγμένα κριτήρια.</p>';
+    if(sourceMarkers.length>=2){
+      map.fitBounds(lib.featureGroup(sourceMarkers).getBounds(),{
+        padding:[58,58],maxZoom:8,animate:false
+      });
+    }else if(sourceMarkers.length===1){
+      const one=selected.find(p=>Number.isFinite(p.latitude)&&Number.isFinite(p.longitude));
+      const maxzoom=one.precision==='region_representative_point'?7.5:8;
+      if(one)map.setView([one.latitude,one.longitude],maxzoom,{animate:false});
+    }else map.setView([38.35,24.2],6,{animate:false});
+    renderSourceList(panel,selected,rows,esc);
+    map.invalidateSize();
   }
   const onChange=e=>{
     if(['bio-map-service','bio-map-region','bio-map-days'].includes(e.target.id))draw();
   };
   panel.addEventListener('change',onChange);
   draw();
-  return ()=>{panel.removeEventListener('change',onChange);};
+  requestAnimationFrame(()=>map.invalidateSize());
+  return ()=>{
+    panel.removeEventListener('change',onChange);
+    tiles.off();
+    map.remove();
+  };
 }
