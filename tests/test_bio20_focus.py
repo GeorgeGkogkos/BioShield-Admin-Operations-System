@@ -188,9 +188,13 @@ def test_brand_loader_genuine_black_home_only_header_and_opt_in_gps():
     js=(root/"static/typed/location-focus.js").read_text()
     css=(root/"static/shell.css").read_text()
     styles=(root/"static/bioshield-admin.css").read_text()
-    assert "bio-start-loader" in html
+    assert 'class="topbar bio-is-loading"' in html
+    assert 'id="bio-header-loading"' in html
+    assert "bio-start-loader" not in html
+    assert "bio-skeleton-brand" not in html
     assert "/static/bioshield-company-logo.png" in html
-    assert "brandedLoader()" in ui
+    assert "brandedLoader()" not in ui
+    assert 'pageSkeleton(window.location.pathname)' in ui
     assert html.index('id="bio-shell-nav"') < html.index('id="app"')
     assert '<nav class="bio-tabs"' not in ui
     assert ui.index("'<section data-bio-panel=\"overview\"") < ui.index("'<header class=\"bio-heading\"")
@@ -207,7 +211,8 @@ def test_brand_loader_genuine_black_home_only_header_and_opt_in_gps():
     assert "--canvas:#000" in css
     assert "--paper:#08080a" in css
     assert "--accent-soft:#17191d" in css
-    assert "bio-logo-pulse" in styles
+    assert "bio-logo-pulse" not in styles
+    assert "bio-initial-load-error" in styles
     assert "prefers-reduced-motion" in styles
 
 
