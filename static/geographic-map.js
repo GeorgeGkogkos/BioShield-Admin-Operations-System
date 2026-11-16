@@ -94,7 +94,7 @@ export function setupCoverageMap(panel, report,esc){
       const isIssuer=p.location_basis==='buyer_only_not_work_site';
       const marker=api.circleMarker([p.latitude,p.longitude],{
         radius:isIssuer?7:9,weight:isIssuer?3:2,
-        color:shade,fillColor:shade,fillOpacity:isIssuer?.35:.8,
+        color:shade,fillColor:shade,fillOpacity:isIssuer ? 0.35 : 0.8,
         dashArray:isIssuer?'3 3':null
       });
       const wrapper=document.createElement('div');
