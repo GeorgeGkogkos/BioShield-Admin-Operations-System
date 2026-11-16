@@ -52,5 +52,6 @@ def test_shell_is_sticky_and_panel_animations_cannot_overlay_header():
     assert "animation:bio-panel-enter 220ms ease-out both" in admin
     assert "@media(prefers-reduced-motion:reduce)" in admin
     assert ".bio-page section[data-bio-panel]:not([hidden]){animation:none}" in admin
-    assert "window.addEventListener('popstate',onPop)" in navigation
-    assert "shellNavigation?.addEventListener('click',onClick)" in navigation
+    compact = "".join(navigation.split())
+    assert "window.addEventListener('popstate',onPop)" in compact
+    assert "shellNavigation?.addEventListener('click',onClick)" in compact
