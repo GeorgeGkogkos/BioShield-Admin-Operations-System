@@ -1,4 +1,5 @@
 import {overviewSnapshot,overviewRecentNotices,discoveryFilterMenu,businessDiscoveryMarkup} from './discovery-layout.js';
+import {renderSearchArchive} from './unified-archive.js';
 import {renderPublicPilot} from './real-pilot.js';
 import {reconcileEntryDiscovery} from './entry-discovery.js';
 import {coverageMarkup,setupCoverageMap} from './geographic-map.js';
@@ -252,7 +253,6 @@ function discoveries(state,esc,focused,heartbeat,segmented) {
     '<option value="disinfection">Απολύμανση</option><option value="plumbing">Υδραυλικός</option>'+
     '<option value="drain_unblocking">Αποφράξεις</option></select>'+
     '<span id="bio-ted-count"></span></div>',
-    locationControls(esc),
     '<div class="bio-focus-title"><h3>Επιπλέον αναζήτηση κοντά στη βάση και στην προσωρινή τοποθεσία</h3>',
     '<p class="bio-note">Ειδικές επίσημες ερωτήσεις γεωγραφίας NUTS στο TED, όχι απλώς ταξινόμηση ήδη γνωστών δημοσιεύσεων.</p></div>',
     '<div id="bio-focus-results">',focusResults(focused,esc),'</div>',
@@ -328,6 +328,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     '<section data-bio-panel="discovery" hidden>',
     discoveryFilterMenu({ted,entry:entryCheck,newIds:newSinceOpen,esc,
       indicator:homeSourceIndicator(ted),summary:homeTedSummary(ted,entryCheck,newSinceOpen)}),
+    '<div id="bio-location-config" class="bio-location-config" data-mode="home" hidden>',locationControls(esc),'</div>',
     '<div id="bio-discovery-public-results">',
     discoveries(ted,esc,focused,heartbeat,segmented),
     '<p id="bio-discovery-no-matches" role="status" class="bio-note" hidden>Δεν υπάρχουν αποτελέσματα με αυτά τα φίλτρα στις φορτωμένες συμβάσεις TED.</p></div>',
@@ -336,7 +337,9 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     '<p id="bio-discovery-private-description" class="bio-note"></p>',
     '<div id="bio-discovery-business-results"></div>',
     '<p class="bio-note" id="bio-discovery-private-no-matches" role="status" hidden>Δεν βρέθηκαν επιχειρηματικά ευρήματα που να ταιριάζουν στην αναζήτηση.</p>',
-    '<a href="/admin/operations/evidence" data-bio-tab="pilot" id="bio-discovery-archive" data-bio-discovery-archive="individual">Αποθηκευμένα δημόσια τεκμήρια ›</a></div>',
+    '<p class="bio-note">Εφόσον υπάρχουν, τα ιστορικά τεκμήρια εμφανίζονται παρακάτω μέσα στην ίδια αναζήτηση.</p></div>',
+    '<div id="bio-unified-archive">',renderSearchArchive(pilot,esc,'public_sector'),'</div>',
+    '<div id="bio-inline-map" class="bio-inline-map" hidden>',coverageMarkup(coverage,esc,pilot),'</div>',
     '</section>',
     '<section data-bio-panel="pilot" hidden>',renderPublicPilot(pilot,esc),'</section>',
     '<section data-bio-panel="map" hidden>',coverageMarkup(coverage,esc,pilot),'</section>',
@@ -389,7 +392,18 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
   installNavigation(page,selectTab);
   setupResearchPlaybook(page.querySelector('[data-bio-panel="sources"]'));
   const discoveryPanel=page.querySelector('[data-bio-panel="discovery"]');
-  const focusController=installLocationFocus(discoveryPanel,choice=>{void refreshFocused(choice);});
+  let locationMode='home';
+  let searchView='list';
+  let inlineMapCleanup=null;
+  // Only a coarse region code is sent. In current/custom modes it replaces
+  // the base search target; exact device coordinates never leave this browser.
+  const effectiveFocusChoice=choice=>({
+    home:locationMode==='home'?choice.home:(choice.temporary||choice.home),
+    temporary:''
+  });
+  const focusController=installLocationFocus(discoveryPanel,choice=>{
+    void refreshFocused(effectiveFocusChoice(choice));
+  });
   const pilotPanel=page.querySelector('[data-bio-panel="pilot"]');
   function filterPilot(){
     const query=pilotPanel.querySelector('#bio-pilot-search');
@@ -476,6 +490,9 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
         pilotPanel.innerHTML=renderPublicPilot(next,esc);
       }
       pilot=next;
+      const archiveSlot=page.querySelector('#bio-unified-archive');
+      if(archiveSlot){archiveSlot.innerHTML=renderSearchArchive(pilot,esc,discoveryCategory);filterTED();}
+      if(searchView==='map')refreshInlineMap();
       // Refresh the public archive layer when the demo evidence changes.
       // Never fetch or expose private business prospect records on the map.
       const activeMap=page.querySelector('[data-bio-panel="map"]');
@@ -532,6 +549,19 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     });
     const emptyBusiness=host?.querySelector('#bio-discovery-private-no-matches');
     if(emptyBusiness)emptyBusiness.hidden=!(discoveryCategory==='business'&&term&&businessRows.length>0&&matchingBusinesses===0);
+    let matchingArchive=0;
+    const archiveRows=host?.querySelectorAll('[data-bio-archive-row]')||[];
+    archiveRows.forEach(row=>{
+      const show=!term||(row.dataset.search||'').includes(term);
+      row.hidden=!show;if(show)matchingArchive++;
+    });
+    const archiveEmpty=host?.querySelector('#bio-search-archive-empty');
+    if(archiveEmpty)archiveEmpty.hidden=!(archiveRows.length>0&&matchingArchive===0);
+    if(term&&matchingArchive>0)host?.querySelector('#bio-search-archive-details')?.setAttribute('open','');
+    if(searchView==='map'){
+      const selector=host?.querySelector('#bio-inline-map #bio-map-source');
+      selector?.dispatchEvent(new Event('change',{bubbles:true}));
+    }
   }
   page.addEventListener('change',event=>{
     if(event.target.id==='bio-ted-service')filterTED();
@@ -621,7 +651,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     if(searchBusy||!page.isConnected)return;
     searchBusy=true;
     const revision=++geoRequestRevision;
-    const choice=focusController.selection();
+    const choice=effectiveFocusChoice(focusController.selection());
     const qp=new URLSearchParams({home:choice.home,temporary:choice.temporary});
     const button=page.querySelector('#bio-ted-refresh');
     const status=page.querySelector('#bio-manual-message');
