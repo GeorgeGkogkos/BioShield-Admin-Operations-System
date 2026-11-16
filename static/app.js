@@ -1,5 +1,15 @@
 import {renderBioShieldAdmin} from './bioshield-admin.js';
 import {currentScreen} from './typed/navigation.js';
+// BIO-34: obsolete data pages are aliases of the single search workspace.
+const oldPath=window.location.pathname.replace(/\/+$/,'');
+const canonicalPaths=new Set(['/admin/operations','/admin/operations/overview',
+  '/admin/operations/evidence','/admin/operations/map']);
+if(canonicalPaths.has(oldPath)){
+  const originalParams=new URLSearchParams(window.location.search);
+  const showMap=oldPath.endsWith('/map')||originalParams.get('tab')==='map';
+  const target='/admin/operations/discovery'+(showMap?'?view=map':'');
+  window.history.replaceState({bioScreen:'discovery'},'',target);
+}
 const esc = value => String(value??'').replace(/[&<>"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
 async function api(path) {
   const response=await fetch('/api'+path,{credentials:'same-origin',cache:'no-store'});
