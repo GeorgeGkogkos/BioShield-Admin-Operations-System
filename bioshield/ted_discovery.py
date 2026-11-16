@@ -12,7 +12,12 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 ENDPOINT = "https://api.ted.europa.eu/v3/notices/search"
-CPVS = frozenset({"90921000", "90922000", "90923000", "90924000"})
+SERVICE_CPVS = {
+    "pest_control": frozenset({"90921000", "90922000", "90923000", "90924000"}),
+    "plumbing": frozenset({"45330000", "45332000", "45332200", "45332400"}),
+    "drain_unblocking": frozenset({"90470000", "45332300", "90460000"}),
+}
+CPVS = frozenset().union(*SERVICE_CPVS.values())
 FIELDS = [
     "publication-number", "notice-title", "buyer-name", "buyer-country",
     "publication-date", "classification-cpv",
@@ -87,8 +92,9 @@ def extract_notices(payload, *, today=None):
         if country not in ("GRC", "GR", "GREECE", "ΕΛΛΑΔΑ"):
             continue
         cpv = {code for v in _all_strings(item.get("classification-cpv"))
-               for code in re.findall(r"\b909\d{5}\b", v)}
+               for code in re.findall(r"\b\d{8}\b", v)}
         matching = sorted(CPVS & cpv)
+        service_codes = sorted(name for name, codes in SERVICE_CPVS.items() if codes & cpv)
         if not matching:
             continue
         title = _flat(item.get("notice-title"))
@@ -104,6 +110,7 @@ def extract_notices(payload, *, today=None):
             "title": title,
             "country": "Ελλάδα",
             "cpv_codes": matching,
+            "service_codes": service_codes,
             "audience_segment": "public_sector",
             "source_url": f"https://ted.europa.eu/en/notice/-/detail/{ident}",
             "evidence_level": "official_ted_metadata",
@@ -118,7 +125,7 @@ def _request_body(today):
     return {
         "query": (
             "buyer-country=GRC AND classification-cpv IN "
-            "(90921000 90922000 90923000 90924000) "
+            "(" + " ".join(sorted(CPVS)) + ") "
             f"AND publication-date>={(today - timedelta(days=30)).strftime('%Y%m%d')} "
             "SORT BY publication-date DESC"
         ),
@@ -150,7 +157,7 @@ def request_official_ted(*, timeout=12):
     payload = json.loads(data)
     rows = extract_notices(payload, today=today)
     return {
-        "version": "bio14_ted_live_v1",
+        "version": "bio16_multi_service_ted_v1",
         "provider": "EU TED official search API",
         "provider_url": "https://docs.ted.europa.eu/api/latest/search.html",
         "status": "ok",
@@ -159,6 +166,9 @@ def request_official_ted(*, timeout=12):
         "searched_at_utc": datetime.now(timezone.utc).isoformat(),
         "freshness_days": 30,
         "raw_count": len(payload["notices"]),
+        "services": {name: sorted(codes) for name, codes in SERVICE_CPVS.items()},
+        "service_counts": {name: sum(name in row["service_codes"] for row in rows)
+                           for name in SERVICE_CPVS},
         "review_required": True,
         "confirmed_contactable_private_leads": 0,
         "source_is_live": True,
@@ -181,12 +191,13 @@ def live_ted_report(*, force=False):
         except (HTTPError, URLError, TimeoutError, OSError, ValueError, json.JSONDecodeError):
             # Never substitute fake or stale source records as "live" discoveries.
             out = {
-                "version": "bio14_ted_live_v1",
+                "version": "bio16_multi_service_ted_v1",
                 "provider": "EU TED official search API",
                 "status": "unavailable",
                 "source_is_live": False,
                 "notices": [],
                 "count": 0,
+                "service_counts": {name: 0 for name in SERVICE_CPVS},
                 "confirmed_contactable_private_leads": 0,
                 "message": "Official TED provider unavailable or response did not pass validation",
                 "checked_at_utc": datetime.now(timezone.utc).isoformat(),
