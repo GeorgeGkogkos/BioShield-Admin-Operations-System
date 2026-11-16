@@ -57,7 +57,7 @@ export function discoveryFilterMenu({ted,entry,newIds,esc,indicator,summary}){
     '<span id="bio-home-source-indicator">'+indicator+'</span></div>',
     '<div class="bio-discovery-filter-row">',
     '<span class="bio-discovery-filter-label">Φίλτρα:</span>',
-    '<nav class="bio-home-categories" aria-label="Φίλτρο αναζήτησης ανά κατηγορία αιτούντος">',
+    '<nav class="bio-home-categories" aria-label="Φίλτρο αναζήτησης ανά κατηγορία αιτούντος ή πηγή δημόσιας προκήρυξης">',
     '<button type="button" class="bio-home-category" data-bio-discovery-category="individual" aria-pressed="false">'+userIcon+'<span>Ιδιώτες</span></button>',
     '<button type="button" class="bio-home-category" data-bio-discovery-category="public_sector" aria-pressed="true">'+publicIcon+'<span>Δημόσιο</span></button>',
     '<button type="button" class="bio-home-category" data-bio-discovery-category="ted" aria-pressed="false"><span class="bio-ted-filter-mark" aria-hidden="true">EU</span><span>TED</span></button>',
