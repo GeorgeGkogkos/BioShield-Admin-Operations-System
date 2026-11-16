@@ -64,3 +64,31 @@ def test_small_screens_have_accessible_app_shell_drawer():
     assert "event.key==='Escape'" in js
     assert "event.target.closest('[data-bio-tab]')" in js
     assert "mobileViewport.addEventListener('change',()=>setMenuOpen(false))" in js
+
+
+
+def test_sidebar_visual_polish_is_flat_compact_and_not_duplicated():
+    html = client.get("/admin/operations/overview").text
+    shell = (STATIC / "shell.css").read_text(encoding="utf-8")
+    admin = (STATIC / "bioshield-admin.js").read_text(encoding="utf-8")
+
+    # Only the selected real page is highlighted; no second dashboard tile.
+    assert 'class="workspace-home"' not in html
+    assert 'class="side-info"' not in html
+    assert "Privacy first" not in html
+    assert '<nav id="bio-shell-nav" class="side-pages"' in html
+    assert html.count('class="side-icon"') == 7
+    assert html.count('class="side-project-link"') == 2
+    assert html.index('class="sidebar-primary"') < html.index('class="sidebar-secondary"')
+    assert "Operations Dashboard" not in html
+    for screen in ROUTES:
+        assert html.count(f'data-bio-tab="{screen}"') == 1
+    assert "link.setAttribute('aria-current','page')" in admin
+
+    # The navigation remains grouped and scrollable if the viewport is short.
+    assert "grid-template-columns:256px minmax(0,1fr)" in shell
+    assert ".side-pages{display:flex;flex-direction:column;gap:3px;padding:0;margin:0}" in shell
+    assert "scrollbar-width:thin" in shell
+    assert ".sidebar::-webkit-scrollbar{width:5px}" in shell
+    assert ".sidebar .side-pages a[aria-current=\"page\"]" in shell
+    assert "box-shadow:inset 3px 0 0 var(--accent)" not in shell
