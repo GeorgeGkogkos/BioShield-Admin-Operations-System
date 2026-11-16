@@ -161,7 +161,12 @@ TRANSLITERATION = {
 def normalize(value):
     value = unicodedata.normalize("NFD", str(value or "").casefold())
     value = "".join(ch for ch in value if unicodedata.category(ch) != "Mn")
-    return re.sub(r"\s+", " ", value).strip()
+    value = re.sub(r"\s+", " ", value).strip()
+    # The PDF explicitly supplies informal Latin spellings and the common
+    # misspelling "απολίμανση"; normalize them before lexical triage.
+    for latin, greek in TRANSLITERATION.items():
+        value = re.sub(r"(?<!\w)" + re.escape(latin) + r"(?!\w)", greek, value)
+    return value
 
 def _contains(text, terms):
     # Deliberately only a lexical hint, not ML or a verified identity/need.
