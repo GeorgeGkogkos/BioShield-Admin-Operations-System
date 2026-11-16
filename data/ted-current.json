@@ -1,6 +1,6 @@
 {
   "confirmed_contactable_private_leads": 0,
-  "count": 4,
+  "count": 5,
   "freshness_days": 30,
   "notes": "Official TED publication metadata only. No claim of tender eligibility, open bidding status, private customer demand or comprehensive Greek coverage.",
   "notices": [
@@ -18,6 +18,9 @@
       "notice_number": "791336-2026",
       "published_on": "2026-11-13",
       "qualification": "official_notice_review_required",
+      "service_codes": [
+        "pest_control"
+      ],
       "source_url": "https://ted.europa.eu/en/notice/-/detail/791336-2026",
       "title": "Ελλάδα – Υπηρεσίες καταπολέμησης επιβλαβών εντόμων – Ολοκληρωμένο Πρόγραμμα Καταπολέμησης Κουνουπιών στη Περιφέρεια Πελοποννήσου, για τα έτη 2027-2028"
     },
@@ -35,8 +38,31 @@
       "notice_number": "774976-2026",
       "published_on": "2026-11-06",
       "qualification": "official_notice_review_required",
+      "service_codes": [
+        "pest_control"
+      ],
       "source_url": "https://ted.europa.eu/en/notice/-/detail/774976-2026",
       "title": "Ελλάδα – Υπηρεσίες καταπολέμησης επιβλαβών εντόμων – Διακήρυξη 10/2026"
+    },
+    {
+      "audience_segment": "public_sector",
+      "buyer": "Δημοτική Επιχείρηση Ύδρευσης Αποχέτευσης Δήμου Ρόδου (ΔΕΥΑΡ)",
+      "contact_eligible": false,
+      "country": "Ελλάδα",
+      "cpv_codes": [
+        "90470000"
+      ],
+      "current_eligibility_verified": false,
+      "evidence_level": "official_ted_metadata",
+      "id": "TED-765459-2026",
+      "notice_number": "765459-2026",
+      "published_on": "2026-11-04",
+      "qualification": "official_notice_review_required",
+      "service_codes": [
+        "drain_unblocking"
+      ],
+      "source_url": "https://ted.europa.eu/en/notice/-/detail/765459-2026",
+      "title": "Ελλάδα – Λειτουργία σταθμού επεξεργασίας λυμάτων – Λειτουργία & Συντήρηση Περιφερειακών Εγκαταστάσεων Επεξεργασίας Λυμάτων & Εφαρμογή της Μεθόδου της Βιοεξυγίανσης"
     },
     {
       "audience_segment": "public_sector",
@@ -53,6 +79,10 @@
       "notice_number": "758868-2026",
       "published_on": "2026-11-02",
       "qualification": "official_notice_review_required",
+      "service_codes": [
+        "pest_control",
+        "rodent_control"
+      ],
       "source_url": "https://ted.europa.eu/en/notice/-/detail/758868-2026",
       "title": "Ελλάδα – Υπηρεσίες καταπολέμησης επιβλαβών εντόμων – Παροχή υπηρεσιών κουνουποκτονιών- απεντομώσεων – μυοκτονιών καθώς και άλλων ειδικών εργασιών σε χώρους εμβέλειας Δήμου Πειραιά, οικονομικών ετών 2027, 2028"
     },
@@ -70,18 +100,51 @@
       "notice_number": "758124-2026",
       "published_on": "2026-11-02",
       "qualification": "official_notice_review_required",
+      "service_codes": [
+        "pest_control"
+      ],
       "source_url": "https://ted.europa.eu/en/notice/-/detail/758124-2026",
       "title": "Ελλάδα – Υπηρεσίες καταπολέμησης επιβλαβών εντόμων – Διακήρυξη 10/2026"
     }
   ],
   "provider": "EU TED official search API",
   "provider_url": "https://docs.ted.europa.eu/api/latest/search.html",
-  "query": "buyer-country=GRC AND classification-cpv IN (90921000 90922000 90923000 90924000) AND publication-date>=20261017 SORT BY publication-date DESC",
-  "raw_count": 4,
+  "query": "buyer-country=GRC AND classification-cpv IN (45330000 45332000 45332200 45332300 45332400 90460000 90470000 90921000 90922000 90923000 90924000) AND publication-date>=20261017 SORT BY publication-date DESC",
+  "raw_count": 5,
   "review_required": true,
-  "searched_at_utc": "2026-11-16T11:13:23.017971+00:00",
+  "searched_at_utc": "2026-11-16T11:38:55.575585+00:00",
+  "service_counts": {
+    "disinfection": 0,
+    "drain_unblocking": 1,
+    "pest_control": 4,
+    "plumbing": 0,
+    "rodent_control": 1
+  },
+  "services": {
+    "disinfection": [
+      "90921000"
+    ],
+    "drain_unblocking": [
+      "45332300",
+      "90460000",
+      "90470000"
+    ],
+    "pest_control": [
+      "90922000",
+      "90924000"
+    ],
+    "plumbing": [
+      "45330000",
+      "45332000",
+      "45332200",
+      "45332400"
+    ],
+    "rodent_control": [
+      "90923000"
+    ]
+  },
   "source_is_live": true,
   "source_type": "official_public_procurement",
   "status": "ok",
-  "version": "bio14_ted_live_v1"
+  "version": "bio16_multi_service_ted_v1"
 }
