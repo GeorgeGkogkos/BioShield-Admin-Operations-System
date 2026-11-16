@@ -1,4 +1,5 @@
-/* BioShield setup + synthetic-only benchmark. No real public posts or credentials. */
+import {renderPublicPilot} from './real-pilot.js';
+/* Synthetic lab and real public evidence are separate. */
 function metric(title,value,esc,explain='') {
   const display=value==null?'—':esc(value);
   return '<article class="bio-metric"><span>'+esc(title)+'</span><strong>'+display+'</strong><small>'+esc(explain|| (value==null?'Δεν υπάρχουν πραγματικά δεδομένα':'Επαληθευμένη τιμή'))+'</small></article>';
@@ -15,8 +16,8 @@ const categoryNames={
 export async function renderBioShieldAdmin(page,{api,esc}) {
   page.innerHTML='<p role="status">Φόρτωση BioShield Admin Operations…</p>';
   try {
-    const [data,lab,examples]=await Promise.all([
-      api('/bioshield/overview'),api('/bioshield/lab/report'),api('/bioshield/lab/cases')
+    const [data,lab,examples,pilot]=await Promise.all([
+      api('/bioshield/overview'),api('/bioshield/lab/report'),api('/bioshield/lab/cases'),api('/bioshield/pilot/evidence')
     ]);
     if(!page.isConnected)return;
     const q=lab.quality, speed=lab.throughput, normal=lab.mock_normal, outage=lab.mock_fallback;
@@ -41,7 +42,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
       esc(data.message),' Ο εργαστηριακός έλεγχος χρησιμοποιεί αποκλειστικά επινοημένα παραδείγματα.</p></div>',
       '<nav class="bio-tabs" aria-label="Ενότητες BioShield">',
       '<button type="button" data-bio-tab="overview" class="active" aria-pressed="true">Επισκόπηση</button>',
-      '<button type="button" data-bio-tab="lab" aria-pressed="false">Εργαστήριο απόδοσης</button>',
+      '<button type="button" data-bio-tab="pilot" aria-pressed="false">Πραγματικά ευρήματα</button>',
       '<button type="button" data-bio-tab="candidates" aria-pressed="false">Υποψήφιοι</button>',
       '<button type="button" data-bio-tab="sources" aria-pressed="false">Πηγές</button>',
       '<button type="button" data-bio-tab="runs" aria-pressed="false">Εκτελέσεις</button>',
@@ -62,6 +63,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
       '<span>Precision <strong>',percentage(q.precision),'</strong></span>',
       '</div><button class="bio-open-lab" type="button" data-bio-tab="lab">Προβολή δοκιμών και παραδειγμάτων</button>',
       '</article></div></section>',
+      '<section data-bio-panel="pilot" hidden>',renderPublicPilot(pilot,esc),'</section>',
       '<section data-bio-panel="lab" hidden>',
       '<div class="bio-lab-top"><div><p class="eyebrow">BIO-08 / BIO-09</p><h2>Performance &amp; Relevance Laboratory</h2>',
       '<p class="bio-muted">Οι παρακάτω τιμές αφορούν μόνο ',number(q.fixture_count),
