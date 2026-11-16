@@ -192,10 +192,14 @@
 .bio-tabs a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @keyframes bio-fade-out{to{opacity:0;transform:translateY(-6px)}}
 @keyframes bio-fade-in{from{opacity:0;transform:translateY(8px)}}
-::view-transition-old(root){animation:160ms ease-in both bio-fade-out}
-::view-transition-new(root){animation:250ms ease-out both bio-fade-in}
+/* The shell, tab strip, and footer never fade or slide: only the active screen does. */
+.bio-page section[data-bio-panel]:not([hidden]){view-transition-name:bio-panel}
+::view-transition-old(root),::view-transition-new(root){animation:none}
+::view-transition-group(bio-panel){animation-duration:0s}
+::view-transition-old(bio-panel){animation:160ms ease-in both bio-fade-out}
+::view-transition-new(bio-panel){animation:250ms ease-out both bio-fade-in}
 @media(prefers-reduced-motion:reduce){
-  ::view-transition-old(root),::view-transition-new(root){animation:none!important}
+  ::view-transition-old(bio-panel),::view-transition-new(bio-panel){animation:none!important}
 }
 .bio-research-section{margin-top:24px;padding:20px;border-radius:16px;
   border:1px solid var(--line);background:var(--paper)}
