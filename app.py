@@ -33,6 +33,19 @@ def home():
 def operations():
     return FileResponse(STATIC/"index.html",headers={"Cache-Control":"no-store"})
 
+# Distinct deep-linkable pages; the typed client router maintains transitions.
+# These are read-only public-source admin previews, not authenticated CRM pages.
+OPERATIONS_PAGES = frozenset({
+    "overview", "discovery", "evidence", "map", "sources"
+})
+
+@app.get("/admin/operations/{page}", include_in_schema=False)
+@app.get("/admin/operations/{page}/", include_in_schema=False)
+def operations_page(page: str):
+    if page not in OPERATIONS_PAGES:
+        raise HTTPException(404, "Unknown BioShield page")
+    return FileResponse(STATIC / "index.html", headers={"Cache-Control":"no-store"})
+
 @app.get("/health")
 def health():
     return {"status":"ok","application":"bioshield-admin-operations"}
@@ -103,6 +116,15 @@ def source_provider_status():
         "outreach": "disabled",
         "synthetic_requests": 0,
     }, headers={"Cache-Control": "no-store"})
+
+# Read-only, explicitly unlicensed Perplexity keyword/provider research metadata.
+# It does NOT trigger social crawling, outreach or collect private contacts.
+from bioshield.research_catalog import public_research_config
+
+@app.get("/api/bioshield/research/config")
+def read_only_search_research_config():
+    return JSONResponse(public_research_config(),
+                        headers={"Cache-Control":"no-store"})
 
 # Public source provenance and legal/technical readiness (no provider access tokens).
 from bioshield.source_policy import SERVICE_LABELS, source_status

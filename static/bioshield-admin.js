@@ -1,5 +1,7 @@
 import {renderPublicPilot} from './real-pilot.js';
 import {coverageMarkup,setupCoverageMap} from './geographic-map.js';
+import {installNavigation} from './typed/navigation.js';
+import {researchMarkup,setupResearchPlaybook} from './typed/research-view.js';
 
 /* BIO-14: REAL public-source evidence only; the synthetic request lab is removed. */
 const fmt = x => Number(x || 0).toLocaleString('el-GR');
@@ -75,13 +77,15 @@ function discoveries(state,esc) {
 
 export async function renderBioShieldAdmin(page,{api,esc}) {
   page.innerHTML='<p role="status">Φόρτωση πραγματικών ευρημάτων BioShield…</p>';
-  const [pilotReply,tedReply,sourceReply,mapReply]=await Promise.allSettled([
+  const [pilotReply,tedReply,sourceReply,mapReply,researchReply]=await Promise.allSettled([
     api('/bioshield/demo/evidence'), api('/bioshield/discovery/tenders'),
-    api('/bioshield/discovery/sources'), api('/bioshield/discovery/map')
+    api('/bioshield/discovery/sources'), api('/bioshield/discovery/map'),
+    api('/bioshield/research/config')
   ]);
   let pilot=pilotReply.status==='fulfilled'?pilotReply.value:{demo_unavailable:true};
   let ted=tedReply.status==='fulfilled'?tedReply.value:{status:'unavailable'};
   const policy=sourceReply.status==='fulfilled'?sourceReply.value:null;
+  const research=researchReply.status==='fulfilled'?researchReply.value:null;
   let coverage=mapReply.status==='fulfilled'?mapReply.value:{status:'source_unavailable'};
   let mapCleanup=null;
   let mapInitialized=false;
@@ -96,11 +100,11 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     '<div class="bio-alert"><strong>Μόνο τεκμηριωμένες πηγές</strong>',
     '<p>Οι παλιές συζητήσεις δεν εμφανίζονται ως νέοι πελάτες. Οι προκηρύξεις είναι δημόσια δεδομένα, όχι εξακριβωμένες αναθέσεις. Η εταιρική Supabase και η διαβίβαση στο τηλεφωνικό κέντρο παραμένουν απομονωμένες.</p></div>',
     '<nav class="bio-tabs" aria-label="Πλοήγηση BioShield">',
-    '<button type="button" data-bio-tab="overview" class="active" aria-pressed="true">Επισκόπηση</button>',
-    '<button type="button" data-bio-tab="discovery" aria-pressed="false">Νέες ανακαλύψεις</button>',
-    '<button type="button" data-bio-tab="pilot" aria-pressed="false">Αποθηκευμένα ευρήματα</button>',
-    '<button type="button" data-bio-tab="map" aria-pressed="false">Χάρτης / Κάλυψη</button>',
-    '<button type="button" data-bio-tab="sources" aria-pressed="false">Πηγές &amp; έλεγχοι</button>',
+    '<a href="/admin/operations/overview" data-bio-tab="overview" class="active" aria-current="page">Επισκόπηση</a>',
+    '<a href="/admin/operations/discovery" data-bio-tab="discovery">Νέες ανακαλύψεις</a>',
+    '<a href="/admin/operations/evidence" data-bio-tab="pilot">Αποθηκευμένα ευρήματα</a>',
+    '<a href="/admin/operations/map" data-bio-tab="map">Χάρτης / Κάλυψη</a>',
+    '<a href="/admin/operations/sources" data-bio-tab="sources">Πηγές &amp; έλεγχοι</a>',
     '</nav>',
     '<section data-bio-panel="overview">',
     '<div class="bio-metrics">',
@@ -123,6 +127,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     '<h2>Συνδεδεμένες &amp; εκκρεμείς πηγές</h2>',
     '<p class="bio-muted">Έγινε έρευνα σε Facebook, Instagram, TikTok και ανεξάρτητα ελληνικά forums. Εμφανίζονται μόνο πραγματικές καταστάσεις πρόσβασης· καμία κοινωνική πλατφόρμα δεν θεωρείται ενεργός crawler.</p>',
     sourceList(policy,esc),
+    researchMarkup(research,esc),
     '<div class="bio-policy"><span>Firecrawl · τέσσερις λογαριασμοί (έλεγχος 16/11/2026)</span><strong>0 + 0 + 0 + 1.400 credits</strong></div>',
     '<p class="bio-note">Ο τέταρτος λογαριασμός είναι συνδεδεμένος στο ChatGPT. Για server-side rotation απαιτείται ξεχωριστή σύνδεση API key στο Render, που δεν έχει γίνει.</p>',
     '<div class="bio-policy"><span>TinyFish — εξουσιοδοτημένες πηγές</span><strong>Αναμονή ελέγχου δικαιωμάτων</strong></div>',
@@ -136,9 +141,18 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
   ].join('');
   const panels=()=>[...page.querySelectorAll('[data-bio-panel]')];
   function selectTab(name){
+    // Release old Leaflet instance when leaving map page, avoiding orphan maps.
+    if(name!=='map'&&mapInitialized){
+      if(typeof mapCleanup==='function')mapCleanup();
+      mapCleanup=null;
+      mapInitialized=false;
+    }
     page.querySelectorAll('[data-bio-tab]').forEach(b=>{
       const active=b.dataset.bioTab===name;
-      b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));
+      b.classList.toggle('active',active);
+      if(b.tagName==='A'){
+        if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');
+      }else b.setAttribute('aria-pressed',String(active));
     });
     panels().forEach(p=>p.hidden=p.dataset.bioPanel!==name);
     if(name==='map'&&!mapInitialized){
@@ -146,15 +160,9 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
       mapCleanup=setupCoverageMap(page.querySelector('[data-bio-panel="map"]'),coverage,esc);
     }
   }
-  page.addEventListener('click',event=>{
-    const tab=event.target.closest('[data-bio-tab]');
-    if(tab)selectTab(tab.dataset.bioTab);
-  });
-  // Stable shareable deep-link for geographic inspection and map acceptance.
-  const requestedTab=new URLSearchParams(window.location.search).get('tab');
-  if(['overview','discovery','pilot','map','sources'].includes(requestedTab)){
-    selectTab(requestedTab);
-  }
+  // Typed TypeScript router supplies distinct URLs, transitions and back/forward.
+  installNavigation(page,selectTab);
+  setupResearchPlaybook(page.querySelector('[data-bio-panel="sources"]'));
   const pilotPanel=page.querySelector('[data-bio-panel="pilot"]');
   function filterPilot(){
     const query=pilotPanel.querySelector('#bio-pilot-search');
@@ -183,7 +191,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
   async function refreshPilot(){
     const oldQuery=pilotPanel.querySelector('#bio-pilot-search')?.value||'';
     const oldType=pilotPanel.querySelector('#bio-pilot-type')?.value||'all';
-    const oldAge=pilotPanel.querySelector('#bio-pilot-recency')?.value||'30d';
+    const oldAge=pilotPanel.querySelector('#bio-pilot-recency')?.value||'7d';
     try{pilot=await api('/bioshield/demo/evidence');}catch{pilot={demo_unavailable:true};}
     if(!page.isConnected)return;
     pilotPanel.innerHTML=renderPublicPilot(pilot,esc);

@@ -99,3 +99,15 @@ After reviewing the screenshot of the oversimplified geographic silhouette, the 
 ### Leaflet 1.9.4 reliability correction (2026-11-16)
 
 The original BIO-18 live browser test found no OpenStreetMap tile images after the initial self-hosted Leaflet 1.3.1 release, although pins and filters worked. This is not considered a successful map rendering. A follow-up hotfix upgrades the self-hosted assets to **Leaflet 1.9.4**, removes unnecessary cross-origin anonymous image loading, adds a delayed viewport resize pass and a visible tile-loading failure warning even when no `tileerror` event fires. The dashboard also accepts `?tab=map` for a direct, shareable map view and independent screenshot QA. This changes no source evidence or private data. The real basemap must still be visually tested after deployment; mere loading of attribution or markers is not sufficient.
+
+
+## BIO-19 — Separate TypeScript pages and PDF-derived public research
+
+The five BioShield sections are now **real, bookmarkable URLs** with typed TypeScript History API navigation and accessible transitions: [Overview](https://bioshield-admin-operations.onrender.com/admin/operations/overview), [New discoveries](https://bioshield-admin-operations.onrender.com/admin/operations/discovery), [Saved evidence](https://bioshield-admin-operations.onrender.com/admin/operations/evidence), [Map](https://bioshield-admin-operations.onrender.com/admin/operations/map) and [Sources & controls](https://bioshield-admin-operations.onrender.com/admin/operations/sources). Back/forward, reload and older `?tab=map` deep links are supported.
+
+The Sources page contains a searchable categorized Greek **Perplexity 28-page PDF-based keyword playbook** (services, pests, professional-request vs problem-only phrases, spaces, Attica localities, ad signals), proposed provider links and example manual search queries. The read-only `/api/bioshield/research/config` endpoint exposes the catalog, explicitly excluding intermediary job marketplaces from public discussion research, and enforcing original-post **7-day freshness** for offline evidence triage; no dated-2021 posts are relabeled as current due to later comments. Existing water/plumbing/drain keywords are kept separately.
+
+**No social/forum commercial crawler, private customer contact intake or unsolicited outreach was activated.** The Perplexity PDF is a proposal, not provider terms approval. Only TED official notices remain live automated discovery.
+
+See [BIO-19 technical source-based design](docs/BIO19_TS_PAGES_PERPLEXITY_RESEARCH.md).
+
