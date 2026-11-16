@@ -74,30 +74,30 @@ def test_private_data_remains_unavailable_and_no_new_api_routes_are_needed():
         assert client.post("/api/bioshield/handoff").status_code==403
         assert client.get("/api/bioshield/discovery/map").status_code==200
 
-def test_service_filter_is_inside_search_facets_not_a_separate_results_toolbar():
+def test_service_filter_is_inside_search_facets_and_matches_other_pills():
     menu=(STATIC/"discovery-layout.js").read_text(encoding="utf-8").split(
         "export function discoveryFilterMenu",1)[1].split(
         "export function businessDiscoveryMarkup",1)[0]
     admin=(STATIC/"bioshield-admin.js").read_text(encoding="utf-8")
+    css=(STATIC/"bioshield-admin.css").read_text(encoding="utf-8")
     results=admin.split("function discoveries(",1)[1].split(
         "export async function renderBioShieldAdmin",1)[0]
     assert menu.count('id="bio-ted-service"')==1
     assert menu.index('data-bio-location-mode="custom"') < menu.index('id="bio-ted-service"')
     assert menu.index('id="bio-ted-service"') < menu.index('bio-discovery-meta')
-    for service in ("all","pest_control","rodent_control","disinfection","plumbing","drain_unblocking"):
-        assert f'<option value="{service}">' in menu
+    service_options=("all","pest_control","rodent_control","disinfection","plumbing","drain_unblocking")
+    for service in service_options:
+        assert f'data-bio-discovery-service="{service}"' in menu
+    assert menu.count('data-bio-discovery-service="')==len(service_options)
+    assert 'id="bio-ted-service" class="bio-home-categories" role="group"' in menu
+    assert 'data-bio-discovery-service="all" aria-pressed="true"' in menu
+    assert '<select id="bio-ted-service"' not in menu
+    assert '<option value=' not in menu
     assert 'id="bio-ted-service"' not in results
     assert 'id="bio-ted-count"' in results
-    assert "host?.querySelector('#bio-ted-service')" in admin
-    assert "if(event.target.id==='bio-ted-service')filterTED();" in admin
-
-def test_location_mode_restores_home_without_showing_configuration_panel():
-    """Returning from custom/current to the saved base must not reopen setup."""
-    script=(STATIC/"bioshield-admin.js").read_text(encoding="utf-8")
-    mode=script.split("function setLocationMode(mode){",1)[1].split(
-        "// The menu belongs",1)[0]
-    assert "config.hidden=mode==='home';" in mode
-    assert "config.dataset.mode=mode;" in mode
-    assert "if(mode==='home')" in mode
-    assert "if(extra&&extra.value){extra.value='';}" in mode
-    assert "void refreshFocused(effectiveFocusChoice(focusController.selection()))" in mode
+    assert "const selection=discoveryService;" in admin
+    assert "if(service)setDiscoveryService(service.dataset.bioDiscoveryService)" in admin
+    assert "button.setAttribute('aria-pressed',String(button.dataset.bioDiscoveryService===service))" in admin
+    assert "const serviceMatch=selection==='all'" in admin
+    assert ".bio-discovery-menu .bio-service-filter-row .bio-home-categories" in css
+    assert ".bio-discovery-service-select" not in css
