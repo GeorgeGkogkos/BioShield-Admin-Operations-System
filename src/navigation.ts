@@ -13,7 +13,7 @@ export const ROUTES = {
 
 export type Screen = keyof typeof ROUTES;
 export type RouteChange = (screen: Screen) => void;
-const canonical = (screen: Screen): Screen => (['overview','pilot','map'] as string[]).includes(screen)?'discovery':screen;
+const canonical = (screen: Screen): Screen => screen==='pilot'?'discovery':screen;
 const SCREENS: Screen[] = ['overview','discovery','pilot','map','sources','status'];
 
 export function currentScreen(location: Pick<Location,'pathname'|'search'> = window.location): Screen {
@@ -25,7 +25,7 @@ export function currentScreen(location: Pick<Location,'pathname'|'search'> = win
     const legacy=new URLSearchParams(location.search).get('tab');
     if(legacy && SCREENS.includes(legacy as Screen))return canonical(legacy as Screen);
   }
-  return 'discovery';
+  return 'overview';
 }
 
 export function installNavigation(page: HTMLElement, onChange: RouteChange): () => void {
@@ -57,7 +57,7 @@ export function installNavigation(page: HTMLElement, onChange: RouteChange): () 
       document.documentElement.dataset.bioScreen=next;
       onChange(next);
       document.title='BioShield — '+({
-        overview:'Επισκόπηση',discovery:'Νέες ανακαλύψεις',
+        overview:'Επισκόπηση',discovery:'Αναζήτηση',
         pilot:'Αποθηκευμένα ευρήματα',map:'Χάρτης / Κάλυψη',
         sources:'Πηγές & έλεγχοι',status:'Κατάσταση & διαφάνεια',
       } as const)[next];
