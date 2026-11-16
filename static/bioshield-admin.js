@@ -33,16 +33,26 @@ const dateTime = raw => {
 function countCard(title,value,note){
   return '<article class="bio-metric"><span>'+title+'</span><strong>'+fmt(value)+'</strong><small>'+note+'</small></article>';
 }
-function tenderRows(state,esc) {
+function tenderRows(state,esc,policy) {
   if (state?.status !== 'ok') return '<p class="bio-note">Δεν υπάρχει διαθέσιμη επιβεβαιωμένη απάντηση από το επίσημο TED API. Δεν εμφανίζονται κατασκευασμένα ή παλιά αποτελέσματα ως νέα.</p>';
-  const found=state.notices||[];
-  if(!found.length)return '<p class="bio-note">Η τελευταία πραγματική αναζήτηση TED ολοκληρώθηκε, αλλά δεν επέστρεψε πρόσφατες εγγραφές που να καλύπτουν όλα τα κριτήρια.</p>';
+  const source=state.notices||[];
+  const allowed=new Set(policy?.combined_nuts||['EL301','EL302','EL303','EL304','EL305','EL306','EL307','EL642','EL652']);
+  const minRemote=policy?.remote_min_value_eur||100000;
+  const found=source.filter(x=>{
+    const nuts=x.place_of_performance_nuts||[];
+    if(nuts.some(n=>allowed.has(n)))return true;
+    return nuts.length>0&&Number.isFinite(x.official_total_value_eur)&&
+      x.official_total_value_eur>=minRemote;
+  });
+  if(!found.length)return '<p class="bio-note">Δεν βρέθηκαν προκηρύξεις με τεκμηριωμένη γεωγραφική συνάφεια ή επιβεβαιωμένο μεγάλο ποσό εκτός περιοχής. '+
+    'Από '+esc(source.length)+' εθνικά αποτελέσματα, όσα έχουν άγνωστη περιοχή ή ανεπαρκή οικονομικά στοιχεία παραμένουν προς έλεγχο.</p>';
   return '<div class="bio-scroll"><table class="bio-table bio-real-table"><thead><tr>'+
-    '<th>Αριθμός TED</th><th>Ημ/νία δημοσίευσης</th><th>Υπηρεσία</th><th>Δημόσιος αγοραστής</th><th>Αντικείμενο</th><th>CPV</th><th>Πρωτογενής πηγή</th>'+
+    '<th>Αριθμός TED</th><th>Ημ/νία δημοσίευσης</th><th>Υπηρεσία</th><th>Δημόσιος αγοραστής</th><th>Αντικείμενο</th><th>NUTS / αξία</th><th>Πρωτογενής πηγή</th>'+
     '</tr></thead><tbody>'+found.map(x=>
-      '<tr data-ted-row data-services="'+esc((x.service_codes||[]).join(','))+'"><td><strong>'+esc(x.notice_number)+'</strong></td><td>'+esc(x.published_on)+'</td>'+
+      '<tr data-ted-row data-services="'+esc((x.service_codes||[]).join(','))+'" data-search="'+esc([x.title,x.buyer,x.notice_number].join(' ').toLocaleLowerCase('el-GR'))+'"><td><strong>'+esc(x.notice_number)+'</strong></td><td>'+esc(x.published_on)+'</td>'+
       '<td>'+esc((x.service_codes||[]).map(k=>serviceLabels[k]||k).join(', '))+'</td>'+
-      '<td>'+esc(x.buyer)+'</td><td>'+esc(x.title)+'</td><td>'+esc((x.cpv_codes||[]).join(', '))+'</td>'+
+      '<td>'+esc(x.buyer)+'</td><td>'+esc(x.title)+'</td><td>'+esc((x.place_of_performance_nuts||[]).join(', '))+
+      (x.official_total_value_eur?' · '+esc(x.official_total_value_eur.toLocaleString('el-GR'))+' €':' · αξία μη επιβεβαιωμένη')+'</td>'+
       '<td><a href="'+esc(x.source_url)+'" target="_blank" rel="noopener noreferrer">Επίσημο TED</a>'+
       '<small class="bio-evidence-note">Ελέγχονται η διακήρυξη και η δυνατότητα υποβολής</small></td></tr>'
     ).join('')+'</tbody></table></div>';
@@ -133,16 +143,17 @@ function officialSourceCards(official,esc){
        'Επίσημη αναζήτηση · αναμονή σύνδεσης')+'</span></article>').join('')+'</div>';
 }
 
-function discoveries(state,esc) {
+function discoveries(state,esc,focused,heartbeat) {
   return [
     '<div class="bio-lab-top"><div><p class="eyebrow">OFFICIAL EU OPEN DATA / LIVE SEARCH</p>',
     '<h2>Αυτόματη ανακάλυψη — δημόσια έργα</h2>',
     '<p class="bio-muted">Πραγματική αναζήτηση δημοσίων συμβάσεων για απεντομώσεις, μυοκτονίες, απολυμάνσεις, <strong>υδραυλικά</strong> και <strong>αποφράξεις</strong> βάσει επίσημων CPV. Δεν τεκμηριώνει από μόνη της ότι ένας διαγωνισμός είναι ανοιχτός.</p></div>',
     '<span class="bio-test-badge">',state?.status==='ok'?'API TED · ΑΝΑΓΝΩΣΗ':'TED · ΜΗ ΔΙΑΘΕΣΙΜΟ','</span></div>',
+    '<div id="bio-live-status-discovery">',automationStatus(heartbeat,state,esc),'</div>',
     '<div class="bio-demo-connection"><div><strong>',state?.status==='ok'?'Τελευταία επιτυχής αναζήτηση':'Αδυναμία επαλήθευσης TED',
     '</strong><p>Ώρα Αθήνας: ',dateTime(state?.searched_at_utc||state?.checked_at_utc),
     ' · ',state?.status==='ok'?'Επιστράφηκαν '+fmt(state.count)+' πραγματικές προκηρύξεις από '+fmt(state.raw_count)+' εγγραφές απάντησης.':'Δεν χρησιμοποιούμε εικονικά αποτελέσματα.', '</p></div>',
-    '<button id="bio-ted-refresh" type="button" class="bio-open-lab">Ανανέωση αναζήτησης</button></div>',
+    '<button id="bio-ted-refresh" type="button" class="bio-open-lab">Εκτέλεση χειροκίνητης αναζήτησης τώρα</button></div>',
     '<div class="bio-metrics bio-lab-metrics">',
     countCard('Ευρήματα TED',state?.status==='ok'?state.count:0,'Έλεγχος αρχικής διακήρυξης απαιτείται'),
     countCard('Επιβεβαιωμένοι ιδιώτες',0,'Δεν συλλέγονται προσωπικά στοιχεία'),
@@ -155,8 +166,14 @@ function discoveries(state,esc) {
     '<option value="pest_control">Απεντόμωση</option><option value="rodent_control">Μυοκτονία</option>'+
     '<option value="disinfection">Απολύμανση</option><option value="plumbing">Υδραυλικός</option>'+
     '<option value="drain_unblocking">Αποφράξεις</option></select>'+
+    '<label for="bio-ted-term">Όρος</label><input id="bio-ted-term" type="search" placeholder="Προκήρυξη, υπηρεσία, φορέας…">',
     '<span id="bio-ted-count"></span></div>',
-    tenderRows(state,esc),
+    locationControls(esc),
+    '<div class="bio-focus-title"><h3>Επιπλέον αναζήτηση κοντά στη βάση και στην προσωρινή τοποθεσία</h3>',
+    '<p class="bio-note">Ειδικές επίσημες ερωτήσεις γεωγραφίας NUTS στο TED, όχι απλώς ταξινόμηση ήδη γνωστών δημοσιεύσεων.</p></div>',
+    '<div id="bio-focus-results">',focusResults(focused,esc),'</div>',
+    '<h3>Εθνικές προκηρύξεις — μόνο τοπικά σχετικές ή τεκμηριωμένα μεγάλες εκτός περιοχής</h3>',
+    '<div id="bio-ted-results">',tenderRows(state,esc,focused?.policy),'</div>',
     '<p class="bio-note">Η ανακάλυψη ενεργοποιείται αυτόματα με το άνοιγμα της σελίδας (έως 15 λεπτά cache ανά instance) και η προγραμματισμένη αναζήτηση GitHub Actions εκτελείται κάθε ώρα, στο :17 (με πιθανές καθυστερήσεις scheduler). Εάν ο πάροχος δεν απαντά, η κατάσταση φαίνεται ως μη διαθέσιμη.</p>',
     '<p class="bio-note"><strong>Facebook, Instagram, TikTok, Reddit:</strong> η εμπορική αυτοματοποιημένη συλλογή απαιτεί δικαιώματα πλατφόρμας. Οι ανεξάρτητες κοινότητες χρειάζονται έλεγχο robots και όρων πριν από οποιοδήποτε crawl. Οι συζητήσεις δεν αποτελούν επιβεβαιωμένους πελάτες.</p>',
   ].join('');
