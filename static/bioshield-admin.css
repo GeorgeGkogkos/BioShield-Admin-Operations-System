@@ -176,17 +176,18 @@
 .bio-service-filter select{width:100%;max-width:100%}
 .bio-service-filter #bio-map-count{grid-column:1 / -1;padding-top:4px}}
 
-/* BIO-23: navigation belongs to the shared sidebar, not the screen panel. */
-@keyframes bio-fade-out{to{opacity:0;transform:translateY(-6px)}}
-@keyframes bio-fade-in{from{opacity:0;transform:translateY(8px)}}
-/* The shell, sidebar navigation, and footer never animate: only the active screen does. */
-.bio-page section[data-bio-panel]:not([hidden]){view-transition-name:bio-panel}
-::view-transition-old(root),::view-transition-new(root){animation:none}
-::view-transition-group(bio-panel){animation-duration:0s}
-::view-transition-old(bio-panel){animation:160ms ease-in both bio-fade-out}
-::view-transition-new(bio-panel){animation:250ms ease-out both bio-fade-in}
+/* BIO-22 follow-up: document View Transition snapshots are top-layer and
+   can paint over sticky chrome regardless of z-index. Animate real panels
+   in normal document flow, safely below the header and sidebar. */
+@keyframes bio-panel-enter{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.bio-page section[data-bio-panel]:not([hidden]){
+  animation:bio-panel-enter 220ms ease-out both;
+}
 @media(prefers-reduced-motion:reduce){
-  ::view-transition-old(bio-panel),::view-transition-new(bio-panel){animation:none!important}
+  .bio-page section[data-bio-panel]:not([hidden]){animation:none}
 }
 .bio-research-section{margin-top:24px;padding:20px;border-radius:16px;
   border:1px solid var(--line);background:var(--paper)}
