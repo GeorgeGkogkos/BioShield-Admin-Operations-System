@@ -59,6 +59,8 @@ def test_small_screens_have_accessible_app_shell_drawer():
     assert ".bio-mobile-nav-open .sidebar{display:flex;position:fixed" in css
     assert ".bio-mobile-nav-open .sidebar-backdrop{display:block;position:fixed" in css
     assert "menuToggle.setAttribute('aria-expanded',String(visible))" in js
+    assert "const initialScreen=currentScreen()" in js
+    assert "link.dataset.bioTab===initialScreen" in js
     assert "event.key==='Escape'" in js
     assert "event.target.closest('[data-bio-tab]')" in js
     assert "mobileViewport.addEventListener('change',()=>setMenuOpen(false))" in js
