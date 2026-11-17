@@ -851,7 +851,8 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
       if(filter){filter.value=archive.dataset.bioDiscoveryArchive;filterPilot();}
     }
     if(event.target.closest('#bio-demo-refresh'))void refreshPilot();
-    if(event.target.closest('#bio-ted-refresh')){void refreshTED(true);void refreshVerified();}
+    if(event.target.closest('#bio-ted-refresh'))void refreshTED(true);
+    if(event.target.closest('#bio-ted-refresh'))void refreshVerified();
     if(event.target.closest('#bio-map-refresh'))void refreshCoverage();
   });
   setDiscoveryCategory('public_sector');
