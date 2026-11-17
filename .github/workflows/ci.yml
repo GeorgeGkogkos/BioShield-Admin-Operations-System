@@ -54,6 +54,10 @@ jobs:
         run: |
           node --input-type=module --check < static/unified-archive.js
           node --test tests/test_recent_individual_results.mjs
+      - name: Verify BIO-39 redacted verified-request UI
+        run: |
+          node --input-type=module --check < static/verified-requests.js
+          node --test tests/test_bio39_verified_preview.mjs
       - name: Verify responsive map popup and mobile layout
         run: |
           node --input-type=module --check < static/geographic-map.js
