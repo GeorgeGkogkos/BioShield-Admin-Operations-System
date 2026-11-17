@@ -275,4 +275,16 @@ def second_account_demo_evidence():
         raise HTTPException(503, "Independent demo database unavailable; no cached real leads")
     return JSONResponse(payload, headers={"Cache-Control": "no-store"})
 
+# BIO-39: redacted public summary from the independent second Supabase account.
+# NEVER expose private canonical URLs or any social identity on this unauthenticated app.
+from bioshield.verified_public_preview import PreviewUnavailable, fetch_verified_public_preview
+
+@app.get("/api/bioshield/discovery/verified-requests")
+def verified_requests_readonly_preview():
+    try:
+        payload = fetch_verified_public_preview()
+    except PreviewUnavailable:
+        raise HTTPException(503, "Verified public preview unavailable; no cached requests")
+    return JSONResponse(payload, headers={"Cache-Control": "no-store"})
+
 app.mount("/static",StaticFiles(directory=STATIC),name="static")
