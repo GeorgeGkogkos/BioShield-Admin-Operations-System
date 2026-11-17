@@ -1,5 +1,6 @@
 import {overviewSnapshot,overviewRecentNotices,discoveryFilterMenu,businessDiscoveryMarkup} from './discovery-layout.js';
 import {renderSearchArchive} from './unified-archive.js';
+import {renderVerifiedRequests} from './verified-requests.js';
 import {renderKimdis} from './kimdis-results.js';
 import {renderPublicPilot} from './real-pilot.js';
 import {reconcileEntryDiscovery} from './entry-discovery.js';
@@ -248,7 +249,7 @@ function discoveries(state,esc,focused,heartbeat,segmented) {
 export async function renderBioShieldAdmin(page,{api,esc}) {
   page.innerHTML=pageSkeleton(window.location.pathname);
   const selectedHome=safeHome();
-  const [pilotReply,tedReply,sourceReply,mapReply,researchReply,focusedReply,heartbeatReply,officialReply,alertsReply,segmentedReply]=await Promise.allSettled([
+  const [pilotReply,tedReply,sourceReply,mapReply,researchReply,focusedReply,heartbeatReply,officialReply,alertsReply,segmentedReply,verifiedReply]=await Promise.allSettled([
     api('/bioshield/demo/evidence'), api('/bioshield/discovery/tenders'),
     api('/bioshield/discovery/sources'), api('/bioshield/discovery/map'),
     api('/bioshield/research/config'),
@@ -256,7 +257,8 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     api('/bioshield/discovery/heartbeat'),
     api('/bioshield/discovery/official-sources'),
     api('/bioshield/discovery/google-alerts'),
-    api('/bioshield/discovery/segmented?home='+encodeURIComponent(selectedHome))
+    api('/bioshield/discovery/segmented?home='+encodeURIComponent(selectedHome)),
+    api('/bioshield/discovery/verified-requests')
   ]);
   let pilot=pilotReply.status==='fulfilled'?pilotReply.value:{demo_unavailable:true};
   let ted=tedReply.status==='fulfilled'?tedReply.value:{status:'unavailable'};
@@ -272,6 +274,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
   const policy=sourceReply.status==='fulfilled'?sourceReply.value:null;
   let focused=focusedReply.status==='fulfilled'?focusedReply.value:{status:'unavailable'};
   let segmented=segmentedReply.status==='fulfilled'?segmentedReply.value:{status:'unavailable'};
+  let verified=verifiedReply.status==='fulfilled'?verifiedReply.value:{status:'unavailable'};
   let heartbeat=heartbeatReply.status==='fulfilled'?heartbeatReply.value:{status:'unavailable'};
   const official=officialReply.status==='fulfilled'?officialReply.value:null;
   const googleAlerts=alertsReply.status==='fulfilled'?alertsReply.value:null;
@@ -320,6 +323,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     '<div id="bio-discovery-business-results"></div>',
     '<p class="bio-note" id="bio-discovery-private-no-matches" role="status" hidden>Δεν βρέθηκαν επιχειρηματικά ευρήματα που να ταιριάζουν στην αναζήτηση.</p>',
     '<p class="bio-note">Εφόσον υπάρχουν, τα ιστορικά τεκμήρια εμφανίζονται παρακάτω μέσα στην ίδια αναζήτηση.</p></div>',
+    '<div id="bio-verified-requests">',renderVerifiedRequests(verified,esc,'public_sector'),'</div>',
     '<div id="bio-unified-archive">',renderSearchArchive(pilot,esc,'public_sector'),'</div>',
     '</section>',
     '<section data-bio-panel="pilot" hidden>',renderPublicPilot(pilot,esc),'</section>',
@@ -334,7 +338,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     '<div class="bio-policy"><span>Firecrawl · τέσσερις λογαριασμοί (έλεγχος 16/11/2026)</span><strong>0 + 0 + 0 + 1.400 credits</strong></div>',
     '<p class="bio-note">Ο τέταρτος λογαριασμός είναι συνδεδεμένος στο ChatGPT. Για server-side rotation απαιτείται ξεχωριστή σύνδεση API key στο Render, που δεν έχει γίνει.</p>',
     '<div class="bio-policy"><span>TinyFish — εξουσιοδοτημένες πηγές</span><strong>Αναμονή ελέγχου δικαιωμάτων</strong></div>',
-    '<div class="bio-policy"><span>Supabase Demo (δεύτερος λογαριασμός)</span><strong>Μόνο ανάγνωση</strong></div>',
+    '<div class="bio-policy"><span>Supabase Demo (δεύτερος λογαριασμός)</span><strong>Μόνο ανάγνωση — προστατευμένη προβολή νέων αιτημάτων</strong></div>',
     '<div class="bio-policy"><span>Εταιρικό CRM / Supabase</span><strong>Ασύνδετο</strong></div>',
     '<div class="bio-policy"><span>Στοιχεία επαφών &amp; τηλεφωνικό κέντρο</span><strong>Απενεργοποιημένα</strong></div>',
     '<p class="bio-note">Για να ενεργοποιηθεί διαχείριση πραγματικών ιδιωτικών υποψηφίων χρειάζονται admin authentication, επιτρεπόμενοι πάροχοι, έλεγχος νόμιμης βάσης, δικαιώματα και εξωτερική ολοκλήρωση CRM.</p></section>',
@@ -561,6 +565,16 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
       const show=!term||(row.dataset.search||'').includes(term);
       row.hidden=!show;if(show)matchingArchive++;
     });
+    let matchingVerified=0;
+    const verifiedRows=host?.querySelectorAll('#bio-verified-requests [data-bio-verified-row]')||[];
+    verifiedRows.forEach(row=>{
+      const matchesService=selection==='all'||(row.dataset.services||'').split(',').includes(selection);
+      const matchesTerm=!term||(row.dataset.search||'').includes(term);
+      const show=matchesService&&matchesTerm;
+      row.hidden=!show;if(show)matchingVerified++;
+    });
+    const verifiedEmpty=host?.querySelector('#bio-verified-search-empty');
+    if(verifiedEmpty)verifiedEmpty.hidden=!(verifiedRows.length>0&&matchingVerified===0);
     const archiveEmpty=host?.querySelector('#bio-search-archive-empty');
     if(archiveEmpty)archiveEmpty.hidden=!(archiveRows.length>0&&matchingArchive===0);
     if(term&&matchingArchive>0)host?.querySelector('#bio-search-archive-details')?.setAttribute('open','');
@@ -568,6 +582,22 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
   page.addEventListener('input',event=>{
     if(event.target.id==='bio-ted-term')filterTED();
   });
+  let verifiedBusy=false;
+  async function refreshVerified(){
+    if(verifiedBusy||!page.isConnected)return;
+    verifiedBusy=true;
+    try{
+      const next=await api('/bioshield/discovery/verified-requests');
+      verified=(next?.status==='ok'&&Array.isArray(next.requests))?next:{status:'unavailable'};
+    }catch{verified={status:'unavailable'};}
+    finally{
+      verifiedBusy=false;
+      if(page.isConnected){
+        const slot=page.querySelector('#bio-verified-requests');
+        if(slot){slot.innerHTML=renderVerifiedRequests(verified,esc,discoveryCategory);filterTED();}
+      }
+    }
+  }
   let mapBusy=false;
   async function refreshCoverage(){
     if(mapBusy)return;
@@ -799,6 +829,8 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
     }
     const saved=page.querySelector('#bio-unified-archive');
     if(saved)saved.innerHTML=renderSearchArchive(pilot,esc,category);
+    const verifiedSlot=page.querySelector('#bio-verified-requests');
+    if(verifiedSlot)verifiedSlot.innerHTML=renderVerifiedRequests(verified,esc,category);
     const kimdisSection=page.querySelector('#bio-kimdis-results');
     if(kimdisSection)kimdisSection.hidden=category!=='public_sector';
     // Discovery uses a single results list; the standalone Map page owns maps.
@@ -819,7 +851,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
       if(filter){filter.value=archive.dataset.bioDiscoveryArchive;filterPilot();}
     }
     if(event.target.closest('#bio-demo-refresh'))void refreshPilot();
-    if(event.target.closest('#bio-ted-refresh'))void refreshTED(true);
+    if(event.target.closest('#bio-ted-refresh')){void refreshTED(true);void refreshVerified();}
     if(event.target.closest('#bio-map-refresh'))void refreshCoverage();
   });
   setDiscoveryCategory('public_sector');
@@ -836,6 +868,11 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
       if((archive&&!archive.hidden)||(discovery&&!discovery.hidden))void refreshPilot();
     }
   },30000);
+  const verifiedTimer=setInterval(()=>{
+    if(!page.isConnected){clearInterval(verifiedTimer);return;}
+    const discovery=page.querySelector('[data-bio-panel="discovery"]');
+    if(!document.hidden&&discovery&&!discovery.hidden)void refreshVerified();
+  },300000);
   const tedTimer=setInterval(()=>{
     if(!page.isConnected){clearInterval(tedTimer);focusController.stop();return;}
     if(!document.hidden){void refreshTED();void refreshCoverage();void refreshKimdis();}
