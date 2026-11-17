@@ -819,7 +819,7 @@ export async function renderBioShieldAdmin(page,{api,esc}) {
       const archive=page.querySelector('#bio-discovery-archive');
       if(heading)heading.textContent=(category==='individual'?'Ιδιώτες':'Επιχειρήσεις')+' — αναζήτηση';
       if(description)description.textContent=category==='individual'?
-        'Δεν έχει συνδεθεί εγκεκριμένη ενεργή πηγή νέων ιδιωτικών αιτημάτων. Ιστορικές δημόσιες συζητήσεις δεν αποτελούν νέους πελάτες.':
+        'Δεν υπάρχει deployed social crawler στην εφαρμογή. Εμφανίζονται μόνο τα επαληθευμένα αιτήματα που έχουν καταχωριστεί από τη χωριστή ωριαία έρευνα, χωρίς προσωπικά στοιχεία.':
         'Οι δημόσιες συμβάσεις TED βρίσκονται στις κατηγορίες «Δημόσιο» και «TED». Εδώ εμφανίζονται αποκλειστικά τεκμηριωμένα επιχειρηματικά αιτήματα, εάν προκύψουν.';
       if(body){
         body.hidden=category!=='business';
