@@ -18,7 +18,7 @@
       "first_seen_at_utc": "2026-11-24T00:54:41.435149+00:00",
       "geography_evidence": "official_ted_performance_nuts",
       "id": "TED-814428-2026",
-      "last_seen_at_utc": "2026-11-26T00:23:23.023275+00:00",
+      "last_seen_at_utc": "2026-11-26T09:33:22.288251+00:00",
       "notice_number": "814428-2026",
       "official_total_value_eur": null,
       "place_of_performance_nuts": [
@@ -46,7 +46,7 @@
       "first_seen_at_utc": "2026-11-19T03:31:31.712352+00:00",
       "geography_evidence": "official_ted_performance_nuts",
       "id": "TED-805494-2026",
-      "last_seen_at_utc": "2026-11-26T00:23:23.023275+00:00",
+      "last_seen_at_utc": "2026-11-26T09:33:22.288251+00:00",
       "notice_number": "805494-2026",
       "official_total_value_eur": null,
       "place_of_performance_nuts": [
@@ -74,7 +74,7 @@
       "first_seen_at_utc": "2026-11-16T13:55:23.745988+00:00",
       "geography_evidence": "official_ted_performance_nuts",
       "id": "TED-791336-2026",
-      "last_seen_at_utc": "2026-11-26T00:23:23.023275+00:00",
+      "last_seen_at_utc": "2026-11-26T09:33:22.288251+00:00",
       "notice_number": "791336-2026",
       "official_total_value_eur": null,
       "place_of_performance_nuts": [
@@ -102,7 +102,7 @@
       "first_seen_at_utc": "2026-11-16T13:55:23.745988+00:00",
       "geography_evidence": "official_ted_performance_nuts",
       "id": "TED-774976-2026",
-      "last_seen_at_utc": "2026-11-26T00:23:23.023275+00:00",
+      "last_seen_at_utc": "2026-11-26T09:33:22.288251+00:00",
       "notice_number": "774976-2026",
       "official_total_value_eur": null,
       "place_of_performance_nuts": [
@@ -135,7 +135,7 @@
       "first_seen_at_utc": "2026-11-16T13:55:23.745988+00:00",
       "geography_evidence": "official_ted_performance_nuts",
       "id": "TED-765459-2026",
-      "last_seen_at_utc": "2026-11-26T00:23:23.023275+00:00",
+      "last_seen_at_utc": "2026-11-26T09:33:22.288251+00:00",
       "notice_number": "765459-2026",
       "official_total_value_eur": null,
       "place_of_performance_nuts": [
@@ -164,7 +164,7 @@
       "first_seen_at_utc": "2026-11-16T13:55:23.745988+00:00",
       "geography_evidence": "official_ted_performance_nuts",
       "id": "TED-758868-2026",
-      "last_seen_at_utc": "2026-11-26T00:23:23.023275+00:00",
+      "last_seen_at_utc": "2026-11-26T09:33:22.288251+00:00",
       "notice_number": "758868-2026",
       "official_total_value_eur": null,
       "place_of_performance_nuts": [
@@ -193,7 +193,7 @@
       "first_seen_at_utc": "2026-11-16T13:55:23.745988+00:00",
       "geography_evidence": "official_ted_performance_nuts",
       "id": "TED-758124-2026",
-      "last_seen_at_utc": "2026-11-26T00:23:23.023275+00:00",
+      "last_seen_at_utc": "2026-11-26T09:33:22.288251+00:00",
       "notice_number": "758124-2026",
       "official_total_value_eur": null,
       "place_of_performance_nuts": [
@@ -219,7 +219,7 @@
   "query": "buyer-country=GRC AND classification-cpv IN (45330000 45332000 45332200 45332300 45332400 90460000 90470000 90921000 90922000 90923000 90924000) AND publication-date>=20261027 SORT BY publication-date DESC",
   "raw_count": 8,
   "review_required": true,
-  "searched_at_utc": "2026-11-26T00:23:23.023275+00:00",
+  "searched_at_utc": "2026-11-26T09:33:22.288251+00:00",
   "service_counts": {
     "disinfection": 0,
     "drain_unblocking": 1,
